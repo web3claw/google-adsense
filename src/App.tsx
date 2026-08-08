@@ -1,30 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { BrowserProvider, useBrowser } from "./context/BrowserContext";
 import { ChromeHeader } from "./components/ChromeHeader";
+import { Sidebar } from "./components/Sidebar";
 import "./ChromeTheme.css";
 
 const PageViewport: React.FC = () => {
   const { currentEntry, refreshKey, isRefreshing, navigateTo } = useBrowser();
   const [loadTime, setLoadTime] = useState<string>(new Date().toLocaleTimeString());
 
-  // Update load time whenever page changes or refresh is triggered
   useEffect(() => {
     setLoadTime(new Date().toLocaleTimeString());
   }, [currentEntry.pageId, refreshKey]);
 
-  const pageId = currentEntry.pageId || "sites-list";
+  const pageId = currentEntry.pageId || "payments-info";
 
   return (
-    <main className="chrome-viewport" key={refreshKey}>
-      <div style={{ padding: "32px 40px", maxWidth: "1000px", margin: "0 auto" }}>
-        {/* Page Header Bar */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+    <div className="viewport-content" key={refreshKey}>
+      <div style={{ padding: "32px 40px", maxWidth: "1100px", margin: "0 auto" }}>
+        {/* Page Top Status Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px" }}>
           <div>
             <span style={{ fontSize: "12px", color: "#1a73e8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
               Google AdSense Console
             </span>
-            <h1 style={{ fontSize: "24px", color: "#202124", fontWeight: 500, marginTop: "4px" }}>
-              {currentEntry.title}
+            <h1 style={{ fontSize: "24px", color: "#202124", fontWeight: 400, marginTop: "4px" }}>
+              {currentEntry.title.replace(" – Google AdSense", "")}
             </h1>
           </div>
           <div style={{ textAlign: "right" }}>
@@ -33,210 +33,151 @@ const PageViewport: React.FC = () => {
                 fontSize: "12px",
                 color: isRefreshing ? "#1a73e8" : "#5f6368",
                 backgroundColor: isRefreshing ? "#e8f0fe" : "#f1f3f4",
-                padding: "4px 10px",
+                padding: "6px 12px",
                 borderRadius: "12px",
                 fontWeight: 500,
                 transition: "all 0.2s ease",
               }}
             >
-              {isRefreshing ? "↻ Reloading viewport..." : `Updated at ${loadTime}`}
+              {isRefreshing ? "↻ Reloading data..." : `Last updated at ${loadTime}`}
             </span>
           </div>
         </div>
 
-        {/* Dynamic Page Views */}
+        {/* Dynamic Page Rendering */}
+        {pageId === "payments-info" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {/* Balance Card */}
+            <div
+              style={{
+                padding: "24px",
+                borderRadius: "8px",
+                border: "1px solid #dadce0",
+                backgroundColor: "#ffffff",
+                boxShadow: "0 1px 2px rgba(60,64,67,0.05)",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <h2 style={{ fontSize: "18px", color: "#202124", fontWeight: 500 }}>Your earnings</h2>
+                <span style={{ fontSize: "13px", color: "#1a73e8", fontWeight: 500, cursor: "pointer" }}>View transactions →</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+                <span style={{ fontSize: "36px", fontWeight: 400, color: "#202124" }}>$1,428.50</span>
+                <span style={{ fontSize: "14px", color: "#5f6368" }}>Paid monthly if threshold ($100.00) is reached</span>
+              </div>
+              {/* Progress bar */}
+              <div style={{ width: "100%", height: "8px", backgroundColor: "#e8f0fe", borderRadius: "4px", marginTop: "16px", overflow: "hidden" }}>
+                <div style={{ width: "100%", height: "100%", backgroundColor: "#1a73e8", borderRadius: "4px" }} />
+              </div>
+            </div>
+
+            {/* How you get paid */}
+            <div
+              style={{
+                padding: "24px",
+                borderRadius: "8px",
+                border: "1px solid #dadce0",
+                backgroundColor: "#ffffff",
+                boxShadow: "0 1px 2px rgba(60,64,67,0.05)",
+              }}
+            >
+              <h2 style={{ fontSize: "18px", color: "#202124", fontWeight: 500, marginBottom: "12px" }}>How you get paid</h2>
+              <p style={{ color: "#5f6368", fontSize: "14px", marginBottom: "16px" }}>
+                Primary payment method: Wire transfer to bank account (•••• 8892)
+              </p>
+              <button
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #dadce0",
+                  borderRadius: "4px",
+                  fontSize: "14px",
+                  color: "#1a73e8",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                }}
+              >
+                Manage payment methods
+              </button>
+            </div>
+          </div>
+        )}
+
+        {pageId === "verification-check" && (
+          <div style={{ backgroundColor: "#ffffff", padding: "24px", borderRadius: "8px", border: "1px solid #dadce0" }}>
+            <h2 style={{ fontSize: "18px", color: "#202124", fontWeight: 500, marginBottom: "16px" }}>Identity verification</h2>
+            <div style={{ padding: "16px", backgroundColor: "#e6f4ea", borderRadius: "8px", color: "#137333", fontSize: "14px", fontWeight: 500, display: "flex", alignItems: "center", gap: "8px" }}>
+              <span>✓</span> Identity check completed successfully
+            </div>
+          </div>
+        )}
+
+        {pageId === "home" && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
+            <div style={{ padding: "24px", borderRadius: "8px", border: "1px solid #dadce0", backgroundColor: "#ffffff" }}>
+              <h3 style={{ fontSize: "14px", color: "#5f6368", marginBottom: "8px" }}>Estimated earnings (Today)</h3>
+              <p style={{ fontSize: "32px", fontWeight: 400, color: "#1a73e8" }}>$42.80</p>
+            </div>
+            <div style={{ padding: "24px", borderRadius: "8px", border: "1px solid #dadce0", backgroundColor: "#ffffff" }}>
+              <h3 style={{ fontSize: "14px", color: "#5f6368", marginBottom: "8px" }}>Page views</h3>
+              <p style={{ fontSize: "32px", fontWeight: 400, color: "#202124" }}>12,450</p>
+            </div>
+          </div>
+        )}
+
         {pageId === "sites-list" && (
-          <div>
-            <p style={{ color: "#5f6368", fontSize: "14px", marginBottom: "24px" }}>
-              Overview of your active monetized domains and AdSense status.
-            </p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px", marginBottom: "32px" }}>
-              <div
-                onClick={() =>
-                  navigateTo({
-                    title: "Site Detail: myblog.com – AdSense",
-                    url: "adsense.google.com/adsense/u/0/pub-222938054781862/sites/detail/myblog.com",
-                    pageId: "site-detail",
-                  })
-                }
-                style={{
-                  padding: "20px",
-                  borderRadius: "12px",
-                  border: "1px solid #e0e0e0",
-                  backgroundColor: "#ffffff",
-                  cursor: "pointer",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                  transition: "transform 0.15s ease, shadow 0.15s ease",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                  <h3 style={{ fontSize: "16px", color: "#1a73e8", fontWeight: 600 }}>myblog.com</h3>
-                  <span style={{ fontSize: "12px", color: "#1e8e3e", backgroundColor: "#e6f4ea", padding: "2px 8px", borderRadius: "10px", fontWeight: 500 }}>
-                    Ready
-                  </span>
-                </div>
-                <p style={{ fontSize: "13px", color: "#5f6368" }}>Auto ads enabled • 3 Ad units active</p>
-                <div style={{ marginTop: "12px", fontSize: "13px", color: "#1a73e8", fontWeight: 500 }}>
-                  View site analytics →
-                </div>
-              </div>
-
-              <div
-                onClick={() =>
-                  navigateTo({
-                    title: "Earnings Overview – AdSense",
-                    url: "adsense.google.com/adsense/u/0/pub-222938054781862/reports/earnings",
-                    pageId: "earnings",
-                  })
-                }
-                style={{
-                  padding: "20px",
-                  borderRadius: "12px",
-                  border: "1px solid #e0e0e0",
-                  backgroundColor: "#ffffff",
-                  cursor: "pointer",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                  <h3 style={{ fontSize: "16px", color: "#202124", fontWeight: 600 }}>Earnings Report</h3>
-                  <span style={{ fontSize: "12px", color: "#1a73e8", backgroundColor: "#e8f0fe", padding: "2px 8px", borderRadius: "10px", fontWeight: 500 }}>
-                    +15.2%
-                  </span>
-                </div>
-                <p style={{ fontSize: "24px", fontWeight: 600, color: "#1a73e8" }}>$1,842.30</p>
-                <div style={{ marginTop: "8px", fontSize: "13px", color: "#1a73e8", fontWeight: 500 }}>
-                  Open detailed reports →
-                </div>
-              </div>
-
-              <div
-                onClick={() =>
-                  navigateTo({
-                    title: "Account Settings – AdSense",
-                    url: "adsense.google.com/adsense/u/0/pub-222938054781862/settings/account",
-                    pageId: "settings",
-                  })
-                }
-                style={{
-                  padding: "20px",
-                  borderRadius: "12px",
-                  border: "1px solid #e0e0e0",
-                  backgroundColor: "#ffffff",
-                  cursor: "pointer",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                  <h3 style={{ fontSize: "16px", color: "#202124", fontWeight: 600 }}>Account Settings</h3>
-                </div>
-                <p style={{ fontSize: "13px", color: "#5f6368" }}>Publisher ID: pub-222938054781862</p>
-                <div style={{ marginTop: "16px", fontSize: "13px", color: "#1a73e8", fontWeight: 500 }}>
-                  Manage preferences →
-                </div>
-              </div>
+          <div style={{ backgroundColor: "#ffffff", padding: "24px", borderRadius: "8px", border: "1px solid #dadce0" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h2 style={{ fontSize: "18px", color: "#202124", fontWeight: 500 }}>Sites (3 active)</h2>
+              <button style={{ padding: "8px 16px", backgroundColor: "#1a73e8", color: "#fff", border: "none", borderRadius: "4px", fontSize: "14px", cursor: "pointer" }}>
+                + Add site
+              </button>
+            </div>
+            <div
+              onClick={() =>
+                navigateTo({
+                  title: "Site Detail: example.com – Google AdSense",
+                  url: "adsense.google.com/adsense/u/0/pub-222938054781862/sites/detail/example.com",
+                  pageId: "site-detail",
+                })
+              }
+              style={{ padding: "16px", border: "1px solid #eee", borderRadius: "6px", cursor: "pointer", display: "flex", justifyContent: "space-between" }}
+            >
+              <span style={{ fontWeight: 500, color: "#1a73e8" }}>example.com</span>
+              <span style={{ color: "#1e8e3e", fontSize: "13px" }}>Ready</span>
             </div>
           </div>
         )}
 
         {pageId === "site-detail" && (
-          <div style={{ backgroundColor: "#ffffff", padding: "24px", borderRadius: "12px", border: "1px solid #dadce0" }}>
-            <h2 style={{ fontSize: "18px", color: "#202124", marginBottom: "12px" }}>Domain: myblog.com</h2>
-            <p style={{ color: "#5f6368", fontSize: "14px", marginBottom: "20px" }}>
-              Detailed ad performance and ad placement settings for myblog.com.
-            </p>
-            <div style={{ padding: "16px", backgroundColor: "#f8f9fa", borderRadius: "8px", marginBottom: "16px" }}>
-              <p style={{ fontSize: "13px", color: "#3c4043" }}>✓ Ads.txt Status: Authorized</p>
-              <p style={{ fontSize: "13px", color: "#3c4043", marginTop: "4px" }}>✓ Approval Status: Getting ads ready</p>
-            </div>
-            <button
-              onClick={() =>
-                navigateTo({
-                  title: "Sites – Google AdSense",
-                  url: "adsense.google.com/adsense/u/0/pub-222938054781862/sites/list",
-                  pageId: "sites-list",
-                })
-              }
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "#f1f3f4",
-                border: "none",
-                borderRadius: "6px",
-                fontSize: "13px",
-                fontWeight: 500,
-                color: "#3c4043",
-                cursor: "pointer",
-              }}
-            >
-              ← Back to Sites List
-            </button>
+          <div style={{ backgroundColor: "#ffffff", padding: "24px", borderRadius: "8px", border: "1px solid #dadce0" }}>
+            <h2 style={{ fontSize: "18px", color: "#202124", marginBottom: "12px" }}>Site Details: example.com</h2>
+            <p style={{ color: "#5f6368", fontSize: "14px" }}>Auto ads status: ON • Anchor ads: Enabled</p>
           </div>
         )}
 
-        {pageId === "earnings" && (
-          <div style={{ backgroundColor: "#ffffff", padding: "24px", borderRadius: "12px", border: "1px solid #dadce0" }}>
-            <h2 style={{ fontSize: "18px", color: "#202124", marginBottom: "12px" }}>Earnings & Performance Metrics</h2>
-            <p style={{ color: "#5f6368", fontSize: "14px", marginBottom: "20px" }}>
-              This month's revenue breakdown and RPM statistics.
-            </p>
-            <div style={{ padding: "20px", backgroundColor: "#e8f0fe", borderRadius: "8px", marginBottom: "16px" }}>
-              <span style={{ fontSize: "13px", color: "#1967d2" }}>Total Earnings</span>
-              <p style={{ fontSize: "32px", fontWeight: 700, color: "#1967d2", marginTop: "4px" }}>$1,842.30</p>
-            </div>
+        {pageId === "reports" && (
+          <div style={{ backgroundColor: "#ffffff", padding: "24px", borderRadius: "8px", border: "1px solid #dadce0" }}>
+            <h2 style={{ fontSize: "18px", color: "#202124", marginBottom: "12px" }}>Performance Reports</h2>
+            <p style={{ color: "#5f6368", fontSize: "14px" }}>RPM: $4.25 • CTR: 2.1% • Impressions: 38,200</p>
           </div>
         )}
 
         {pageId === "settings" && (
-          <div style={{ backgroundColor: "#ffffff", padding: "24px", borderRadius: "12px", border: "1px solid #dadce0" }}>
-            <h2 style={{ fontSize: "18px", color: "#202124", marginBottom: "12px" }}>Account Preferences</h2>
-            <p style={{ color: "#5f6368", fontSize: "14px" }}>
-              Manage tax information, payment methods, and user access.
-            </p>
+          <div style={{ backgroundColor: "#ffffff", padding: "24px", borderRadius: "8px", border: "1px solid #dadce0" }}>
+            <h2 style={{ fontSize: "18px", color: "#202124", marginBottom: "12px" }}>Account Information</h2>
+            <p style={{ color: "#5f6368", fontSize: "14px" }}>Publisher ID: pub-222938054781862 • Time zone: (UTC+08:00) Beijing</p>
           </div>
         )}
 
-        {pageId === "new-tab" && (
-          <div style={{ textAlign: "center", padding: "60px 20px" }}>
-            <h2 style={{ fontSize: "28px", color: "#202124", fontWeight: 400, marginBottom: "16px" }}>New Tab</h2>
-            <p style={{ color: "#5f6368", fontSize: "15px", marginBottom: "28px" }}>
-              Select a quick shortcut below to navigate:
-            </p>
-            <button
-              onClick={() =>
-                navigateTo({
-                  title: "Sites – Google AdSense",
-                  url: "adsense.google.com/adsense/u/0/pub-222938054781862/sites/list",
-                  pageId: "sites-list",
-                })
-              }
-              style={{
-                padding: "10px 24px",
-                backgroundColor: "#1a73e8",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "20px",
-                fontSize: "14px",
-                fontWeight: 500,
-                cursor: "pointer",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
-              }}
-            >
-              Open Google AdSense Dashboard
-            </button>
-          </div>
-        )}
-
-        {/* Tip Banner */}
-        <div style={{ marginTop: "32px", padding: "12px 16px", backgroundColor: "#fff8e1", borderRadius: "8px", border: "1px solid #ffe082" }}>
-          <p style={{ fontSize: "13px", color: "#795548", display: "flex", alignItems: "center", gap: "8px" }}>
-            <span>💡</span>
-            <span>
-              <strong>Try the Header Controls:</strong> Click any card above to navigate. Use the <strong>← Back</strong> and <strong>→ Forward</strong> buttons in the top beige Chrome header to navigate history, or click <strong>↻ Reload</strong> to refresh the content area!
-            </span>
+        {/* Informational Footer Tip */}
+        <div style={{ marginTop: "32px", padding: "14px 18px", backgroundColor: "#f8f9fa", borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+          <p style={{ fontSize: "13px", color: "#5f6368" }}>
+            💡 <strong>Sidebar & Header Sync:</strong> Click any sidebar menu item on the left to navigate. Notice how the top address bar URL, tab title, and Back/Forward history update in real time!
           </p>
         </div>
       </div>
-    </main>
+    </div>
   );
 };
 
@@ -244,7 +185,10 @@ export function App() {
   return (
     <BrowserProvider>
       <ChromeHeader />
-      <PageViewport />
+      <main className="chrome-viewport">
+        <Sidebar />
+        <PageViewport />
+      </main>
     </BrowserProvider>
   );
 }
