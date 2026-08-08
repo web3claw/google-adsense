@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "google-adsense",
-        "width": 1280,
-        "height": 960,
+        "width": 1920,
+        "height": 1200,
         "decorations": false
       }
     ],
