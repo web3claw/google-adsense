@@ -24,11 +24,11 @@ const AdSenseFullLogo = () => (
       letterSpacing: 0,
       fontWeight: 400,
       objectFit: "contain",
-      background: `url('${ADSENSE_LOGO_SVG_BASE64}') no-repeat 50%/contain`,
-      width: "220px",
-      height: "35px",
+      background: `url('${ADSENSE_LOGO_SVG_BASE64}') no-repeat left center/contain`,
+      width: "190px",
+      height: "32px",
       display: "block",
-      marginLeft: "10px",
+      marginLeft: "0px",
     }}
   />
 );
