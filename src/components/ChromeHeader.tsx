@@ -3,12 +3,16 @@ import { useBrowser } from "../context/BrowserContext";
 import { WindowControls } from "./WindowControls";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
-// Google AdSense SVG Logo
+// Official Google AdSense Tab Favicon SVG
 const AdSenseLogo = () => (
-  <svg width="16" height="16" viewBox="0 0 48 48" fill="none">
-    <path d="M42 38L24 6L6 38H42Z" fill="#F4B400" />
-    <path d="M24 6L6 38H18L24 27.5L30 38H42L24 6Z" fill="#4285F4" />
-    <path d="M18 38H30L24 27.5L18 38Z" fill="#0F9D58" />
+  <svg width="16" height="16" viewBox="0 0 120 100" fill="none">
+    <g transform="translate(4, 0)">
+      <rect x="22" y="6" width="28" height="88" rx="14" transform="rotate(-28 22 6)" fill="#F9AB00" />
+      <circle cx="21" cy="85" r="13" fill="#34A853" />
+    </g>
+    <g transform="translate(42, 0)">
+      <rect x="22" y="6" width="28" height="88" rx="14" transform="rotate(-28 22 6)" fill="#4285F4" />
+    </g>
   </svg>
 );
 

@@ -1,10 +1,10 @@
 /* Chrome Beige Theme CSS Tokens */
 :root {
-  --chrome-header-bg: #f7dfcc;
-  --chrome-toolbar-bg: #f9e6d6;
-  --chrome-tab-active-bg: #fdf8f4;
+  --chrome-header-bg: #fbebdc;
+  --chrome-toolbar-bg: #fbebdc;
+  --chrome-tab-active-bg: #fef7f1;
   --chrome-tab-hover-bg: #f4d4bc;
-  --chrome-address-bg: #f4e8dc;
+  --chrome-address-bg: #f7e6d5;
   --chrome-address-focus-bg: #ffffff;
   --chrome-text-main: #3c4043;
   --chrome-text-muted: #5f6368;
