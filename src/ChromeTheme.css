@@ -377,7 +377,7 @@ input,
    ========================================================================== */
 
 .adsense-sidebar {
-  width: 256px;
+  width: 240px;
   height: 100%;
   background-color: #ffffff;
   border-right: 1px solid #e0e0e0;
@@ -390,16 +390,16 @@ input,
 }
 
 .adsense-sidebar.collapsed {
-  width: 64px;
+  width: 60px;
 }
 
 /* Sidebar Top Header Section */
 .sidebar-header {
   display: flex;
   align-items: center;
-  height: 56px;
-  padding: 0 16px;
-  gap: 16px;
+  height: 52px;
+  padding: 0 14px;
+  gap: 12px;
   flex-shrink: 0;
   border-bottom: 1px solid #e0e0e0;
   position: relative;
@@ -407,7 +407,7 @@ input,
 
 .sidebar-header-divider {
   width: 1px;
-  height: 32px;
+  height: 28px;
   background-color: #dadce0;
   margin-left: auto;
   flex-shrink: 0;
@@ -417,7 +417,7 @@ input,
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 8px;
+  padding: 6px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -433,7 +433,7 @@ input,
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  padding: 8px 0;
+  padding: 6px 0;
 }
 
 .sidebar-group {
@@ -444,7 +444,7 @@ input,
 .sidebar-divider {
   border: none;
   border-top: 1px solid #e0e0e0;
-  margin: 8px 0;
+  margin: 6px 0;
 }
 
 /* Item Styling */
@@ -452,9 +452,9 @@ input,
   position: relative;
   display: flex;
   align-items: center;
-  height: 40px;
-  margin-right: 12px;
-  border-radius: 0 24px 24px 0;
+  height: 36px;
+  margin-right: 10px;
+  border-radius: 0 20px 20px 0;
   cursor: pointer;
   color: #3c4043;
   transition: background-color 0.15s ease;
@@ -487,12 +487,12 @@ input,
   display: flex;
   align-items: center;
   width: 100%;
-  padding-left: 20px;
-  gap: 14px;
+  padding-left: 18px;
+  gap: 12px;
 }
 
 .sidebar-item.subitem .sidebar-item-content {
-  padding-left: 44px;
+  padding-left: 38px;
 }
 
 .sidebar-icon {
@@ -507,12 +507,12 @@ input,
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
+  width: 18px;
   flex-shrink: 0;
 }
 
 .sidebar-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -524,7 +524,7 @@ input,
   align-items: center;
   justify-content: center;
   position: absolute;
-  left: 6px;
+  left: 4px;
   color: #5f6368;
 }
 
