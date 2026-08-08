@@ -1,22 +1,37 @@
 import React, { useState } from "react";
 import { useBrowser } from "../context/BrowserContext";
 
-// SVGs matching Google Material Symbols exactly
+// SVGs matching Google Material Symbols & Official AdSense Logo exactly
 const HamburgerIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <path d="M3 18H21M3 12H21M3 6H21" stroke="#5F6368" strokeWidth="2" strokeLinecap="round" />
+  <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+    <path d="M0 1H18M0 7H18M0 13H18" stroke="#3c4043" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
 
 const AdSenseFullLogo = () => (
-  <div style={{ display: "flex", alignItems: "center", gap: "8px", userSelect: "none" }}>
-    <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
-      <path d="M42 38L24 6L6 38H42Z" fill="#F4B400" />
-      <path d="M24 6L6 38H18L24 27.5L30 38H42L24 6Z" fill="#4285F4" />
-      <path d="M18 38H30L24 27.5L18 38Z" fill="#0F9D58" />
+  <div style={{ display: "flex", alignItems: "center", gap: "10px", userSelect: "none" }}>
+    <svg width="34" height="28" viewBox="0 0 120 100" fill="none">
+      {/* Left Pill - Yellow with Green Bottom */}
+      <g transform="translate(4, 0)">
+        <rect x="22" y="6" width="28" height="88" rx="14" transform="rotate(-28 22 6)" fill="#F9AB00" />
+        <circle cx="21" cy="85" r="13" fill="#34A853" />
+      </g>
+      {/* Right Pill - Blue */}
+      <g transform="translate(42, 0)">
+        <rect x="22" y="6" width="28" height="88" rx="14" transform="rotate(-28 22 6)" fill="#4285F4" />
+      </g>
     </svg>
-    <span style={{ fontSize: "20px", fontWeight: 400, color: "#3c4043", fontFamily: "Google Sans, Roboto, sans-serif", letterSpacing: "-0.5px" }}>
-      <strong style={{ fontWeight: 500, color: "#5f6368" }}>Google</strong> <span style={{ color: "#5f6368" }}>AdSense</span>
+    <span
+      style={{
+        fontSize: "22px",
+        fontWeight: 400,
+        color: "#5f6368",
+        fontFamily: "'Google Sans', 'Product Sans', -apple-system, Roboto, sans-serif",
+        letterSpacing: "-0.2px",
+        whiteSpace: "nowrap",
+      }}
+    >
+      Google AdSense
     </span>
   </div>
 );
@@ -150,7 +165,12 @@ export const Sidebar: React.FC = () => {
         >
           <HamburgerIcon />
         </button>
-        {!isCollapsed && <AdSenseFullLogo />}
+        {!isCollapsed && (
+          <>
+            <AdSenseFullLogo />
+            <div className="sidebar-header-divider" />
+          </>
+        )}
       </div>
 
       {/* Navigation List */}

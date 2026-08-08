@@ -401,6 +401,16 @@ input,
   padding: 0 16px;
   gap: 16px;
   flex-shrink: 0;
+  border-bottom: 1px solid #e0e0e0;
+  position: relative;
+}
+
+.sidebar-header-divider {
+  width: 1px;
+  height: 32px;
+  background-color: #dadce0;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .sidebar-hamburger-btn {
