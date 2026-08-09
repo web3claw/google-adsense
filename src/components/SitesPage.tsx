@@ -61,6 +61,46 @@ export const SitesPage: React.FC<{
   const [newSiteUrlInput, setNewSiteUrlInput] = useState<string>("");
   const [siteToDelete, setSiteToDelete] = useState<SiteItem | null>(null);
 
+  // Edit Site Modal states
+  const [siteToEdit, setSiteToEdit] = useState<SiteItem | null>(null);
+  const [editUrlInput, setEditUrlInput] = useState<string>("");
+  const [editDateInput, setEditDateInput] = useState<string>("");
+  const [editTimeInput, setEditTimeInput] = useState<string>("");
+
+  const handleOpenEditModal = (site: SiteItem) => {
+    setSiteToEdit(site);
+    setEditUrlInput(site.url);
+    setEditDateInput(site.lastUpdatedDate);
+    setEditTimeInput(site.lastUpdatedTime);
+  };
+
+  const handleEditSiteSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!siteToEdit) return;
+
+    const cleanDomain = editUrlInput
+      .trim()
+      .replace(/^https?:\/\//i, "")
+      .replace(/\/.*$/, "");
+
+    if (!cleanDomain) return;
+
+    setSites(
+      sites.map((s) =>
+        s.id === siteToEdit.id
+          ? {
+              ...s,
+              url: cleanDomain,
+              lastUpdatedDate: editDateInput.trim(),
+              lastUpdatedTime: editTimeInput.trim(),
+            }
+          : s
+      )
+    );
+
+    setSiteToEdit(null);
+  };
+
   // Add Site Handler
   const handleAddSiteSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -281,11 +321,19 @@ export const SitesPage: React.FC<{
                   </tr>
                 ) : (
                   filteredSites.map((site) => (
-                    <tr key={site.id}>
+                    <tr
+                      key={site.id}
+                      onDoubleClick={() => handleOpenEditModal(site)}
+                      title="Double-click to edit Site URL and Last updated"
+                      style={{ cursor: "pointer" }}
+                    >
                       <td className="col-site-url">
                         <span
                           className="site-link-text"
-                          onClick={() => onNavigateToDetail && onNavigateToDetail(site.url)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onNavigateToDetail && onNavigateToDetail(site.url);
+                          }}
                         >
                           {site.url}
                         </span>
@@ -388,6 +436,93 @@ export const SitesPage: React.FC<{
                   disabled={!newSiteUrlInput.trim()}
                 >
                   Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Edit Site Details (Styled Google Settings Modal) */}
+      {siteToEdit && (
+        <div className="modal-overlay" onClick={() => setSiteToEdit(null)}>
+          <div
+            className="modal-card settings-modal-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: "480px", padding: "24px" }}
+          >
+            {/* Header */}
+            <div className="settings-modal-header" style={{ paddingBottom: "12px" }}>
+              <div className="settings-user-info">
+                <h3 className="settings-user-name" style={{ fontSize: "16px", color: "#1a73e8", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px" }}>
+                    edit
+                  </i>
+                  Edit Site (编辑域名与更新时间)
+                </h3>
+                <span className="settings-user-pub" style={{ color: "#5f6368", fontSize: "12px" }}>
+                  Update domain URL and last updated info
+                </span>
+              </div>
+              <button className="settings-modal-close-btn" onClick={() => setSiteToEdit(null)} title="Close">
+                ✕
+              </button>
+            </div>
+
+            <div className="settings-modal-divider" />
+
+            <form onSubmit={handleEditSiteSubmit} className="settings-modal-body" style={{ gap: "14px", display: "flex", flexDirection: "column" }}>
+              <div className="settings-group">
+                <label className="settings-label" style={{ fontWeight: 600 }}>
+                  Site URL (域名)
+                </label>
+                <input
+                  type="text"
+                  value={editUrlInput}
+                  onChange={(e) => setEditUrlInput(e.target.value)}
+                  className="settings-num-input"
+                  style={{ width: "100%", height: "36px", padding: "0 10px", fontSize: "13px" }}
+                  required
+                />
+              </div>
+
+              <div className="settings-group">
+                <label className="settings-label" style={{ fontWeight: 600 }}>
+                  Last Updated Date (上次更新日期)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Aug 9, 2026"
+                  value={editDateInput}
+                  onChange={(e) => setEditDateInput(e.target.value)}
+                  className="settings-num-input"
+                  style={{ width: "100%", height: "36px", padding: "0 10px", fontSize: "13px" }}
+                  required
+                />
+              </div>
+
+              <div className="settings-group">
+                <label className="settings-label" style={{ fontWeight: 600 }}>
+                  Last Updated Time (上次更新时间段)
+                </label>
+                <input
+                  type="text"
+                  placeholder="8:40 AM | BST"
+                  value={editTimeInput}
+                  onChange={(e) => setEditTimeInput(e.target.value)}
+                  className="settings-num-input"
+                  style={{ width: "100%", height: "36px", padding: "0 10px", fontSize: "13px" }}
+                  required
+                />
+              </div>
+
+              {/* Footer Actions: Cancel on Left, Save on Right */}
+              <div className="settings-modal-footer" style={{ marginTop: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <button type="button" className="btn-text-cancel" onClick={() => setSiteToEdit(null)}>
+                  Cancel (取消)
+                </button>
+                <button type="submit" className="btn-solid-save">
+                  Save Changes (保存修改)
                 </button>
               </div>
             </form>
