@@ -33,7 +33,7 @@ interface BrowserContextType {
 const defaultHistory: HistoryEntry[] = [
   {
     title: "Sites – Google AdSense",
-    url: "adsense.google.com/adsense/u/0/pub-222938054781862/sites/list",
+    url: "https://adsense.google.com/adsense/u/0/pub-2229538054781862/sites/list",
     pageId: "sites-list",
   },
 ];

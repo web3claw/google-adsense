@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { BrowserProvider, useBrowser } from "./context/BrowserContext";
 import { ChromeHeader } from "./components/ChromeHeader";
 import { Sidebar } from "./components/Sidebar";
+import { SitesPage } from "./components/SitesPage";
+import { PaymentsInfoPage } from "./components/PaymentsInfoPage";
+import { TransactionsServicePage } from "./components/TransactionsServicePage";
 import "./ChromeTheme.css";
 
 const PageViewport: React.FC = () => {
@@ -12,7 +15,76 @@ const PageViewport: React.FC = () => {
     setLoadTime(new Date().toLocaleTimeString());
   }, [currentEntry.pageId, refreshKey]);
 
-  const pageId = currentEntry.pageId || "payments-info";
+  const pageId = currentEntry.pageId || "sites-list";
+
+  if (pageId === "sites-list") {
+    return (
+      <div className="viewport-content" key={refreshKey}>
+        <SitesPage
+          onNavigateToDetail={(siteUrl) =>
+            navigateTo({
+              title: `Site Detail: ${siteUrl} – Google AdSense`,
+              url: `https://adsense.google.com/adsense/u/0/pub-2229538054781862/sites/detail/${siteUrl}`,
+              pageId: "site-detail",
+            })
+          }
+          onNavigateToPolicy={() =>
+            navigateTo({
+              title: "Policy center – Google AdSense",
+              url: "https://adsense.google.com/adsense/u/0/pub-2229538054781862/policy/overview",
+              pageId: "policy",
+            })
+          }
+        />
+      </div>
+    );
+  }
+
+  if (pageId === "payments-info") {
+    return (
+      <div className="viewport-content" key={refreshKey}>
+        <PaymentsInfoPage
+          onNavigateToPolicy={() =>
+            navigateTo({
+              title: "Policy center – Google AdSense",
+              url: "https://adsense.google.com/adsense/u/0/pub-2229538054781862/policy/overview",
+              pageId: "policy",
+            })
+          }
+          onNavigateToTransactions={() =>
+            navigateTo({
+              title: "Payments info – Payments – Google AdSense",
+              url: "https://adsense.google.com/adsense/u/0/pub-2229538054781862/payments/?place=TRANSACTIONS_SERVICE",
+              pageId: "transactions-service",
+            })
+          }
+        />
+      </div>
+    );
+  }
+
+  if (pageId === "transactions-service") {
+    return (
+      <div className="viewport-content" key={refreshKey}>
+        <TransactionsServicePage
+          onNavigateToPolicy={() =>
+            navigateTo({
+              title: "Policy center – Google AdSense",
+              url: "https://adsense.google.com/adsense/u/0/pub-2229538054781862/policy/overview",
+              pageId: "policy",
+            })
+          }
+          onNavigateBackToPayments={() =>
+            navigateTo({
+              title: "Payments info – Google AdSense",
+              url: "https://adsense.google.com/adsense/u/0/pub-2229538054781862/payments",
+              pageId: "payments-info",
+            })
+          }
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="viewport-content" key={refreshKey}>
@@ -137,7 +209,7 @@ const PageViewport: React.FC = () => {
               onClick={() =>
                 navigateTo({
                   title: "Site Detail: example.com – Google AdSense",
-                  url: "adsense.google.com/adsense/u/0/pub-222938054781862/sites/detail/example.com",
+                  url: "https://adsense.google.com/adsense/u/0/pub-2229538054781862/sites/detail/example.com",
                   pageId: "site-detail",
                 })
               }
@@ -166,7 +238,7 @@ const PageViewport: React.FC = () => {
         {pageId === "settings" && (
           <div style={{ backgroundColor: "#ffffff", padding: "24px", borderRadius: "8px", border: "1px solid #dadce0" }}>
             <h2 style={{ fontSize: "18px", color: "#202124", marginBottom: "12px" }}>Account Information</h2>
-            <p style={{ color: "#5f6368", fontSize: "14px" }}>Publisher ID: pub-222938054781862 • Time zone: (UTC+08:00) Beijing</p>
+            <p style={{ color: "#5f6368", fontSize: "14px" }}>Publisher ID: pub-2229538054781862 • Time zone: (UTC+08:00) Beijing</p>
           </div>
         )}
 

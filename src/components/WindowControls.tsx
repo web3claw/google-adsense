@@ -65,7 +65,7 @@ export const WindowControls: React.FC = () => {
         onClick={handleMinimize}
         title="Minimize"
       >
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
           <rect x="2" y="5.5" width="8" height="1" fill="currentColor" />
         </svg>
       </button>
@@ -78,13 +78,13 @@ export const WindowControls: React.FC = () => {
       >
         {isMaximized ? (
           // Restore Icon (2 overlapping boxes)
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
             <path d="M3.5 3.5H9.5V9.5H3.5V3.5Z" stroke="currentColor" strokeWidth="1" fill="none" />
             <path d="M5 2H10.5V7.5" stroke="currentColor" strokeWidth="1" fill="none" />
           </svg>
         ) : (
           // Maximize Icon (single box)
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
             <rect x="2.5" y="2.5" width="7" height="7" stroke="currentColor" strokeWidth="1" fill="none" />
           </svg>
         )}
@@ -96,7 +96,7 @@ export const WindowControls: React.FC = () => {
         onClick={handleClose}
         title="Close"
       >
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
           <path d="M2.5 2.5L9.5 9.5M9.5 2.5L2.5 9.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
         </svg>
       </button>

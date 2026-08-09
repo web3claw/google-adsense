@@ -2,18 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useBrowser } from "../context/BrowserContext";
 import { WindowControls } from "./WindowControls";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import faviconIcon from "../assets/favicon.ico";
 
-// Official Google AdSense Tab Favicon SVG
 const AdSenseLogo = () => (
-  <svg width="16" height="16" viewBox="0 0 120 100" fill="none">
-    <g transform="translate(4, 0)">
-      <rect x="22" y="6" width="28" height="88" rx="14" transform="rotate(-28 22 6)" fill="#F9AB00" />
-      <circle cx="21" cy="85" r="13" fill="#34A853" />
-    </g>
-    <g transform="translate(42, 0)">
-      <rect x="22" y="6" width="28" height="88" rx="14" transform="rotate(-28 22 6)" fill="#4285F4" />
-    </g>
-  </svg>
+  <img src={faviconIcon} width="13" height="13" alt="favicon" style={{ display: "block" }} />
 );
 
 export const ChromeHeader: React.FC = () => {
@@ -77,7 +69,7 @@ export const ChromeHeader: React.FC = () => {
           title="Tabs menu"
           onMouseDown={stopProp}
         >
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
             <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
@@ -97,7 +89,7 @@ export const ChromeHeader: React.FC = () => {
               >
                 {/* Left tab curve shadow/edge decoration */}
                 <div className="tab-corner tab-corner-left" />
-                
+
                 <div className="tab-content" data-tauri-drag-region>
                   <span className="tab-favicon" data-tauri-drag-region>
                     <AdSenseLogo />
@@ -111,7 +103,7 @@ export const ChromeHeader: React.FC = () => {
                     onMouseDown={stopProp}
                     title="Close tab"
                   >
-                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                    <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
                       <path d="M2.5 2.5L9.5 9.5M9.5 2.5L2.5 9.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
                     </svg>
                   </button>
@@ -130,7 +122,7 @@ export const ChromeHeader: React.FC = () => {
             onMouseDown={stopProp}
             title="New tab"
           >
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
               <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
           </button>
@@ -155,7 +147,7 @@ export const ChromeHeader: React.FC = () => {
             title="Click to go back"
             disabled={!canGoBack}
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
               <path d="M10 3.5L4.5 8L10 12.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
@@ -168,7 +160,7 @@ export const ChromeHeader: React.FC = () => {
             title="Click to go forward"
             disabled={!canGoForward}
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
               <path d="M6 3.5L11.5 8L6 12.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
@@ -182,8 +174,8 @@ export const ChromeHeader: React.FC = () => {
           >
             <svg
               className={isRefreshing ? "refresh-spinning" : ""}
-              width="15"
-              height="15"
+              width="13"
+              height="13"
               viewBox="0 0 16 16"
               fill="none"
             >
@@ -195,7 +187,7 @@ export const ChromeHeader: React.FC = () => {
         {/* Address Bar Form */}
         <form className="chrome-address-bar" onSubmit={handleUrlSubmit} onMouseDown={stopProp}>
           <div className="address-bar-icon site-info-icon" title="View site information">
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
               <path d="M3 5.5H13M3 10.5H13M5.5 3V8M10.5 8V13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </div>
@@ -206,25 +198,27 @@ export const ChromeHeader: React.FC = () => {
             onChange={(e) => setInputUrl(e.target.value)}
             placeholder="Search Google or type a URL"
           />
+
+          {/* Action Icons Inside Address Bar Capsule */}
+          <div className="address-bar-actions">
+            {/* Translate Icon */}
+            <button type="button" className="chrome-icon-btn address-action-btn" title="Translate this page">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+              </svg>
+            </button>
+
+            {/* Star Bookmark Icon */}
+            <button type="button" className="chrome-icon-btn address-action-btn" title="Bookmark this tab">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2L9.8 5.8L14 6.3L10.9 9.2L11.7 13.3L8 11.2L4.3 13.3L5.1 9.2L2 6.3L6.2 5.8L8 2Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
         </form>
 
         {/* Right Toolbar Action Icons */}
         <div className="chrome-action-group" onMouseDown={stopProp}>
-          {/* Side Panel / Extensions */}
-          <button className="chrome-icon-btn action-btn" title="Side panel">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <rect x="2.5" y="2.5" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.4" />
-              <path d="M9.5 2.5V13.5" stroke="currentColor" strokeWidth="1.4" />
-            </svg>
-          </button>
-
-          {/* Star Bookmark */}
-          <button className="chrome-icon-btn action-btn" title="Bookmark this tab">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2L9.8 5.8L14 6.3L10.9 9.2L11.7 13.3L8 11.2L4.3 13.3L5.1 9.2L2 6.3L6.2 5.8L8 2Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-            </svg>
-          </button>
-
           {/* User Profile Avatar */}
           <button className="chrome-profile-btn" title="Google Account">
             <span className="profile-avatar">A</span>
@@ -232,7 +226,7 @@ export const ChromeHeader: React.FC = () => {
 
           {/* 3-dots Menu */}
           <button className="chrome-icon-btn action-btn" title="Customize and control Google Chrome">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
               <circle cx="8" cy="3.5" r="1.3" fill="currentColor" />
               <circle cx="8" cy="8" r="1.3" fill="currentColor" />
               <circle cx="8" cy="12.5" r="1.3" fill="currentColor" />
