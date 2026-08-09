@@ -89,6 +89,23 @@ const PageViewport: React.FC = () => {
     );
   }
 
+  const getActivePubId = (): string => {
+    try {
+      const saved = localStorage.getItem("adsense_earnings_config");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.pubId) {
+          let p = String(parsed.pubId).trim();
+          if (!p.startsWith("pub-")) p = `pub-${p}`;
+          return p;
+        }
+      }
+    } catch (e) {}
+    return "pub-8666469182451238";
+  };
+
+  const activePubId = getActivePubId();
+
   if (pageId === "payments-info") {
     return (
       <div className="viewport-content" key={refreshKey}>
@@ -96,15 +113,16 @@ const PageViewport: React.FC = () => {
           onNavigateToPolicy={() =>
             navigateTo({
               title: "Policy center – Google AdSense",
-              url: "https://adsense.google.com/adsense/u/0/pub-2229538054781862/policy/overview",
+              url: `https://adsense.google.com/adsense/u/0/${activePubId}/policy/overview`,
               pageId: "policy",
             })
           }
-          onNavigateToTransactions={() =>
+          onNavigateToTransactions={(targetMonth = "all") =>
             navigateTo({
               title: "Payments info – Payments – Google AdSense",
-              url: "https://adsense.google.com/adsense/u/0/pub-2229538054781862/payments/?place=TRANSACTIONS_SERVICE",
+              url: `https://adsense.google.com/adsense/u/0/${activePubId}/payments/?place=TRANSACTIONS_SERVICE`,
               pageId: "transactions-service",
+              targetMonth: targetMonth,
             })
           }
         />
@@ -119,14 +137,14 @@ const PageViewport: React.FC = () => {
           onNavigateToPolicy={() =>
             navigateTo({
               title: "Policy center – Google AdSense",
-              url: "https://adsense.google.com/adsense/u/0/pub-2229538054781862/policy/overview",
+              url: `https://adsense.google.com/adsense/u/0/${activePubId}/policy/overview`,
               pageId: "policy",
             })
           }
           onNavigateBackToPayments={() =>
             navigateTo({
               title: "Payments info – Google AdSense",
-              url: "https://adsense.google.com/adsense/u/0/pub-2229538054781862/payments",
+              url: `https://adsense.google.com/adsense/u/0/${activePubId}/payments`,
               pageId: "payments-info",
             })
           }

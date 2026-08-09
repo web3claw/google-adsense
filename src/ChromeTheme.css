@@ -595,7 +595,7 @@ input,
 }
 
 .adsense-topbar-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 400;
   color: #202124;
 }
@@ -1522,11 +1522,12 @@ input,
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .transaction-date-link {
   color: #1a73e8;
+  font-size: 11px;
   text-decoration: none;
 }
 
@@ -1536,6 +1537,7 @@ input,
 
 .transaction-amount {
   color: #202124;
+  font-size: 11px;
 }
 
 /* How You Get Paid Content */
@@ -1566,7 +1568,7 @@ input,
 /* Footer Link Action Bar on Cards */
 .payments-card-footer-action {
   border-top: 1px solid #f1f3f4;
-  padding: 10px;
+  padding: 12px 16px;
   text-align: center;
   background-color: #ffffff;
 }
@@ -1575,9 +1577,10 @@ input,
   background: transparent;
   border: none;
   color: #1a73e8;
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 500;
   cursor: pointer;
+  outline: none;
 }
 
 .card-footer-link-btn:hover {
@@ -1635,7 +1638,7 @@ input,
 }
 
 .breadcrumb-link {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 400;
   color: #5f6368;
   cursor: pointer;
@@ -1646,21 +1649,28 @@ input,
 }
 
 .breadcrumb-separator {
-  font-size: 16px;
+  font-size: 13px;
   color: #5f6368;
 }
 
 .breadcrumb-current {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 500;
   color: #202124;
 }
 
-/* Filter Controls Row (Right Side) */
+/* Filter Controls Row (Below Breadcrumb, Right Aligned) */
+.transactions-filter-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  margin-bottom: 6px;
+}
+
 .transactions-filter-controls {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 28px;
 }
 
 .trans-select-wrap {
@@ -1669,6 +1679,7 @@ input,
   align-items: center;
   border-bottom: 1px solid #dadce0;
   padding-bottom: 4px;
+  min-width: 175px;
 }
 
 .trans-select-wrap select {
@@ -1679,7 +1690,8 @@ input,
   color: #3c4043;
   cursor: pointer;
   appearance: none;
-  padding-right: 16px;
+  padding-right: 20px;
+  width: 100%;
 }
 
 .select-arrow {
@@ -1708,7 +1720,7 @@ input,
   border: 1px solid #dadce0;
   border-radius: 8px;
   padding: 20px;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .period-block.collapsed {
@@ -1716,37 +1728,80 @@ input,
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  padding: 16px 24px;
+  padding: 22px 28px;
+  min-height: 60px;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.1), 0 1px 2px rgba(60, 64, 67, 0.15);
 }
 
 .period-block.collapsed:hover {
-  background-color: #f8f9fa;
+  background-color: #ffffff;
+  border-color: #bdc1c6;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(60, 64, 67, 0.2), 0 2px 8px rgba(60, 64, 67, 0.12);
 }
 
 .period-title-collapsed {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: #202124;
 }
 
 .balance-text-collapsed {
-  font-size: 13px;
+  font-size: 12px;
   color: #5f6368;
 }
 
 .period-block.expanded {
   display: flex;
   flex-direction: column;
+  border: none;
+  box-shadow: none;
+  background-color: transparent;
+  padding: 8px 0 16px 0;
+  border-radius: 0;
 }
 
 .period-block-header {
-  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-bottom: 12px;
+  padding: 0 24px;
 }
 
 .period-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 500;
   color: #202124;
+}
+
+.header-action-icons {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.icon-action-btn {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-action-btn:hover {
+  opacity: 0.7;
+}
+
+.period-divider-line {
+  border-top: 1px solid #e0e0e0;
+  margin: 12px 0 16px 0;
+  width: 100%;
 }
 
 .period-balance-line {
@@ -1757,46 +1812,69 @@ input,
   text-align: right;
 }
 
+.period-balance-line.ending-line {
+  margin-bottom: 16px;
+  padding: 0 24px 16px 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
 .period-balance-line.starting-line {
-  margin-top: 24px;
+  margin-top: 16px;
+  padding: 16px 24px 0 24px;
+  border-top: 1px solid #f1f3f4;
   margin-bottom: 0;
 }
 
 .balance-text {
-  font-size: 13px;
+  font-size: 11.5px;
   font-weight: 500;
   color: #3c4043;
 }
 
-/* Period Table */
-.period-table-wrap {
+/* Period Transactions Table & Line Borders */
+.transactions-table-wrap {
   width: 100%;
-  border-top: 1px solid #f1f3f4;
-  border-bottom: 1px solid #f1f3f4;
-  padding: 12px 0;
+  margin-bottom: 8px;
 }
 
-.period-table {
+.transactions-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.period-table th {
-  font-size: 11px;
+.transactions-table th {
+  font-size: 10.5px;
   font-weight: 500;
   color: #5f6368;
-  text-transform: none;
-  padding: 8px 12px;
+  text-align: left;
+  padding: 10px 24px;
+  border-bottom: 1px solid #f1f3f4;
 }
 
-.period-table td {
-  padding: 36px 12px;
+.transactions-table th.align-right,
+.transactions-table td.align-right {
+  text-align: right;
 }
 
-.empty-period-cell {
-  text-align: center;
-  font-size: 13px;
-  color: #5f6368;
+.transactions-table td {
+  font-size: 11.5px;
+  color: #3c4043;
+  padding: 14px 24px;
+  border-bottom: 1px solid #f1f3f4;
+  vertical-align: middle;
+}
+
+.transactions-table tr:last-child td {
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.blue-payment-link {
+  color: #1a73e8;
+  text-decoration: none;
+}
+
+.blue-payment-link:hover {
+  text-decoration: underline;
 }
 
 /* ==========================================================================

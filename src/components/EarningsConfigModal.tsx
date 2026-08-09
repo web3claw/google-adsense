@@ -1,13 +1,35 @@
 import React from "react";
 
+export interface TransactionItem {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+}
+
 export interface EarningsConfigData {
   countryName: string;
   currentEarnings: number;
   threshold: number;
-  isCustomProgress: boolean;
-  customProgressPercent: number;
   lastPaymentDate: string;
   lastPaymentAmount: number;
+
+  // Additional Card Parameters
+  payeeName: string;
+  pubId: string;
+  bankMasked: string;
+  augAmount: number;
+  julAmount: number;
+  junAmount: number;
+
+  // Transactions Settings
+  currencyCode?: string; // e.g. "USD", "EUR", "GBP"
+  initialStartingBalance?: number; // e.g. 0.37
+
+  // Dynamic Transaction Items for the 3 Months
+  month1Items?: TransactionItem[];
+  month2Items?: TransactionItem[];
+  month3Items?: TransactionItem[];
 }
 
 interface EarningsConfigModalProps {
@@ -21,10 +43,54 @@ export const DEFAULT_EARNINGS_CONFIG: EarningsConfigData = {
   countryName: "United Kingdom",
   currentEarnings: 0.42,
   threshold: 70.0,
-  isCustomProgress: false,
-  customProgressPercent: 0,
   lastPaymentDate: "Jul 21",
   lastPaymentAmount: 392.45,
+
+  payeeName: "EMMANUEL DELLBRÜGGER",
+  pubId: "pub-8666469182451238",
+  bankMasked: "DE••\u2009••••\u2009••••\u2009••••\u2009••07\u200949",
+  augAmount: 0.42,
+  julAmount: 0.42,
+  junAmount: 392.47,
+
+  currencyCode: "USD",
+  initialStartingBalance: 0.37,
+
+  month1Items: [],
+  month2Items: [
+    {
+      id: "m2-1",
+      date: "Jul 1\u2009\u2013\u200931, 2026",
+      description: "Earnings - AdSense for Content",
+      amount: 0.42,
+    },
+    {
+      id: "m2-2",
+      date: "Jul 21, 2026",
+      description: "Automatic payment: Bank account ····0749. GG104GK2OJ",
+      amount: -392.45,
+    },
+    {
+      id: "m2-3",
+      date: "Jul 3\u2009\u2013\u20094, 2026",
+      description: "Invalid Traffic - AdSense for Content",
+      amount: -0.02,
+    },
+  ],
+  month3Items: [
+    {
+      id: "m3-1",
+      date: "Jun 1\u2009\u2013\u200930, 2026",
+      description: "Invalid Traffic - AdSense for Content",
+      amount: -0.03,
+    },
+    {
+      id: "m3-2",
+      date: "Jun 1\u2009\u2013\u200930, 2026",
+      description: "Earnings - AdSense for Content",
+      amount: 392.13,
+    },
+  ],
 };
 
 export const EarningsConfigModal: React.FC<EarningsConfigModalProps> = ({
@@ -36,15 +102,13 @@ export const EarningsConfigModal: React.FC<EarningsConfigModalProps> = ({
   const [formData, setFormData] = React.useState<EarningsConfigData>(config);
 
   React.useEffect(() => {
-    setFormData(config);
+    setFormData({
+      ...DEFAULT_EARNINGS_CONFIG,
+      ...config,
+    });
   }, [config, isOpen]);
 
   if (!isOpen) return null;
-
-  const calculatedPercent =
-    formData.threshold > 0
-      ? Math.min(100, Math.floor((formData.currentEarnings / formData.threshold) * 100))
-      : 0;
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +118,7 @@ export const EarningsConfigModal: React.FC<EarningsConfigModalProps> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card settings-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "520px" }}>
+      <div className="modal-card settings-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "560px", maxHeight: "85vh", overflowY: "auto" }}>
         {/* Header */}
         <div className="settings-modal-header" style={{ paddingBottom: "12px" }}>
           <div className="settings-user-info">
@@ -62,7 +126,7 @@ export const EarningsConfigModal: React.FC<EarningsConfigModalProps> = ({
               <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px" }}>
                 account_balance_wallet
               </i>
-              Configure "Your Earnings" Parameters (配置收益卡片参数)
+              Configure Payments Parameters (配置 Payments 页面所有参数)
             </h3>
             <span className="settings-user-pub" style={{ color: "#5f6368", fontSize: "12px" }}>
               Double-click card settings • Changes apply immediately
@@ -75,128 +139,121 @@ export const EarningsConfigModal: React.FC<EarningsConfigModalProps> = ({
 
         <div className="settings-modal-divider" />
 
-        <form onSubmit={handleSave} className="settings-modal-body" style={{ gap: "16px", display: "flex", flexDirection: "column" }}>
-          {/* Item 0: Country Name */}
-          <div className="settings-group">
-            <label className="settings-label" style={{ fontWeight: 600 }}>
-              1. Account Country Name (付款账号国家/地区名称)
-            </label>
-            <p className="settings-hint">Displayed in "AdSense (United Kingdom)" title (e.g. United Kingdom, United States)</p>
-            <input
-              type="text"
-              value={formData.countryName}
-              onChange={(e) => setFormData({ ...formData, countryName: e.target.value })}
-              placeholder="e.g. United Kingdom, United States"
-              className="settings-num-input"
-              style={{ width: "100%", height: "36px", padding: "0 12px", fontSize: "14px", fontWeight: 600 }}
-              required
-            />
-          </div>
-
-          {/* Item 1: Current Earnings Amount */}
-          <div className="settings-group">
-            <label className="settings-label" style={{ fontWeight: 600 }}>
-              2. Current Earnings Amount (当前收益金额)
-            </label>
-            <p className="settings-hint">Displayed at top right of card (e.g. 0.42, 135.12)</p>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.currentEarnings}
-              onChange={(e) => setFormData({ ...formData, currentEarnings: Number(e.target.value) })}
-              className="settings-num-input"
-              style={{ width: "100%", height: "36px", padding: "0 12px", fontSize: "14px", fontWeight: 600 }}
-              required
-            />
-          </div>
-
-          {/* Item 2: Payment Threshold */}
-          <div className="settings-group">
-            <label className="settings-label" style={{ fontWeight: 600 }}>
-              3. Payment Threshold (付款起付额/阈值)
-            </label>
-            <p className="settings-hint">Standard threshold is 70.00 or 60.00 (syncs to subtitle & footer)</p>
-            <input
-              type="number"
-              step="0.01"
-              min="1"
-              value={formData.threshold}
-              onChange={(e) => setFormData({ ...formData, threshold: Number(e.target.value) })}
-              className="settings-num-input"
-              style={{ width: "100%", height: "36px", padding: "0 12px", fontSize: "14px", fontWeight: 600 }}
-              required
-            />
-          </div>
-
-          {/* Item 3: Progress Percentage */}
-          <div className="settings-group">
-            <label className="settings-label" style={{ fontWeight: 600 }}>
-              4. Progress Percentage (进度百分比)
-            </label>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "6px" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer" }}>
-                <input
-                  type="radio"
-                  name="progressMode"
-                  checked={!formData.isCustomProgress}
-                  onChange={() => setFormData({ ...formData, isCustomProgress: false })}
-                />
-                <span>Auto calculate (自动联动计算: {calculatedPercent}%)</span>
-              </label>
-
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer" }}>
-                <input
-                  type="radio"
-                  name="progressMode"
-                  checked={formData.isCustomProgress}
-                  onChange={() => setFormData({ ...formData, isCustomProgress: true })}
-                />
-                <span>Custom percentage (手动指定百分比)</span>
-              </label>
-
-              {formData.isCustomProgress && (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "24px" }}>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={formData.customProgressPercent}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        customProgressPercent: Math.min(100, Math.max(0, Number(e.target.value))),
-                      })
-                    }
-                    className="settings-num-input"
-                    style={{ width: "90px", height: "32px", padding: "0 8px", fontSize: "14px" }}
-                  />
-                  <span style={{ fontSize: "13px", color: "#5f6368" }}>%</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Item 4 & 5: Last Payment Date & Amount */}
+        <form onSubmit={handleSave} className="settings-modal-body" style={{ gap: "14px", display: "flex", flexDirection: "column" }}>
+          {/* Section 1: Earnings & Account */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             <div className="settings-group">
               <label className="settings-label" style={{ fontWeight: 600 }}>
-                5. Last Payment Date (上次付款日期)
+                1. Country Name (国家/地区)
               </label>
               <input
                 type="text"
-                value={formData.lastPaymentDate}
-                onChange={(e) => setFormData({ ...formData, lastPaymentDate: e.target.value })}
-                placeholder="e.g. Jul 21"
+                value={formData.countryName}
+                onChange={(e) => setFormData({ ...formData, countryName: e.target.value })}
                 className="settings-num-input"
-                style={{ width: "100%", height: "36px", padding: "0 12px", fontSize: "14px" }}
+                style={{ width: "100%", height: "34px", padding: "0 10px", fontSize: "13px" }}
                 required
               />
             </div>
 
             <div className="settings-group">
               <label className="settings-label" style={{ fontWeight: 600 }}>
-                6. Last Payment Amount (上次付款金额)
+                2. Payee Name (收款人姓名)
+              </label>
+              <input
+                type="text"
+                value={formData.payeeName}
+                onChange={(e) => setFormData({ ...formData, payeeName: e.target.value })}
+                className="settings-num-input"
+                style={{ width: "100%", height: "34px", padding: "0 10px", fontSize: "13px" }}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div className="settings-group">
+              <label className="settings-label" style={{ fontWeight: 600 }}>
+                3. Publisher ID (AdSense pub-ID)
+              </label>
+              <input
+                type="text"
+                value={formData.pubId}
+                onChange={(e) => setFormData({ ...formData, pubId: e.target.value })}
+                className="settings-num-input"
+                style={{ width: "100%", height: "34px", padding: "0 10px", fontSize: "13px" }}
+                required
+              />
+            </div>
+
+            <div className="settings-group">
+              <label className="settings-label" style={{ fontWeight: 600 }}>
+                4. Bank Account (银行卡尾号)
+              </label>
+              <input
+                type="text"
+                value={formData.bankMasked}
+                onChange={(e) => setFormData({ ...formData, bankMasked: e.target.value })}
+                className="settings-num-input"
+                style={{ width: "100%", height: "34px", padding: "0 10px", fontSize: "13px" }}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div className="settings-group">
+              <label className="settings-label" style={{ fontWeight: 600 }}>
+                5. Current Earnings (当前收益)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.currentEarnings}
+                onChange={(e) => setFormData({ ...formData, currentEarnings: Number(e.target.value) })}
+                className="settings-num-input"
+                style={{ width: "100%", height: "34px", padding: "0 10px", fontSize: "13px" }}
+                required
+              />
+            </div>
+
+            <div className="settings-group">
+              <label className="settings-label" style={{ fontWeight: 600 }}>
+                6. Payment Threshold (起付阈值)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="1"
+                value={formData.threshold}
+                onChange={(e) => setFormData({ ...formData, threshold: Number(e.target.value) })}
+                className="settings-num-input"
+                style={{ width: "100%", height: "34px", padding: "0 10px", fontSize: "13px" }}
+                required
+              />
+            </div>
+          </div>
+
+          {/* Section 2: Last Payment */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div className="settings-group">
+              <label className="settings-label" style={{ fontWeight: 600 }}>
+                7. Last Payment Date (上次付款日期)
+              </label>
+              <input
+                type="text"
+                value={formData.lastPaymentDate}
+                onChange={(e) => setFormData({ ...formData, lastPaymentDate: e.target.value })}
+                className="settings-num-input"
+                style={{ width: "100%", height: "34px", padding: "0 10px", fontSize: "13px" }}
+                required
+              />
+            </div>
+
+            <div className="settings-group">
+              <label className="settings-label" style={{ fontWeight: 600 }}>
+                8. Last Payment Amount (上次付款金额)
               </label>
               <input
                 type="number"
@@ -205,13 +262,13 @@ export const EarningsConfigModal: React.FC<EarningsConfigModalProps> = ({
                 value={formData.lastPaymentAmount}
                 onChange={(e) => setFormData({ ...formData, lastPaymentAmount: Number(e.target.value) })}
                 className="settings-num-input"
-                style={{ width: "100%", height: "36px", padding: "0 12px", fontSize: "14px" }}
+                style={{ width: "100%", height: "34px", padding: "0 10px", fontSize: "13px" }}
                 required
               />
             </div>
           </div>
 
-          {/* Footer Actions (Reset Defaults Removed) */}
+          {/* Footer Actions */}
           <div className="settings-modal-footer" style={{ marginTop: "12px", justifyContent: "flex-end" }}>
             <div style={{ display: "flex", gap: "10px" }}>
               <button type="button" className="btn-text-cancel" onClick={onClose}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useBrowser } from "../context/BrowserContext";
 import {
   EarningsConfigModal,
@@ -10,7 +10,7 @@ const EARNINGS_STORAGE_KEY = "adsense_earnings_config";
 
 export const PaymentsInfoPage: React.FC<{
   onNavigateToPolicy?: () => void;
-  onNavigateToTransactions?: () => void;
+  onNavigateToTransactions?: (hash?: string) => void;
 }> = ({ onNavigateToTransactions }) => {
   const { formatCurrency, setIsSettingsModalOpen } = useBrowser();
 
@@ -18,7 +18,10 @@ export const PaymentsInfoPage: React.FC<{
     try {
       const saved = localStorage.getItem(EARNINGS_STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        return {
+          ...DEFAULT_EARNINGS_CONFIG,
+          ...JSON.parse(saved),
+        };
       }
     } catch (err) {
       console.error("Error loading earnings config", err);
@@ -36,11 +39,37 @@ export const PaymentsInfoPage: React.FC<{
     }
   }, [earningsConfig]);
 
-  const progressPercent = earningsConfig.isCustomProgress
-    ? earningsConfig.customProgressPercent
-    : earningsConfig.threshold > 0
-    ? Math.min(100, Math.floor((earningsConfig.currentEarnings / earningsConfig.threshold) * 100))
-    : 0;
+  const dateRanges = useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const day = now.getDate();
+
+    // Row 1: Current month (e.g. Sep 1 – 20, 2026 or Aug 1 – 9, 2026)
+    const m1 = now.toLocaleDateString("en-US", { month: "short" });
+    const row1Text = `${m1} 1\u2009\u2013\u2009${day}, ${year}`;
+
+    // Row 2: 1 month ago (e.g. Aug 1 – 31, 2026 or Jul 1 – 31, 2026)
+    const d2 = new Date(year, month - 1, 1);
+    const m2 = d2.toLocaleDateString("en-US", { month: "short" });
+    const y2 = d2.getFullYear();
+    const lastDay2 = new Date(year, month, 0).getDate();
+    const row2Text = `${m2} 1\u2009\u2013\u2009${lastDay2}, ${y2}`;
+
+    // Row 3: 2 months ago (e.g. Jul 1 – 31, 2026 or Jun 1 – 30, 2026)
+    const d3 = new Date(year, month - 2, 1);
+    const m3 = d3.toLocaleDateString("en-US", { month: "short" });
+    const y3 = d3.getFullYear();
+    const lastDay3 = new Date(year, month - 1, 0).getDate();
+    const row3Text = `${m3} 1\u2009\u2013\u2009${lastDay3}, ${y3}`;
+
+    return { row1Text, row2Text, row3Text };
+  }, []);
+
+  const progressPercent =
+    earningsConfig.threshold > 0
+      ? Math.min(100, Math.floor((earningsConfig.currentEarnings / earningsConfig.threshold) * 100))
+      : 0;
 
   return (
     <div className="payments-page-container">
@@ -88,8 +117,8 @@ export const PaymentsInfoPage: React.FC<{
           <div
             className="earnings-card"
             onDoubleClick={() => setIsConfigModalOpen(true)}
-            title="Double-click to configure Your Earnings parameters"
-            style={{ cursor: "pointer", userSelect: "none" }}
+            title="Double-click to configure parameters"
+            style={{ cursor: "pointer" }}
           >
             <div className="earnings-card-top">
               <div className="earnings-card-info">
@@ -139,81 +168,142 @@ export const PaymentsInfoPage: React.FC<{
 
           {/* Two Column Grid: Transactions & How You Get Paid */}
           <div className="payments-two-col-grid">
-            {/* Transactions Card */}
-            <div className="payments-card">
+            {/* Card 1: Transactions Card */}
+            <div
+              className="payments-card"
+              onDoubleClick={() => setIsConfigModalOpen(true)}
+              title="Double-click to edit parameters"
+              style={{ cursor: "pointer" }}
+            >
               <div className="payments-card-body">
                 <h3 className="payments-card-title">Transactions</h3>
                 <div className="transactions-list">
                   <div className="transaction-item">
                     <a
-                      href="#aug"
+                      href="#row1"
                       className="transaction-date-link"
                       onClick={(e) => {
                         e.preventDefault();
-                        onNavigateToTransactions?.();
+                        onNavigateToTransactions?.("#row1");
                       }}
                     >
-                      Aug 1 - 8, 2026
+                      {dateRanges.row1Text}
                     </a>
-                    <span className="transaction-amount">{formatCurrency("135.12")}</span>
+                    <span className="transaction-amount">{formatCurrency(earningsConfig.augAmount ?? 0.42)}</span>
                   </div>
                   <div className="transaction-item">
                     <a
-                      href="#jul"
+                      href="#row2"
                       className="transaction-date-link"
                       onClick={(e) => {
                         e.preventDefault();
-                        onNavigateToTransactions?.();
+                        onNavigateToTransactions?.("#row2");
                       }}
                     >
-                      Jul 1 - 31, 2026
+                      {dateRanges.row2Text}
                     </a>
-                    <span className="transaction-amount">{formatCurrency("135.12")}</span>
+                    <span className="transaction-amount">{formatCurrency(earningsConfig.julAmount ?? 0.42)}</span>
                   </div>
                   <div className="transaction-item">
                     <a
-                      href="#jun"
+                      href="#row3"
                       className="transaction-date-link"
                       onClick={(e) => {
                         e.preventDefault();
-                        onNavigateToTransactions?.();
+                        onNavigateToTransactions?.("#row3");
                       }}
                     >
-                      Jun 1 - 30, 2026
+                      {dateRanges.row3Text}
                     </a>
-                    <span className="transaction-amount">{formatCurrency("60.00")}</span>
+                    <span className="transaction-amount">{formatCurrency(earningsConfig.junAmount ?? 392.47)}</span>
                   </div>
                 </div>
-                <div className="payments-card-actions">
-                  <a
-                    href="#view-transactions"
-                    className="card-text-link"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onNavigateToTransactions?.();
-                    }}
-                  >
-                    View transactions
-                  </a>
-                </div>
+              </div>
+              <div className="payments-card-footer-action">
+                <button
+                  className="card-footer-link-btn"
+                  onClick={() => onNavigateToTransactions?.("#all")}
+                >
+                  View transactions
+                </button>
               </div>
             </div>
 
-            {/* How You Get Paid Card */}
-            <div className="payments-card">
+            {/* Card 2: How You Get Paid Card */}
+            <div
+              className="payments-card"
+              onDoubleClick={() => setIsConfigModalOpen(true)}
+              title="Double-click to edit parameters"
+              style={{ cursor: "pointer" }}
+            >
               <div className="payments-card-body">
                 <h3 className="payments-card-title">How you get paid</h3>
-                <p className="payments-card-desc">
-                  You'll need to add a payment method before you can collect your earnings.
-                </p>
-                <div className="payments-card-actions margin-top-large">
-                  <button className="btn-add-payment-method">
-                    <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ fontSize: "18px", marginRight: "6px" }}>
-                      add_card
-                    </i>
-                    Add payment method
-                  </button>
+                <div className="how-paid-flex-row" style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "12px", marginBottom: "8px" }}>
+                  <div
+                    className="blue-bank-icon-box"
+                    style={{
+                      width: "88px",
+                      height: "58px",
+                      backgroundColor: "#d3e3fd",
+                      borderRadius: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="#041e49">
+                      <path d="M4 10h2v7H4zm5 0h2v7H9zm6 0h2v7h-2zm5 0h2v7h-2zM2 22h20v-3H2v3zm10-20L2 6v2h20V6l-10-4z" />
+                      <circle cx="18" cy="15" r="3.2" fill="#041e49" stroke="#d3e3fd" strokeWidth="0.8" />
+                      <text x="18" y="16.8" fontSize="3.8" fill="#d3e3fd" textAnchor="middle" fontWeight="bold">
+                        $
+                      </text>
+                    </svg>
+                  </div>
+                  <div className="how-paid-info-text">
+                    <div style={{ fontSize: "11px", color: "#3c4043", fontWeight: 500, letterSpacing: "0.2px" }}>
+                      {earningsConfig.bankMasked || "DE••\u2009••••\u2009••••\u2009••••\u2009••07\u200949"}
+                    </div>
+                    <div style={{ fontSize: "10.5px", color: "#5f6368", textTransform: "uppercase", marginTop: "3px", letterSpacing: "0.2px" }}>
+                      {earningsConfig.payeeName || "EMMANUEL DELLBRÜGGER"}
+                    </div>
+                  </div>
                 </div>
+              </div>
+              <div className="payments-card-footer-action">
+                <button className="card-footer-link-btn">
+                  Manage payment methods
+                </button>
+              </div>
+            </div>
+
+            {/* Card 3: Settings Card */}
+            <div
+              className="payments-card"
+              onDoubleClick={() => setIsConfigModalOpen(true)}
+              title="Double-click to edit parameters"
+              style={{ cursor: "pointer" }}
+            >
+              <div className="payments-card-body">
+                <h3 className="payments-card-title">Settings</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                  <div style={{ fontSize: "11px", color: "#5f6368" }}>
+                    AdSense {earningsConfig.pubId || "pub-8666469182451238"}
+                  </div>
+                  <div style={{ fontSize: "10.5px", color: "#202124", fontWeight: 500 }}>
+                    {earningsConfig.payeeName || "EMMANUEL DELLBRÜGGER"}
+                  </div>
+                  <div>
+                    <a href="#user" style={{ fontSize: "11px", color: "#1a73e8", textDecoration: "none" }}>
+                      1 user
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div className="payments-card-footer-action">
+                <button className="card-footer-link-btn">
+                  Manage settings
+                </button>
               </div>
             </div>
           </div>

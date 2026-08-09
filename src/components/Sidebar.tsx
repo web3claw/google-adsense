@@ -143,10 +143,26 @@ export const Sidebar: React.FC = () => {
 
   const activePageId = currentEntry.pageId;
 
+  const getActivePubId = (): string => {
+    try {
+      const saved = localStorage.getItem("adsense_earnings_config");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.pubId) {
+          let p = String(parsed.pubId).trim();
+          if (!p.startsWith("pub-")) p = `pub-${p}`;
+          return p;
+        }
+      }
+    } catch (e) {}
+    return "pub-8666469182451238";
+  };
+
   const handleNav = (pageId: string, title: string, path: string) => {
+    const pubId = getActivePubId();
     navigateTo({
       title: `${title} – Google AdSense`,
-      url: `https://adsense.google.com/adsense/u/0/pub-2229538054781862/${path}`,
+      url: `https://adsense.google.com/adsense/u/0/${pubId}/${path}`,
       pageId,
     });
   };

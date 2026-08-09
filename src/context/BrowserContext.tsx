@@ -4,6 +4,7 @@ export interface HistoryEntry {
   title: string;
   url: string;
   pageId: string;
+  targetMonth?: string;
 }
 
 export interface TabItem {
