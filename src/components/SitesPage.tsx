@@ -28,7 +28,7 @@ const DEFAULT_SITES: SiteItem[] = [
 export const SitesPage: React.FC<{
   onNavigateToDetail?: (siteUrl: string) => void;
   onNavigateToPolicy?: () => void;
-}> = ({ onNavigateToDetail, onNavigateToPolicy }) => {
+}> = ({ onNavigateToDetail }) => {
   const { setIsSettingsModalOpen } = useBrowser();
   const [sites, setSites] = useState<SiteItem[]>(() => {
     try {
