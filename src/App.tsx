@@ -8,12 +8,61 @@ import { TransactionsServicePage } from "./components/TransactionsServicePage";
 import "./ChromeTheme.css";
 
 const PageViewport: React.FC = () => {
-  const { currentEntry, refreshKey, isRefreshing, navigateTo } = useBrowser();
+  const { currentEntry, refreshKey, isRefreshing, isNavigatingLoading, navigateTo } = useBrowser();
   const [loadTime, setLoadTime] = useState<string>(new Date().toLocaleTimeString());
 
   useEffect(() => {
     setLoadTime(new Date().toLocaleTimeString());
   }, [currentEntry.pageId, refreshKey]);
+
+  if (isNavigatingLoading) {
+    return (
+      <div className="viewport-content">
+        <div className="adsense-topbar">
+          <h1 className="adsense-topbar-title">
+            {currentEntry.pageId === "payments-info" || currentEntry.pageId === "transactions-service"
+              ? "Payments info"
+              : "Sites"}
+          </h1>
+          <div className="adsense-topbar-right">
+            <button className="topbar-icon-btn" title="Help">
+              <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px", color: "#5F6368" }}>
+                help_outline
+              </i>
+            </button>
+            <button className="topbar-icon-btn" title="Notifications">
+              <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px", color: "#5F6368" }}>
+                notifications_none
+              </i>
+            </button>
+            <div className="topbar-avatar" title="Google Account">
+              <svg width="28" height="28" viewBox="0 0 32 32">
+                <circle cx="16" cy="16" r="16" fill="#1A73E8" />
+                <path d="M16 18c-3.5 0-10 1.75-10 5.25V26h20v-2.75C26 19.75 19.5 18 16 18z" fill="#FFF" />
+                <circle cx="16" cy="11" r="4.5" fill="#FFF" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Centered Circular Spinner Below Divider */}
+        <div className="center-page-spinner-wrap">
+          <svg className="google-material-spinner" width="30" height="30" viewBox="0 0 32 32">
+            <circle
+              cx="16"
+              cy="16"
+              r="12"
+              fill="none"
+              stroke="#1A73E8"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeDasharray="48, 90"
+            />
+          </svg>
+        </div>
+      </div>
+    );
+  }
 
   const pageId = currentEntry.pageId || "sites-list";
 
@@ -253,16 +302,30 @@ const PageViewport: React.FC = () => {
   );
 };
 
+import { GlobalSettingsModal } from "./components/GlobalSettingsModal";
+
 export function App() {
   return (
-    <BrowserProvider>
+    <>
+
       <ChromeHeader />
       <main className="chrome-viewport">
         <Sidebar />
         <PageViewport />
       </main>
+
+      {/* Global Preferences Modal */}
+      <GlobalSettingsModal />
+    </>
+  );
+}
+
+export function AppContainer() {
+  return (
+    <BrowserProvider>
+      <App />
     </BrowserProvider>
   );
 }
 
-export default App;
+export default AppContainer;

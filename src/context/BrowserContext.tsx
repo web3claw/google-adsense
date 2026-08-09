@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 export interface HistoryEntry {
   title: string;
@@ -18,9 +18,16 @@ interface BrowserContextType {
   canGoBack: boolean;
   canGoForward: boolean;
   isRefreshing: boolean;
+  isNavigatingLoading: boolean;
   refreshKey: number;
   tabs: TabItem[];
   activeTabId: string;
+  // Global Settings State
+  networkDelay: number;
+  currencySymbol: string;
+  isSettingsModalOpen: boolean;
+
+  // Actions
   setActiveTabId: (id: string) => void;
   goBack: () => void;
   goForward: () => void;
@@ -28,6 +35,10 @@ interface BrowserContextType {
   navigateTo: (entry: HistoryEntry) => void;
   addTab: () => void;
   closeTab: (id: string, e: React.MouseEvent) => void;
+  setIsSettingsModalOpen: (open: boolean) => void;
+  setNetworkDelay: (ms: number) => void;
+  setCurrencySymbol: (symbol: string) => void;
+  formatCurrency: (val: string | number) => string;
 }
 
 const defaultHistory: HistoryEntry[] = [
@@ -50,7 +61,28 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [tabs, setTabs] = useState<TabItem[]>([defaultTab]);
   const [activeTabId, setActiveTabId] = useState<string>("1");
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [isNavigatingLoading, setIsNavigatingLoading] = useState<boolean>(false);
   const [refreshKey, setRefreshKey] = useState<number>(0);
+
+  // Global Unified Network Delay (0ms - 50000ms, Default: 1000ms)
+  const [networkDelay, setNetworkDelayState] = useState<number>(() => {
+    const saved = localStorage.getItem("adsense_network_delay");
+    return saved ? Number(saved) : 1000;
+  });
+
+  const [currencySymbol, setCurrencySymbolState] = useState<string>(() => {
+    return localStorage.getItem("adsense_currency_symbol") || "$";
+  });
+
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    localStorage.setItem("adsense_network_delay", String(networkDelay));
+  }, [networkDelay]);
+
+  useEffect(() => {
+    localStorage.setItem("adsense_currency_symbol", currencySymbol);
+  }, [currencySymbol]);
 
   const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0] || defaultTab;
   const currentEntry = activeTab.history[activeTab.historyIndex] || defaultHistory[0];
@@ -59,44 +91,93 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const canGoForward = activeTab.historyIndex < activeTab.history.length - 1;
 
   const navigateTo = (entry: HistoryEntry) => {
-    setTabs((prev) =>
-      prev.map((tab) => {
-        if (tab.id !== activeTabId) return tab;
-        // Trim forward history and append new entry
-        const updatedHistory = [...tab.history.slice(0, tab.historyIndex + 1), entry];
-        return {
-          ...tab,
-          history: updatedHistory,
-          historyIndex: updatedHistory.length - 1,
-        };
-      })
-    );
+    if (networkDelay > 0) {
+      setIsNavigatingLoading(true);
+      setTimeout(() => {
+        setIsNavigatingLoading(false);
+        setTabs((prev) =>
+          prev.map((tab) => {
+            if (tab.id !== activeTabId) return tab;
+            const updatedHistory = [...tab.history.slice(0, tab.historyIndex + 1), entry];
+            return {
+              ...tab,
+              history: updatedHistory,
+              historyIndex: updatedHistory.length - 1,
+            };
+          })
+        );
+      }, networkDelay);
+    } else {
+      setTabs((prev) =>
+        prev.map((tab) => {
+          if (tab.id !== activeTabId) return tab;
+          const updatedHistory = [...tab.history.slice(0, tab.historyIndex + 1), entry];
+          return {
+            ...tab,
+            history: updatedHistory,
+            historyIndex: updatedHistory.length - 1,
+          };
+        })
+      );
+    }
   };
 
   const goBack = () => {
     if (!canGoBack) return;
-    setTabs((prev) =>
-      prev.map((tab) => {
-        if (tab.id !== activeTabId) return tab;
-        return {
-          ...tab,
-          historyIndex: Math.max(0, tab.historyIndex - 1),
-        };
-      })
-    );
+    if (networkDelay > 0) {
+      setIsNavigatingLoading(true);
+      setTimeout(() => {
+        setIsNavigatingLoading(false);
+        setTabs((prev) =>
+          prev.map((tab) => {
+            if (tab.id !== activeTabId) return tab;
+            return {
+              ...tab,
+              historyIndex: Math.max(0, tab.historyIndex - 1),
+            };
+          })
+        );
+      }, networkDelay);
+    } else {
+      setTabs((prev) =>
+        prev.map((tab) => {
+          if (tab.id !== activeTabId) return tab;
+          return {
+            ...tab,
+            historyIndex: Math.max(0, tab.historyIndex - 1),
+          };
+        })
+      );
+    }
   };
 
   const goForward = () => {
     if (!canGoForward) return;
-    setTabs((prev) =>
-      prev.map((tab) => {
-        if (tab.id !== activeTabId) return tab;
-        return {
-          ...tab,
-          historyIndex: Math.min(tab.history.length - 1, tab.historyIndex + 1),
-        };
-      })
-    );
+    if (networkDelay > 0) {
+      setIsNavigatingLoading(true);
+      setTimeout(() => {
+        setIsNavigatingLoading(false);
+        setTabs((prev) =>
+          prev.map((tab) => {
+            if (tab.id !== activeTabId) return tab;
+            return {
+              ...tab,
+              historyIndex: Math.min(tab.history.length - 1, tab.historyIndex + 1),
+            };
+          })
+        );
+      }, networkDelay);
+    } else {
+      setTabs((prev) =>
+        prev.map((tab) => {
+          if (tab.id !== activeTabId) return tab;
+          return {
+            ...tab,
+            historyIndex: Math.min(tab.history.length - 1, tab.historyIndex + 1),
+          };
+        })
+      );
+    }
   };
 
   const refresh = () => {
@@ -104,7 +185,7 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setRefreshKey((prev) => prev + 1);
     setTimeout(() => {
       setIsRefreshing(false);
-    }, 600);
+    }, networkDelay);
   };
 
   const addTab = () => {
@@ -134,6 +215,14 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const formatCurrency = (val: string | number): string => {
+    if (val === null || val === undefined) return `${currencySymbol}0.00`;
+    const str = String(val).trim();
+    // Replace any currency symbol at the beginning
+    const numPart = str.replace(/^[^0-9.-]+/, "");
+    return `${currencySymbol}${numPart}`;
+  };
+
   return (
     <BrowserContext.Provider
       value={{
@@ -142,9 +231,13 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
         canGoBack,
         canGoForward,
         isRefreshing,
+        isNavigatingLoading,
         refreshKey,
         tabs,
         activeTabId,
+        networkDelay,
+        currencySymbol,
+        isSettingsModalOpen,
         setActiveTabId,
         goBack,
         goForward,
@@ -152,6 +245,10 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
         navigateTo,
         addTab,
         closeTab,
+        setIsSettingsModalOpen,
+        setNetworkDelay: setNetworkDelayState,
+        setCurrencySymbol: setCurrencySymbolState,
+        formatCurrency,
       }}
     >
       {children}

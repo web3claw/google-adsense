@@ -1,10 +1,12 @@
 import React, { useState } from "react";
+import { useBrowser } from "../context/BrowserContext";
 
 export const TransactionsServicePage: React.FC<{
   onNavigateToPolicy?: () => void;
   onNavigateBackToPayments?: () => void;
 }> = ({ onNavigateToPolicy, onNavigateBackToPayments }) => {
   const [expandedMonth, setExpandedMonth] = useState<string>("aug");
+  const { formatCurrency, setIsSettingsModalOpen } = useBrowser();
 
   return (
     <div className="payments-page-container">
@@ -22,7 +24,12 @@ export const TransactionsServicePage: React.FC<{
               notifications_none
             </i>
           </button>
-          <div className="topbar-avatar" title="Google Account">
+          <div
+            className="topbar-avatar"
+            title="Google Account & Global Settings"
+            onClick={() => setIsSettingsModalOpen(true)}
+            style={{ cursor: "pointer" }}
+          >
             <svg width="28" height="28" viewBox="0 0 32 32">
               <circle cx="16" cy="16" r="16" fill="#1A73E8" />
               <path d="M16 18c-3.5 0-10 1.75-10 5.25V26h20v-2.75C26 19.75 19.5 18 16 18z" fill="#FFF" />
@@ -34,32 +41,7 @@ export const TransactionsServicePage: React.FC<{
 
       {/* Main Content Viewport */}
       <div className="payments-page-content">
-        {/* Pink Alert Banner */}
-        <div className="policy-banner">
-          <div className="policy-banner-left">
-            <div className="banner-pager">
-              <button className="pager-btn">&lt;</button>
-              <span className="pager-text">1 / 2</span>
-              <button className="pager-btn">&gt;</button>
-            </div>
-            <div className="banner-alert-icon">
-              <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ color: "#D93025", fontSize: "20px" }}>
-                error_outline
-              </i>
-            </div>
-            <span className="banner-text">
-              The number of ads you can show has been limited for one or more of your AdSense products. For more information, go to the Policy Center.
-            </span>
-          </div>
-          <button className="banner-action-btn" onClick={onNavigateToPolicy}>
-            Policy Center
-          </button>
-        </div>
-
-        {/* Divider line below Policy Banner */}
-        <div className="policy-banner-divider" />
-
-        {/* Main Body Below Divider */}
+        {/* Main Body */}
         <div className="payments-main-body">
           {/* Header & Breadcrumb */}
           <div className="transactions-header-row">
@@ -117,7 +99,7 @@ export const TransactionsServicePage: React.FC<{
                   <h3 className="period-title">Aug 1 – 8, 2026</h3>
                 </div>
                 <div className="period-balance-line align-right">
-                  <span className="balance-text">Ending balance: £135.12</span>
+                  <span className="balance-text">Ending balance: {formatCurrency("135.12")}</span>
                 </div>
 
                 {/* Data Table */}
@@ -127,7 +109,7 @@ export const TransactionsServicePage: React.FC<{
                       <tr>
                         <th className="col-date">Date</th>
                         <th className="col-desc">Description</th>
-                        <th className="col-amount align-right">Amount (GBP)</th>
+                        <th className="col-amount align-right">Amount</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -141,13 +123,13 @@ export const TransactionsServicePage: React.FC<{
                 </div>
 
                 <div className="period-balance-line align-right starting-line">
-                  <span className="balance-text">Starting balance: £135.12</span>
+                  <span className="balance-text">Starting balance: {formatCurrency("135.12")}</span>
                 </div>
               </div>
             ) : (
               <div className="period-block collapsed" onClick={() => setExpandedMonth("aug")}>
                 <span className="period-title-collapsed">Aug 1 – 8, 2026</span>
-                <span className="balance-text-collapsed">Ending balance: £135.12</span>
+                <span className="balance-text-collapsed">Ending balance: {formatCurrency("135.12")}</span>
               </div>
             )}
 
@@ -158,7 +140,7 @@ export const TransactionsServicePage: React.FC<{
                   <h3 className="period-title">Jul 1 – 31, 2026</h3>
                 </div>
                 <div className="period-balance-line align-right">
-                  <span className="balance-text">Ending balance: £135.12</span>
+                  <span className="balance-text">Ending balance: {formatCurrency("135.12")}</span>
                 </div>
 
                 <div className="period-table-wrap">
@@ -167,7 +149,7 @@ export const TransactionsServicePage: React.FC<{
                       <tr>
                         <th className="col-date">Date</th>
                         <th className="col-desc">Description</th>
-                        <th className="col-amount align-right">Amount (GBP)</th>
+                        <th className="col-amount align-right">Amount</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -181,13 +163,13 @@ export const TransactionsServicePage: React.FC<{
                 </div>
 
                 <div className="period-balance-line align-right starting-line">
-                  <span className="balance-text">Starting balance: £135.12</span>
+                  <span className="balance-text">Starting balance: {formatCurrency("135.12")}</span>
                 </div>
               </div>
             ) : (
               <div className="period-block collapsed" onClick={() => setExpandedMonth("jul")}>
                 <span className="period-title-collapsed">Jul 1 – 31, 2026</span>
-                <span className="balance-text-collapsed">Ending balance: £135.12</span>
+                <span className="balance-text-collapsed">Ending balance: {formatCurrency("135.12")}</span>
               </div>
             )}
 
@@ -198,7 +180,7 @@ export const TransactionsServicePage: React.FC<{
                   <h3 className="period-title">Jun 1 – 30, 2026</h3>
                 </div>
                 <div className="period-balance-line align-right">
-                  <span className="balance-text">Ending balance: £1.84</span>
+                  <span className="balance-text">Ending balance: {formatCurrency("1.84")}</span>
                 </div>
 
                 <div className="period-table-wrap">
@@ -207,7 +189,7 @@ export const TransactionsServicePage: React.FC<{
                       <tr>
                         <th className="col-date">Date</th>
                         <th className="col-desc">Description</th>
-                        <th className="col-amount align-right">Amount (GBP)</th>
+                        <th className="col-amount align-right">Amount</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -221,13 +203,13 @@ export const TransactionsServicePage: React.FC<{
                 </div>
 
                 <div className="period-balance-line align-right starting-line">
-                  <span className="balance-text">Starting balance: £0.00</span>
+                  <span className="balance-text">Starting balance: {formatCurrency("0.00")}</span>
                 </div>
               </div>
             ) : (
               <div className="period-block collapsed" onClick={() => setExpandedMonth("jun")}>
                 <span className="period-title-collapsed">Jun 1 – 30, 2026</span>
-                <span className="balance-text-collapsed">Ending balance: £1.84</span>
+                <span className="balance-text-collapsed">Ending balance: {formatCurrency("1.84")}</span>
               </div>
             )}
           </div>

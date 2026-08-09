@@ -1,9 +1,12 @@
 import React from "react";
+import { useBrowser } from "../context/BrowserContext";
 
 export const PaymentsInfoPage: React.FC<{
   onNavigateToPolicy?: () => void;
   onNavigateToTransactions?: () => void;
 }> = ({ onNavigateToPolicy, onNavigateToTransactions }) => {
+  const { formatCurrency, setIsSettingsModalOpen } = useBrowser();
+
   return (
     <div className="payments-page-container">
       {/* Top Header Bar */}
@@ -20,7 +23,12 @@ export const PaymentsInfoPage: React.FC<{
               notifications_none
             </i>
           </button>
-          <div className="topbar-avatar" title="Google Account">
+          <div
+            className="topbar-avatar"
+            title="Google Account & Global Settings"
+            onClick={() => setIsSettingsModalOpen(true)}
+            style={{ cursor: "pointer" }}
+          >
             <svg width="28" height="28" viewBox="0 0 32 32">
               <circle cx="16" cy="16" r="16" fill="#1A73E8" />
               <path d="M16 18c-3.5 0-10 1.75-10 5.25V26h20v-2.75C26 19.75 19.5 18 16 18z" fill="#FFF" />
@@ -32,32 +40,7 @@ export const PaymentsInfoPage: React.FC<{
 
       {/* Main Content Viewport */}
       <div className="payments-page-content">
-        {/* Pink Alert Banner */}
-        <div className="policy-banner">
-          <div className="policy-banner-left">
-            <div className="banner-pager">
-              <button className="pager-btn">&lt;</button>
-              <span className="pager-text">1 / 2</span>
-              <button className="pager-btn">&gt;</button>
-            </div>
-            <div className="banner-alert-icon">
-              <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ color: "#D93025", fontSize: "20px" }}>
-                error_outline
-              </i>
-            </div>
-            <span className="banner-text">
-              The number of ads you can show has been limited for one or more of your AdSense products. For more information, go to the Policy Center.
-            </span>
-          </div>
-          <button className="banner-action-btn" onClick={onNavigateToPolicy}>
-            Policy Center
-          </button>
-        </div>
-
-        {/* Divider line below Policy Banner */}
-        <div className="policy-banner-divider" />
-
-        {/* Main Body Below Divider */}
+        {/* Main Body */}
         <div className="payments-main-body">
           {/* Payments Account Header */}
           <div className="payments-account-header">
@@ -66,27 +49,16 @@ export const PaymentsInfoPage: React.FC<{
             <h2 className="payments-section-heading">Payments</h2>
           </div>
 
-          {/* Red Warning Alert Box */}
-          <div className="red-alert-card">
-            <div className="red-alert-left">
-              <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ color: "#FFFFFF", fontSize: "24px" }}>
-                warning
-              </i>
-              <span className="red-alert-text">To receive payouts, please choose a valid payment method.</span>
-            </div>
-            <button className="red-alert-update-btn">Update</button>
-          </div>
-
           {/* Your Earnings Card */}
           <div className="earnings-card">
             <div className="earnings-card-top">
               <div className="earnings-card-info">
                 <h3 className="earnings-title">Your earnings</h3>
                 <p className="earnings-subtitle">
-                  Paid monthly if the total is at least £60.00 (your payout threshold)
+                  Paid monthly if the total is at least {formatCurrency("60.00")} (your payout threshold)
                 </p>
               </div>
-              <span className="earnings-amount">£135.12</span>
+              <span className="earnings-amount">{formatCurrency("135.12")}</span>
             </div>
 
           {/* Progress bar section (62% width matching screenshot) */}
@@ -97,7 +69,7 @@ export const PaymentsInfoPage: React.FC<{
 
             <div className="earnings-card-footer-text">
               <span>You've reached 100% of your payment threshold</span>
-              <span>Payment threshold: £60.00</span>
+              <span>Payment threshold: {formatCurrency("60.00")}</span>
             </div>
           </div>
           </div>
@@ -120,7 +92,7 @@ export const PaymentsInfoPage: React.FC<{
                     >
                       Aug 1 - 8, 2026
                     </a>
-                    <span className="transaction-amount">£135.12</span>
+                    <span className="transaction-amount">{formatCurrency("135.12")}</span>
                   </div>
                   <div className="transaction-item">
                     <a
@@ -133,7 +105,7 @@ export const PaymentsInfoPage: React.FC<{
                     >
                       Jul 1 - 31, 2026
                     </a>
-                    <span className="transaction-amount">£135.12</span>
+                    <span className="transaction-amount">{formatCurrency("135.12")}</span>
                   </div>
                   <div className="transaction-item">
                     <a
@@ -146,7 +118,7 @@ export const PaymentsInfoPage: React.FC<{
                     >
                       Jun 1 - 30, 2026
                     </a>
-                    <span className="transaction-amount">£1.84</span>
+                    <span className="transaction-amount">{formatCurrency("1.84")}</span>
                   </div>
                 </div>
               </div>

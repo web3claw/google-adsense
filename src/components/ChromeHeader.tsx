@@ -23,6 +23,7 @@ export const ChromeHeader: React.FC = () => {
     navigateTo,
     addTab,
     closeTab,
+    setIsSettingsModalOpen,
   } = useBrowser();
 
   const [inputUrl, setInputUrl] = useState(currentEntry.url);
@@ -219,8 +220,12 @@ export const ChromeHeader: React.FC = () => {
 
         {/* Right Toolbar Action Icons */}
         <div className="chrome-action-group" onMouseDown={stopProp}>
-          {/* User Profile Avatar */}
-          <button className="chrome-profile-btn" title="Google Account">
+          {/* User Profile Avatar -> Opens Global Settings Modal */}
+          <button
+            className="chrome-profile-btn"
+            title="Google Account & Global Settings"
+            onClick={() => setIsSettingsModalOpen(true)}
+          >
             <span className="profile-avatar">A</span>
           </button>
 

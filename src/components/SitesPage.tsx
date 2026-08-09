@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useBrowser } from "../context/BrowserContext";
 
 export interface SiteItem {
   id: string;
@@ -28,6 +29,7 @@ export const SitesPage: React.FC<{
   onNavigateToDetail?: (siteUrl: string) => void;
   onNavigateToPolicy?: () => void;
 }> = ({ onNavigateToDetail, onNavigateToPolicy }) => {
+  const { setIsSettingsModalOpen } = useBrowser();
   const [sites, setSites] = useState<SiteItem[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -135,7 +137,12 @@ export const SitesPage: React.FC<{
               <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" />
             </svg>
           </button>
-          <div className="topbar-avatar" title="Google Account">
+          <div
+            className="topbar-avatar"
+            title="Google Account & Global Settings"
+            onClick={() => setIsSettingsModalOpen(true)}
+            style={{ cursor: "pointer" }}
+          >
             <svg width="28" height="28" viewBox="0 0 32 32">
               <circle cx="16" cy="16" r="16" fill="#1A73E8" />
               <path d="M16 18c-3.5 0-10 1.75-10 5.25V26h20v-2.75C26 19.75 19.5 18 16 18z" fill="#FFF" />
@@ -147,31 +154,6 @@ export const SitesPage: React.FC<{
 
       {/* Main Content Viewport */}
       <div className="sites-page-content">
-        {/* Pink Alert Banner */}
-        <div className="policy-banner">
-          <div className="policy-banner-left">
-            <div className="banner-pager">
-              <button className="pager-btn">&lt;</button>
-              <span className="pager-text">1 / 2</span>
-              <button className="pager-btn">&gt;</button>
-            </div>
-            <div className="banner-alert-icon">
-              <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ color: "#d93025", fontSize: "20px", display: "inline-block", verticalAlign: "middle" }}>
-                error_outline
-              </i>
-            </div>
-            <span className="banner-text">
-              The number of ads you can show has been limited for one or more of your AdSense products. For more information, go to the Policy Center.
-            </span>
-          </div>
-          <button className="banner-action-btn" onClick={onNavigateToPolicy}>
-            Policy Center
-          </button>
-        </div>
-
-        {/* Divider line below Policy Banner */}
-        <div className="policy-banner-divider" />
-
         {/* Manage Your Sites Hero */}
         <div className="manage-sites-hero">
           <div className="hero-text-side">

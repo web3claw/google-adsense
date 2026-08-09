@@ -1797,3 +1797,215 @@ input,
   font-size: 13px;
   color: #5f6368;
 }
+
+/* ==========================================================================
+   Global Preferences & Network Simulation Modal Styles
+   ========================================================================== */
+
+.settings-modal-card {
+  width: 520px;
+  max-width: 95vw;
+  border-radius: 16px;
+  padding: 24px;
+  background-color: #ffffff;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+}
+
+.settings-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.settings-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #1a73e8;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-user-info {
+  flex: 1;
+}
+
+.settings-user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #202124;
+}
+
+.settings-user-pub {
+  font-size: 12px;
+  color: #5f6368;
+}
+
+.settings-modal-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  color: #5f6368;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 50%;
+}
+
+.settings-modal-close-btn:hover {
+  background-color: #f1f3f4;
+}
+
+.settings-modal-divider {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 16px 0;
+}
+
+.settings-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-section-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: #202124;
+  margin-bottom: 4px;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background-color: #f8f9fa;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.settings-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.settings-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #202124;
+}
+
+.settings-value-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a73e8;
+  background-color: #e8f0fe;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.settings-hint {
+  font-size: 11px;
+  color: #5f6368;
+  line-height: 1.4;
+}
+
+.currency-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.currency-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.currency-option-btn:hover {
+  border-color: #1a73e8;
+}
+
+.currency-option-btn.selected {
+  border-color: #1a73e8;
+  background-color: #e8f0fe;
+}
+
+.currency-symbol-tag {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a73e8;
+  width: 24px;
+  text-align: center;
+}
+
+.currency-name {
+  font-size: 12px;
+  color: #202124;
+}
+
+.settings-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.settings-range-input {
+  flex: 1;
+  accent-color: #1a73e8;
+  cursor: pointer;
+}
+
+.settings-num-input {
+  width: 72px;
+  height: 32px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  padding: 0 8px;
+  font-size: 13px;
+  color: #202124;
+  outline: none;
+}
+
+.settings-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+/* Center Page Circular Spinner Below Top Divider (Google Material Style) */
+.center-page-spinner-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 0;
+}
+
+.google-material-spinner {
+  animation: googleSpinnerRotate 0.9s linear infinite;
+}
+
+@keyframes googleSpinnerRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
