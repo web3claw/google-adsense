@@ -1,11 +1,46 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useBrowser } from "../context/BrowserContext";
+import {
+  EarningsConfigModal,
+  EarningsConfigData,
+  DEFAULT_EARNINGS_CONFIG,
+} from "./EarningsConfigModal";
+
+const EARNINGS_STORAGE_KEY = "adsense_earnings_config";
 
 export const PaymentsInfoPage: React.FC<{
   onNavigateToPolicy?: () => void;
   onNavigateToTransactions?: () => void;
-}> = ({ onNavigateToPolicy, onNavigateToTransactions }) => {
+}> = ({ onNavigateToTransactions }) => {
   const { formatCurrency, setIsSettingsModalOpen } = useBrowser();
+
+  const [earningsConfig, setEarningsConfig] = useState<EarningsConfigData>(() => {
+    try {
+      const saved = localStorage.getItem(EARNINGS_STORAGE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (err) {
+      console.error("Error loading earnings config", err);
+    }
+    return DEFAULT_EARNINGS_CONFIG;
+  });
+
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(EARNINGS_STORAGE_KEY, JSON.stringify(earningsConfig));
+    } catch (err) {
+      console.error("Error saving earnings config", err);
+    }
+  }, [earningsConfig]);
+
+  const progressPercent = earningsConfig.isCustomProgress
+    ? earningsConfig.customProgressPercent
+    : earningsConfig.threshold > 0
+    ? Math.min(100, Math.floor((earningsConfig.currentEarnings / earningsConfig.threshold) * 100))
+    : 0;
 
   return (
     <div className="payments-page-container">
@@ -45,33 +80,61 @@ export const PaymentsInfoPage: React.FC<{
           {/* Payments Account Header */}
           <div className="payments-account-header">
             <span className="payments-account-sublabel">PAYMENTS ACCOUNT</span>
-            <span className="payments-account-title">AdSense (United Kingdom)</span>
+            <span className="payments-account-title">AdSense ({earningsConfig.countryName || "United Kingdom"})</span>
             <h2 className="payments-section-heading">Payments</h2>
           </div>
 
-          {/* Your Earnings Card */}
-          <div className="earnings-card">
+          {/* Your Earnings Card (Double Click to Configure) */}
+          <div
+            className="earnings-card"
+            onDoubleClick={() => setIsConfigModalOpen(true)}
+            title="Double-click to configure Your Earnings parameters"
+            style={{ cursor: "pointer", userSelect: "none" }}
+          >
             <div className="earnings-card-top">
               <div className="earnings-card-info">
                 <h3 className="earnings-title">Your earnings</h3>
                 <p className="earnings-subtitle">
-                  Paid monthly if the total is at least {formatCurrency("60.00")} (your payout threshold)
+                  Paid monthly if the total is at least {formatCurrency(earningsConfig.threshold)} (your payout threshold)
                 </p>
               </div>
-              <span className="earnings-amount">{formatCurrency("135.12")}</span>
+              <span className="earnings-amount">{formatCurrency(earningsConfig.currentEarnings)}</span>
             </div>
 
-          {/* Progress bar section (62% width matching screenshot) */}
-          <div className="earnings-progress-section">
-            <div className="earnings-progress-track">
-              <div className="earnings-progress-fill" style={{ width: "100%" }} />
+            {/* Progress bar section */}
+            <div className="earnings-progress-section">
+              <div className="earnings-progress-track">
+                <div className="earnings-progress-fill" style={{ width: `${progressPercent}%` }} />
+              </div>
+
+              <div className="earnings-card-footer-text">
+                <span>You've reached {progressPercent}% of your payment threshold</span>
+                <span>Payment threshold: {formatCurrency(earningsConfig.threshold)}</span>
+              </div>
             </div>
 
-            <div className="earnings-card-footer-text">
-              <span>You've reached 100% of your payment threshold</span>
-              <span>Payment threshold: {formatCurrency("60.00")}</span>
+            {/* Last Payment Line with SVG Calendar Icon */}
+            <div
+              className="last-payment-line"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginTop: "14px",
+                paddingTop: "10px",
+                color: "#5f6368",
+                fontSize: "12.5px",
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#5f6368" style={{ flexShrink: 0 }}>
+                <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z" />
+                <path d="M0 0h24v24H0z" fill="none" />
+              </svg>
+              <span>
+                Your last payment was issued on {earningsConfig.lastPaymentDate} for{" "}
+                {formatCurrency(earningsConfig.lastPaymentAmount)}.
+              </span>
             </div>
-          </div>
           </div>
 
           {/* Two Column Grid: Transactions & How You Get Paid */}
@@ -118,17 +181,21 @@ export const PaymentsInfoPage: React.FC<{
                     >
                       Jun 1 - 30, 2026
                     </a>
-                    <span className="transaction-amount">{formatCurrency("1.84")}</span>
+                    <span className="transaction-amount">{formatCurrency("60.00")}</span>
                   </div>
                 </div>
-              </div>
-              <div className="payments-card-footer-action">
-                <button
-                  className="card-footer-link-btn"
-                  onClick={onNavigateToTransactions}
-                >
-                  View transactions
-                </button>
+                <div className="payments-card-actions">
+                  <a
+                    href="#view-transactions"
+                    className="card-text-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onNavigateToTransactions?.();
+                    }}
+                  >
+                    View transactions
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -136,41 +203,30 @@ export const PaymentsInfoPage: React.FC<{
             <div className="payments-card">
               <div className="payments-card-body">
                 <h3 className="payments-card-title">How you get paid</h3>
-                <div className="how-paid-content">
-                  <div className="dark-card-icon-wrap">
-                    <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ fontSize: "28px", color: "#FFFFFF" }}>
+                <p className="payments-card-desc">
+                  You'll need to add a payment method before you can collect your earnings.
+                </p>
+                <div className="payments-card-actions margin-top-large">
+                  <button className="btn-add-payment-method">
+                    <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ fontSize: "18px", marginRight: "6px" }}>
                       add_card
                     </i>
-                  </div>
-                  <span className="how-paid-text">
-                    Add a payment method to receive your earnings
-                  </span>
+                    Add payment method
+                  </button>
                 </div>
               </div>
-              <div className="payments-card-footer-action">
-                <button className="card-footer-link-btn">Add payment method</button>
-              </div>
-            </div>
-          </div>
-
-          {/* Settings Card */}
-          <div className="payments-card settings-card">
-            <div className="payments-card-body">
-              <h3 className="payments-card-title">Settings</h3>
-              <div className="settings-details-list">
-                <p className="setting-line bold-text">AdSense pub-2229538054781862</p>
-                <p className="setting-line name-text">ABAYOMI ADEMOLA ALLI-BALOGUN</p>
-                <a href="#user" className="setting-user-link" onClick={(e) => e.preventDefault()}>
-                  1 user
-                </a>
-              </div>
-            </div>
-            <div className="payments-card-footer-action">
-              <button className="card-footer-link-btn">Manage settings</button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Earnings Parameter Configuration Modal */}
+      <EarningsConfigModal
+        isOpen={isConfigModalOpen}
+        onClose={() => setIsConfigModalOpen(false)}
+        config={earningsConfig}
+        onSaveConfig={(newCfg) => setEarningsConfig(newCfg)}
+      />
     </div>
   );
 };

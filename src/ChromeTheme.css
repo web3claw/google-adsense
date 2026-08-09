@@ -1366,16 +1366,17 @@ input,
 }
 
 .payments-account-title {
-  font-size: 13px;
+  font-size: 13.5px;
   color: #202124;
-  margin-top: 2px;
+  margin-top: 6px;
+  margin-bottom: 12px;
 }
 
 .payments-section-heading {
   font-size: 20px;
   font-weight: 400;
   color: #202124;
-  margin-top: 14px;
+  margin-top: 18px;
 }
 
 /* Red Critical Alert Box */
@@ -1433,14 +1434,14 @@ input,
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .earnings-title {
   font-size: 15px;
   font-weight: 400;
   color: #202124;
-  margin-bottom: 4px;
+  margin-bottom: 12px;
 }
 
 .earnings-subtitle {
