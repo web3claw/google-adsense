@@ -47,29 +47,46 @@ export const TransactionsServicePage: React.FC<{
   // Dynamic Expansion States
   const [expandedBlocks, setExpandedBlocks] = useState<Record<string, boolean>>(() => {
     const target = currentEntry.targetMonth || currentEntry.url || "";
+    const res: Record<string, boolean> = {};
+    for (let i = 1; i <= 24; i++) {
+      res[`row${i}`] = true;
+    }
     if (target === "row1" || target.includes("#row1") || target.includes("#aug")) {
-      return { row1: true, row2: false, row3: false };
+      res.row1 = true;
+      res.row2 = false;
+      res.row3 = false;
+    } else if (target === "row2" || target.includes("#row2") || target.includes("#jul")) {
+      res.row1 = false;
+      res.row2 = true;
+      res.row3 = false;
+    } else if (target === "row3" || target.includes("#row3") || target.includes("#jun")) {
+      res.row1 = false;
+      res.row2 = false;
+      res.row3 = true;
     }
-    if (target === "row2" || target.includes("#row2") || target.includes("#jul")) {
-      return { row1: false, row2: true, row3: false };
-    }
-    if (target === "row3" || target.includes("#row3") || target.includes("#jun")) {
-      return { row1: false, row2: false, row3: true };
-    }
-    return { row1: true, row2: true, row3: true, row4: true, row5: true, row6: true };
+    return res;
   });
 
   useEffect(() => {
     const target = currentEntry.targetMonth || currentEntry.url || "";
-    if (target === "row1" || target.includes("#row1") || target.includes("#aug")) {
-      setExpandedBlocks({ row1: true, row2: false, row3: false });
-    } else if (target === "row2" || target.includes("#row2") || target.includes("#jul")) {
-      setExpandedBlocks({ row1: false, row2: true, row3: false });
-    } else if (target === "row3" || target.includes("#row3") || target.includes("#jun")) {
-      setExpandedBlocks({ row1: false, row2: false, row3: true });
-    } else {
-      setExpandedBlocks({ row1: true, row2: true, row3: true, row4: true, row5: true, row6: true });
+    const res: Record<string, boolean> = {};
+    for (let i = 1; i <= 24; i++) {
+      res[`row${i}`] = true;
     }
+    if (target === "row1" || target.includes("#row1") || target.includes("#aug")) {
+      res.row1 = true;
+      res.row2 = false;
+      res.row3 = false;
+    } else if (target === "row2" || target.includes("#row2") || target.includes("#jul")) {
+      res.row1 = false;
+      res.row2 = true;
+      res.row3 = false;
+    } else if (target === "row3" || target.includes("#row3") || target.includes("#jun")) {
+      res.row1 = false;
+      res.row2 = false;
+      res.row3 = true;
+    }
+    setExpandedBlocks(res);
   }, [currentEntry.targetMonth, currentEntry.url]);
 
   // Automatic Mathematical Balance Calculation for N Months
