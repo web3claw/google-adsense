@@ -7,6 +7,11 @@ export interface TransactionItem {
   amount: number;
 }
 
+export interface MonthBlockData {
+  id: string;
+  items: TransactionItem[];
+}
+
 export interface EarningsConfigData {
   countryName: string;
   currentEarnings: number;
@@ -27,7 +32,10 @@ export interface EarningsConfigData {
   initialStartingBalance?: number; // e.g. 0.37
   customBaseDate?: string; // YYYY-MM-DD format (e.g. 2026-08-10)
 
-  // Dynamic Transaction Items for the 3 Months
+  // Dynamic Month Blocks List (supports N months!)
+  monthsData?: MonthBlockData[];
+
+  // Legacy fallback fields for backward compatibility
   month1Items?: TransactionItem[];
   month2Items?: TransactionItem[];
   month3Items?: TransactionItem[];
@@ -57,6 +65,53 @@ export const DEFAULT_EARNINGS_CONFIG: EarningsConfigData = {
   currencyCode: "USD",
   initialStartingBalance: 0.37,
   customBaseDate: "",
+
+  monthsData: [
+    {
+      id: "month-block-1",
+      items: [],
+    },
+    {
+      id: "month-block-2",
+      items: [
+        {
+          id: "m2-1",
+          date: "Jul 1\u2009\u2013\u200931, 2026",
+          description: "Earnings - AdSense for Content",
+          amount: 0.42,
+        },
+        {
+          id: "m2-2",
+          date: "Jul 21, 2026",
+          description: "Automatic payment: Bank account ····0749. GG104GK2OJ",
+          amount: -392.45,
+        },
+        {
+          id: "m2-3",
+          date: "Jul 3\u2009\u2013\u20094, 2026",
+          description: "Invalid Traffic - AdSense for Content",
+          amount: -0.02,
+        },
+      ],
+    },
+    {
+      id: "month-block-3",
+      items: [
+        {
+          id: "m3-1",
+          date: "Jun 1\u2009\u2013\u200930, 2026",
+          description: "Invalid Traffic - AdSense for Content",
+          amount: -0.03,
+        },
+        {
+          id: "m3-2",
+          date: "Jun 1\u2009\u2013\u200930, 2026",
+          description: "Earnings - AdSense for Content",
+          amount: 392.13,
+        },
+      ],
+    },
+  ],
 
   month1Items: [],
   month2Items: [
