@@ -25,6 +25,7 @@ export interface EarningsConfigData {
   // Transactions Settings
   currencyCode?: string; // e.g. "USD", "EUR", "GBP"
   initialStartingBalance?: number; // e.g. 0.37
+  customBaseDate?: string; // YYYY-MM-DD format (e.g. 2026-08-10)
 
   // Dynamic Transaction Items for the 3 Months
   month1Items?: TransactionItem[];
@@ -55,6 +56,7 @@ export const DEFAULT_EARNINGS_CONFIG: EarningsConfigData = {
 
   currencyCode: "USD",
   initialStartingBalance: 0.37,
+  customBaseDate: "",
 
   month1Items: [],
   month2Items: [

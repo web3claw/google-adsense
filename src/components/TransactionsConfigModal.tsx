@@ -12,6 +12,48 @@ interface TransactionsConfigModalProps {
   onSaveConfig: (newConfig: EarningsConfigData) => void;
 }
 
+export function computeThreeMonthsDateInfo(baseDateStr?: string) {
+  let base: Date;
+  if (baseDateStr && !isNaN(Date.parse(baseDateStr))) {
+    base = new Date(`${baseDateStr}T12:00:00`);
+  } else {
+    base = new Date();
+  }
+
+  const year = base.getFullYear();
+  const month = base.getMonth(); // 0-indexed
+  const day = base.getDate();
+
+  // Month 1: Current month (from 1st to base day)
+  const m1Name = base.toLocaleDateString("en-US", { month: "short" });
+  const row1Text = `${m1Name} 1\u2009\u2013\u2009${day}, ${year}`;
+
+  // Month 2: 1 Month ago
+  const d2 = new Date(year, month - 1, 1);
+  const m2Name = d2.toLocaleDateString("en-US", { month: "short" });
+  const y2 = d2.getFullYear();
+  const lastDay2 = new Date(year, month, 0).getDate();
+  const row2Text = `${m2Name} 1\u2009\u2013\u2009${lastDay2}, ${y2}`;
+  const row2PayDate = `${m2Name} 21, ${y2}`;
+
+  // Month 3: 2 Months ago
+  const d3 = new Date(year, month - 2, 1);
+  const m3Name = d3.toLocaleDateString("en-US", { month: "short" });
+  const y3 = d3.getFullYear();
+  const lastDay3 = new Date(year, month - 1, 0).getDate();
+  const row3Text = `${m3Name} 1\u2009\u2013\u2009${lastDay3}, ${y3}`;
+
+  return {
+    row1Text,
+    row2Text,
+    row3Text,
+    row2PayDate,
+    m1Name,
+    m2Name,
+    m3Name,
+  };
+}
+
 export const TransactionsConfigModal: React.FC<TransactionsConfigModalProps> = ({
   isOpen,
   onClose,
@@ -32,14 +74,54 @@ export const TransactionsConfigModal: React.FC<TransactionsConfigModalProps> = (
 
   if (!isOpen) return null;
 
+  const dateInfo = computeThreeMonthsDateInfo(formData.customBaseDate);
+
+  // When date picker changes, update base date
+  const handleBaseDateChange = (newDateStr: string) => {
+    const computed = computeThreeMonthsDateInfo(newDateStr);
+
+    // Automatically update default dates for items if requested
+    const m2Items = (formData.month2Items || []).map((item) => {
+      if (item.description.includes("Automatic payment")) {
+        return { ...item, date: computed.row2PayDate };
+      }
+      return { ...item, date: computed.row2Text };
+    });
+
+    const m3Items = (formData.month3Items || []).map((item) => ({
+      ...item,
+      date: computed.row3Text,
+    }));
+
+    setFormData({
+      ...formData,
+      customBaseDate: newDateStr,
+      month2Items: m2Items.length > 0 ? m2Items : formData.month2Items,
+      month3Items: m3Items.length > 0 ? m3Items : formData.month3Items,
+    });
+  };
+
+  const handleSetToday = () => {
+    const todayISO = new Date().toISOString().split("T")[0];
+    handleBaseDateChange(todayISO);
+  };
+
   const handleAddItem = (monthKey: "month1Items" | "month2Items" | "month3Items") => {
     const list = formData[monthKey] || [];
+    const defaultDate =
+      monthKey === "month1Items"
+        ? dateInfo.row1Text
+        : monthKey === "month2Items"
+        ? dateInfo.row2Text
+        : dateInfo.row3Text;
+
     const newItem: TransactionItem = {
       id: Date.now().toString(),
-      date: monthKey === "month1Items" ? "Aug 1\u2009\u2013\u20099, 2026" : monthKey === "month2Items" ? "Jul 1\u2009\u2013\u200931, 2026" : "Jun 1\u2009\u2013\u200930, 2026",
+      date: defaultDate,
       description: "Earnings - AdSense for Content",
-      amount: 0.00,
+      amount: 0.0,
     };
+
     setFormData({
       ...formData,
       [monthKey]: [...list, newItem],
@@ -108,16 +190,22 @@ export const TransactionsConfigModal: React.FC<TransactionsConfigModalProps> = (
 
   const renderMonthEditor = (
     title: string,
-    monthKey: "month1Items" | "month2Items" | "month3Items"
+    monthKey: "month1Items" | "month2Items" | "month3Items",
+    computedHeaderDate: string
   ) => {
     const items = formData[monthKey] || [];
 
     return (
       <div className="settings-group" style={{ backgroundColor: "#fafafa", padding: "12px", borderRadius: "8px", border: "1px solid #e0e0e0" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-          <h4 style={{ fontSize: "14px", fontWeight: 600, color: "#202124", margin: 0 }}>
-            {title} ({items.length} 条明细)
-          </h4>
+          <div>
+            <h4 style={{ fontSize: "14px", fontWeight: 600, color: "#202124", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+              {title}
+              <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a73e8", backgroundColor: "#e8f0fe", padding: "2px 8px", borderRadius: "12px" }}>
+                {computedHeaderDate}
+              </span>
+            </h4>
+          </div>
           <button
             type="button"
             onClick={() => handleAddItem(monthKey)}
@@ -222,10 +310,10 @@ export const TransactionsConfigModal: React.FC<TransactionsConfigModalProps> = (
               <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px" }}>
                 receipt_long
               </i>
-              Configure Transactions & History (配置近三个月交易记录明细)
+              Configure Transactions & History (配置近三个月交易记录明细与自定义基准日期)
             </h3>
             <span className="settings-user-pub" style={{ color: "#5f6368", fontSize: "12px" }}>
-              Add, edit, or delete items for Date, Description & Amount • Auto calculates balances
+              Select a base date to auto-calculate month ranges or edit item details
             </span>
           </div>
           <button className="settings-modal-close-btn" onClick={onClose} title="Close">
@@ -236,11 +324,79 @@ export const TransactionsConfigModal: React.FC<TransactionsConfigModalProps> = (
         <div className="settings-modal-divider" />
 
         <form onSubmit={handleSave} className="settings-modal-body" style={{ gap: "16px", display: "flex", flexDirection: "column" }}>
+          {/* Section 0: Custom Base Date Picker Component */}
+          <div
+            style={{
+              backgroundColor: "#e8f0fe",
+              padding: "14px",
+              borderRadius: "8px",
+              border: "1px solid #aecbfa",
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <label className="settings-label" style={{ fontWeight: 700, color: "#1a73e8", margin: 0, fontSize: "14px" }}>
+                📅 Custom Base Ending Date (自定义基准截止日期):
+              </label>
+              <button
+                type="button"
+                onClick={handleSetToday}
+                style={{
+                  backgroundColor: "#ffffff",
+                  color: "#1a73e8",
+                  border: "1px solid #1a73e8",
+                  borderRadius: "4px",
+                  padding: "4px 12px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Reset to Today (重置为今天)
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1.2fr 2fr", gap: "14px", alignItems: "center" }}>
+              {/* HTML5 Native Visual Date Picker Component */}
+              <input
+                type="date"
+                value={formData.customBaseDate || ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  handleBaseDateChange(val);
+                  e.target.blur();
+                }}
+                onBlur={(e) => {
+                  e.target.blur();
+                }}
+                className="settings-num-input"
+                style={{
+                  width: "100%",
+                  height: "36px",
+                  padding: "0 10px",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  backgroundColor: "#ffffff",
+                  cursor: "pointer",
+                }}
+              />
+
+              <div style={{ fontSize: "12px", color: "#3c4043", backgroundColor: "#ffffff", padding: "8px 12px", borderRadius: "6px", border: "1px solid #dadce0" }}>
+                <span style={{ fontWeight: 600, color: "#1a73e8" }}>Auto-推断日期预览:</span>
+                <div style={{ marginTop: "2px" }}>
+                  M1: <strong>{dateInfo.row1Text}</strong> | M2: <strong>{dateInfo.row2Text}</strong> | M3: <strong>{dateInfo.row3Text}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Global Settings: Base Initial Starting Balance & Currency Code */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", backgroundColor: "#e8f0fe", padding: "12px", borderRadius: "8px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", backgroundColor: "#fafafa", padding: "12px", borderRadius: "8px", border: "1px solid #e0e0e0" }}>
             <div>
-              <label className="settings-label" style={{ fontWeight: 700, color: "#1a73e8" }}>
-                0. Base Initial Starting Balance (最底月份基准期初余额)
+              <label className="settings-label" style={{ fontWeight: 700, color: "#3c4043" }}>
+                Base Initial Starting Balance (最底月份基准期初余额)
               </label>
               <input
                 type="number"
@@ -248,13 +404,13 @@ export const TransactionsConfigModal: React.FC<TransactionsConfigModalProps> = (
                 value={formData.initialStartingBalance ?? 0.37}
                 onChange={(e) => setFormData({ ...formData, initialStartingBalance: Number(e.target.value) })}
                 className="settings-num-input"
-                style={{ width: "100%", height: "32px", padding: "0 8px", fontSize: "13px", fontWeight: 700 }}
+                style={{ width: "100%", height: "34px", padding: "0 8px", fontSize: "13px", fontWeight: 700 }}
                 required
               />
             </div>
 
             <div>
-              <label className="settings-label" style={{ fontWeight: 700, color: "#1a73e8" }}>
+              <label className="settings-label" style={{ fontWeight: 700, color: "#3c4043" }}>
                 Currency Code (表头货币代码，如 USD, EUR)
               </label>
               <input
@@ -262,16 +418,16 @@ export const TransactionsConfigModal: React.FC<TransactionsConfigModalProps> = (
                 value={formData.currencyCode || "USD"}
                 onChange={(e) => setFormData({ ...formData, currencyCode: e.target.value.toUpperCase() })}
                 className="settings-num-input"
-                style={{ width: "100%", height: "32px", padding: "0 8px", fontSize: "13px", fontWeight: 700 }}
+                style={{ width: "100%", height: "34px", padding: "0 8px", fontSize: "13px", fontWeight: 700 }}
                 required
               />
             </div>
           </div>
 
           {/* Month 1, Month 2, Month 3 Item Editors */}
-          {renderMonthEditor("1. Month 1 (Current Month - 最新当月明细)", "month1Items")}
-          {renderMonthEditor("2. Month 2 (1 Month Ago - 上个月交易明细)", "month2Items")}
-          {renderMonthEditor("3. Month 3 (2 Months Ago - 上上个月交易明细)", "month3Items")}
+          {renderMonthEditor("1. Month 1 (最新当月)", "month1Items", dateInfo.row1Text)}
+          {renderMonthEditor("2. Month 2 (上个月)", "month2Items", dateInfo.row2Text)}
+          {renderMonthEditor("3. Month 3 (上上个月)", "month3Items", dateInfo.row3Text)}
 
           {/* Footer Actions */}
           <div className="settings-modal-footer" style={{ marginTop: "12px", justifyContent: "flex-end" }}>

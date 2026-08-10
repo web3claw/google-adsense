@@ -4,7 +4,10 @@ import {
   EarningsConfigData,
   DEFAULT_EARNINGS_CONFIG,
 } from "./EarningsConfigModal";
-import { TransactionsConfigModal } from "./TransactionsConfigModal";
+import {
+  TransactionsConfigModal,
+  computeThreeMonthsDateInfo,
+} from "./TransactionsConfigModal";
 
 const EARNINGS_STORAGE_KEY = "adsense_earnings_config";
 
@@ -68,37 +71,10 @@ export const TransactionsServicePage: React.FC<{
     }
   }, [currentEntry.targetMonth, currentEntry.url]);
 
-  // Dynamic Date Ranges Calculation based on system date
+  // Dynamic Date Ranges Calculation based on customBaseDate or system date
   const dateInfo = useMemo(() => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const day = now.getDate();
-
-    // Row 1: Current month
-    const m1 = now.toLocaleDateString("en-US", { month: "short" });
-    const row1Text = `${m1} 1\u2009\u2013\u2009${day}, ${year}`;
-
-    // Row 2: 1 month ago
-    const d2 = new Date(year, month - 1, 1);
-    const m2 = d2.toLocaleDateString("en-US", { month: "short" });
-    const y2 = d2.getFullYear();
-    const lastDay2 = new Date(year, month, 0).getDate();
-    const row2Text = `${m2} 1\u2009\u2013\u2009${lastDay2}, ${y2}`;
-
-    // Row 3: 2 months ago
-    const d3 = new Date(year, month - 2, 1);
-    const m3 = d3.toLocaleDateString("en-US", { month: "short" });
-    const y3 = d3.getFullYear();
-    const lastDay3 = new Date(year, month - 1, 0).getDate();
-    const row3Text = `${m3} 1\u2009\u2013\u2009${lastDay3}, ${y3}`;
-
-    return {
-      row1Text,
-      row2Text,
-      row3Text,
-    };
-  }, []);
+    return computeThreeMonthsDateInfo(earningsConfig.customBaseDate);
+  }, [earningsConfig.customBaseDate]);
 
   // Automatic Mathematical Balance Calculation
   const balances = useMemo(() => {
