@@ -45,18 +45,23 @@ const PageViewport: React.FC = () => {
           </div>
         </div>
 
+        {/* Topbar Linear Progress Bar */}
+        <div className="google-linear-progress">
+          <div className="linear-progress-bar bar1" />
+          <div className="linear-progress-bar bar2" />
+        </div>
+
         {/* Centered Circular Spinner Below Divider */}
         <div className="center-page-spinner-wrap">
           <svg className="google-material-spinner" width="30" height="30" viewBox="0 0 32 32">
             <circle
+              className="google-spinner-path"
               cx="16"
               cy="16"
               r="12"
               fill="none"
-              stroke="#1A73E8"
               strokeWidth="3"
               strokeLinecap="round"
-              strokeDasharray="48, 90"
             />
           </svg>
         </div>

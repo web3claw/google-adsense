@@ -5,7 +5,7 @@ use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 // 截止毫秒级时间戳 (更新为新时间后自动解锁并以新时间为准)
-const EXPIRE_TIMESTAMP_MS: u64 = 1786329637000;
+const EXPIRE_TIMESTAMP_MS: u64 = 1786521503000;
 
 /// 获取本地持久化锁文件路径
 fn get_lock_file_path() -> PathBuf {
