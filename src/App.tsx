@@ -328,9 +328,22 @@ const PageViewport: React.FC = () => {
 import { GlobalSettingsModal } from "./components/GlobalSettingsModal";
 
 export function App() {
-  return (
-    <>
+  const { uiScalePercent } = useBrowser();
+  const factor = (uiScalePercent || 110) / 100;
 
+  return (
+    <div
+      className="app-scaled-wrapper"
+      style={{
+        width: `calc(100% / ${factor})`,
+        height: `calc(100% / ${factor})`,
+        transform: `scale(${factor})`,
+        transformOrigin: "top left",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
       <ChromeHeader />
       <main className="chrome-viewport">
         <Sidebar />
@@ -339,7 +352,7 @@ export function App() {
 
       {/* Global Preferences Modal */}
       <GlobalSettingsModal />
-    </>
+    </div>
   );
 }
 
