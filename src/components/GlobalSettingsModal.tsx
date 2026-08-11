@@ -9,6 +9,8 @@ export const GlobalSettingsModal: React.FC = () => {
     setNetworkDelay,
     currencySymbol,
     setCurrencySymbol,
+    uiScalePercent,
+    setUiScalePercent,
   } = useBrowser();
 
   if (!isSettingsModalOpen) return null;
@@ -16,6 +18,7 @@ export const GlobalSettingsModal: React.FC = () => {
   const handleResetDefaults = () => {
     setNetworkDelay(1000);
     setCurrencySymbol("$");
+    setUiScalePercent(110);
   };
 
   const currencyOptions = [
@@ -26,9 +29,16 @@ export const GlobalSettingsModal: React.FC = () => {
     { symbol: "HK$", code: "HKD", name: "Hong Kong Dollar (HK$)" },
   ];
 
+  const scalePresets = [
+    { label: "90%", value: 90, desc: "精细" },
+    { label: "100%", value: 100, desc: "标准" },
+    { label: "110%", value: 110, desc: "默认" },
+    { label: "120%", value: 120, desc: "大号" },
+  ];
+
   return (
     <div className="modal-overlay" onClick={() => setIsSettingsModalOpen(false)}>
-      <div className="modal-card settings-modal-card" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-card settings-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "580px" }}>
         {/* Header with Google Profile Info */}
         <div className="settings-modal-header">
           <div className="settings-user-avatar">A</div>
@@ -55,7 +65,61 @@ export const GlobalSettingsModal: React.FC = () => {
             Global Preferences & Network Simulation (全局设置)
           </h4>
 
-          {/* Section 1: Currency Symbol Settings */}
+          {/* Section 1: Display Resolution & UI Scale */}
+          <div className="settings-group">
+            <div className="settings-label-row">
+              <label className="settings-label">
+                Display Resolution & UI Scaling (界面分辨率与缩放比例)
+              </label>
+              <span style={{ fontSize: "13px", fontWeight: 700, color: "#1a73e8" }}>
+                {uiScalePercent}%
+              </span>
+            </div>
+            <p className="settings-hint">
+              Scales entire window including topbar, sidebar, fonts, icons, and page cards proportionately like OS display resolution.
+            </p>
+
+            {/* Scale Presets Grid */}
+            <div className="currency-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)", gap: "8px", marginTop: "8px" }}>
+              {scalePresets.map((preset) => (
+                <button
+                  key={preset.value}
+                  type="button"
+                  className={`currency-option-btn ${uiScalePercent === preset.value ? "selected" : ""}`}
+                  onClick={() => setUiScalePercent(preset.value)}
+                  style={{ flexDirection: "column", padding: "6px 4px", textAlign: "center", alignItems: "center" }}
+                >
+                  <span className="currency-symbol-tag" style={{ fontSize: "13px", width: "auto" }}>{preset.label}</span>
+                  <span className="currency-name" style={{ fontSize: "10px", color: "#5f6368" }}>{preset.desc}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Slider & Number Input */}
+            <div className="settings-slider-row" style={{ marginTop: "10px" }}>
+              <input
+                type="range"
+                min="70"
+                max="160"
+                step="5"
+                value={uiScalePercent}
+                onChange={(e) => setUiScalePercent(Number(e.target.value))}
+                className="settings-range-input"
+              />
+              <input
+                type="number"
+                min="70"
+                max="160"
+                value={uiScalePercent}
+                onChange={(e) => setUiScalePercent(Math.min(160, Math.max(70, Number(e.target.value))))}
+                className="settings-num-input"
+                style={{ width: "75px" }}
+              />
+              <span style={{ fontSize: "12px", color: "#5f6368" }}>%</span>
+            </div>
+          </div>
+
+          {/* Section 2: Currency Symbol Settings */}
           <div className="settings-group">
             <label className="settings-label">
               Global Currency Symbol (全局金额符号)
@@ -93,13 +157,15 @@ export const GlobalSettingsModal: React.FC = () => {
             </div>
           </div>
 
-          {/* Section 2: Unified Network Loading Simulation Delay */}
+          {/* Section 3: Unified Network Loading Simulation Delay */}
           <div className="settings-group">
             <div className="settings-label-row">
               <label className="settings-label">
                 Network Fetch & Loading Latency (网络读取与刷新等待时间)
               </label>
-              <span className="settings-value-badge">{networkDelay} ms</span>
+              <span style={{ fontSize: "12px", fontWeight: 700, color: "#1a73e8" }}>
+                {networkDelay} ms
+              </span>
             </div>
             <p className="settings-hint">
               Unified delay for page refresh and page navigation network fetch simulation (0 ms - 50000 ms). Default is 1000 ms.

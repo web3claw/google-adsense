@@ -1336,7 +1336,7 @@ input,
 }
 
 .payments-page-content {
-  padding: 20px 40px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -1347,8 +1347,10 @@ input,
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 0 180px;
+  padding: 0 90px;
   width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
 }
 
 /* Payments Account Sub-header Section */

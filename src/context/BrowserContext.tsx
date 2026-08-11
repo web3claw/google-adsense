@@ -26,6 +26,7 @@ interface BrowserContextType {
   // Global Settings State
   networkDelay: number;
   currencySymbol: string;
+  uiScalePercent: number;
   isSettingsModalOpen: boolean;
 
   // Actions
@@ -39,6 +40,7 @@ interface BrowserContextType {
   setIsSettingsModalOpen: (open: boolean) => void;
   setNetworkDelay: (ms: number) => void;
   setCurrencySymbol: (symbol: string) => void;
+  setUiScalePercent: (val: number) => void;
   formatCurrency: (val: string | number) => string;
 }
 
@@ -75,6 +77,12 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return localStorage.getItem("adsense_currency_symbol") || "$";
   });
 
+  // UI Scale Percent (70% - 160%, Default: 110%)
+  const [uiScalePercent, setUiScalePercentState] = useState<number>(() => {
+    const saved = localStorage.getItem("adsense_ui_scale_percent");
+    return saved ? Number(saved) : 110;
+  });
+
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
@@ -84,6 +92,13 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     localStorage.setItem("adsense_currency_symbol", currencySymbol);
   }, [currencySymbol]);
+
+  useEffect(() => {
+    localStorage.setItem("adsense_ui_scale_percent", String(uiScalePercent));
+    const factor = (uiScalePercent / 100).toString();
+    document.documentElement.style.zoom = factor;
+    (document.body.style as any).zoom = factor;
+  }, [uiScalePercent]);
 
   const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0] || defaultTab;
   const currentEntry = activeTab.history[activeTab.historyIndex] || defaultHistory[0];
@@ -134,7 +149,7 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
             if (tab.id !== activeTabId) return tab;
             return {
               ...tab,
-              historyIndex: Math.max(0, tab.historyIndex - 1),
+              historyIndex: tab.historyIndex - 1,
             };
           })
         );
@@ -145,7 +160,7 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (tab.id !== activeTabId) return tab;
           return {
             ...tab,
-            historyIndex: Math.max(0, tab.historyIndex - 1),
+            historyIndex: tab.historyIndex - 1,
           };
         })
       );
@@ -163,7 +178,7 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
             if (tab.id !== activeTabId) return tab;
             return {
               ...tab,
-              historyIndex: Math.min(tab.history.length - 1, tab.historyIndex + 1),
+              historyIndex: tab.historyIndex + 1,
             };
           })
         );
@@ -174,7 +189,7 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (tab.id !== activeTabId) return tab;
           return {
             ...tab,
-            historyIndex: Math.min(tab.history.length - 1, tab.historyIndex + 1),
+            historyIndex: tab.historyIndex + 1,
           };
         })
       );
@@ -182,51 +197,56 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const refresh = () => {
-    setIsRefreshing(true);
-    setRefreshKey((prev) => prev + 1);
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, networkDelay);
+    if (networkDelay > 0) {
+      setIsRefreshing(true);
+      setTimeout(() => {
+        setIsRefreshing(false);
+        setRefreshKey((prev) => prev + 1);
+      }, networkDelay);
+    } else {
+      setIsRefreshing(true);
+      setTimeout(() => {
+        setIsRefreshing(false);
+        setRefreshKey((prev) => prev + 1);
+      }, 300);
+    }
   };
 
   const addTab = () => {
-    const newId = String(Date.now());
+    const newId = Date.now().toString();
     const newTabItem: TabItem = {
       id: newId,
-      history: [
-        {
-          title: "New Tab",
-          url: "chrome://newtab",
-          pageId: "new-tab",
-        },
-      ],
+      history: defaultHistory,
       historyIndex: 0,
     };
-    setTabs((prev) => [...prev, newTabItem]);
+    setTabs([...tabs, newTabItem]);
     setActiveTabId(newId);
   };
 
   const closeTab = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (tabs.length === 1) return;
-    const nextTabs = tabs.filter((t) => t.id !== id);
-    setTabs(nextTabs);
+    if (tabs.length === 1) return; // Keep at least one tab
+    const newTabs = tabs.filter((t) => t.id !== id);
+    setTabs(newTabs);
     if (activeTabId === id) {
-      setActiveTabId(nextTabs[nextTabs.length - 1].id);
+      setActiveTabId(newTabs[newTabs.length - 1].id);
     }
   };
 
   const formatCurrency = (val: string | number): string => {
-    if (val === null || val === undefined) return `${currencySymbol}0.00`;
-    const str = String(val).trim();
-    // Replace any currency symbol at the beginning
-    const numPart = str.replace(/^[^0-9.-]+/, "");
-    return `${currencySymbol}${numPart}`;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    if (isNaN(num)) return `${currencySymbol}0.00`;
+    return `${currencySymbol}${num.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   };
 
   return (
     <BrowserContext.Provider
       value={{
+        tabs,
+        activeTabId,
         activeTab,
         currentEntry,
         canGoBack,
@@ -234,10 +254,9 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isRefreshing,
         isNavigatingLoading,
         refreshKey,
-        tabs,
-        activeTabId,
         networkDelay,
         currencySymbol,
+        uiScalePercent,
         isSettingsModalOpen,
         setActiveTabId,
         goBack,
@@ -249,6 +268,7 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setIsSettingsModalOpen,
         setNetworkDelay: setNetworkDelayState,
         setCurrencySymbol: setCurrencySymbolState,
+        setUiScalePercent: setUiScalePercentState,
         formatCurrency,
       }}
     >
