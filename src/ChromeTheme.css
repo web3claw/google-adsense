@@ -94,6 +94,7 @@ input,
   height: calc(var(--chrome-tab-height) + 4px);
   padding-top: 4px;
   padding-left: 12px;
+  padding-right: calc(136px * var(--inverse-scale-factor, 0.909));
   background-color: var(--chrome-header-bg);
   position: relative;
   width: 100%;
@@ -238,12 +239,17 @@ input,
 
 /* --- Window Controls (Minimize / Maximize / Close) --- */
 .chrome-window-controls {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 32px;
   display: flex;
   align-items: center;
-  height: 100%;
-  margin-left: auto;
-  align-self: flex-start;
-  z-index: 10;
+  z-index: 999999;
+  zoom: var(--inverse-scale-factor, 0.909);
+  transform-origin: top right;
+  background-color: var(--chrome-header-bg);
+  border-bottom-left-radius: 4px;
 }
 
 .chrome-win-btn {

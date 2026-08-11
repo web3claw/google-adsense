@@ -95,9 +95,12 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     localStorage.setItem("adsense_ui_scale_percent", String(uiScalePercent));
-    const factor = (uiScalePercent / 100).toString();
-    document.documentElement.style.zoom = factor;
-    (document.body.style as any).zoom = factor;
+    const factor = uiScalePercent / 100;
+    const invFactor = 1 / factor;
+    document.documentElement.style.zoom = factor.toString();
+    (document.body.style as any).zoom = factor.toString();
+    document.documentElement.style.setProperty("--ui-scale-factor", factor.toString());
+    document.documentElement.style.setProperty("--inverse-scale-factor", invFactor.toString());
   }, [uiScalePercent]);
 
   const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0] || defaultTab;
