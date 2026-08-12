@@ -9,3 +9,4 @@ This template should help get you started developing with Tauri, React and Types
 ## Dev
 
 - bun run tauri dev
+- env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY bun run tauri dev
