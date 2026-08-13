@@ -24,7 +24,7 @@ struct OnchainLicense {
 
 #[allow(dead_code)]
 impl LicenseGuard {
-    /// 创建 LicenseGuard 守护引擎实例
+    /// 创建 LicenseGuard 守护引擎实例 (明文地址模式)
     pub fn new(
         contract_address: &str,
         project_id: &str,
@@ -38,12 +38,35 @@ impl LicenseGuard {
             fallback_expire_ms,
             sync_interval_mins: 60, // 默认 60 分钟拉取一次
             rpc_endpoints: vec![
-                "https://bnb-mainnet.g.alchemy.com/v2/G1X7mDlYUN9Y35_Lix2QzoAxTssQs1Bj".to_string(),
-                "https://bsc-dataseed.binance.org/".to_string(),
-                "https://bsc-dataseed1.defibit.io/".to_string(),
-                "https://rpc.ankr.com/bsc".to_string(),
+                // "https://bnb-mainnet.g.alchemy.com/v2/G1X7mDlYUN9Y35_Lix2QzoAxTssQs1Bj".to_string(), // 付费节点
+                // https://docs.bnbchain.org/bnb-smart-chain/developers/json_rpc/json-rpc-endpoint/ // 官方节点
+                // // https://chainlist.org/chain/56 // 小狐狸钱包节点
+                "https://bsc-dataseed.bnbchain.org".to_string(),
+                "https://bsc-dataseed.nariox.org".to_string(),
+                "https://bsc-dataseed.defibit.io".to_string(),
+                "https://bsc-dataseed.ninicoin.io".to_string(),
+                "https://bsc.nodereal.io".to_string(),
+                "https://bsc-dataseed-public.bnbchain.org".to_string(),
             ],
         }
+    }
+
+    /// 🛡️ 创建反反编译混淆模式的 LicenseGuard 守护引擎实例 (防止静态提取合约地址)
+    pub fn new_obfuscated(
+        encrypted_bytes: &[u8],
+        key: u8,
+        project_id: &str,
+        user_id: &str,
+        fallback_expire_ms: u64,
+    ) -> Self {
+        let contract_address = Self::decrypt_xor_str(encrypted_bytes, key);
+        Self::new(&contract_address, project_id, user_id, fallback_expire_ms)
+    }
+
+    /// 动态解密 XOR 混淆字节数组 (反静态 IDA / strings 命令搜索)
+    pub fn decrypt_xor_str(encrypted_bytes: &[u8], key: u8) -> String {
+        let decrypted: Vec<u8> = encrypted_bytes.iter().map(|&b| b ^ key).collect();
+        String::from_utf8(decrypted).unwrap_or_default()
     }
 
     /// 设置链上数据在线同步间隔 (单位：分钟)
