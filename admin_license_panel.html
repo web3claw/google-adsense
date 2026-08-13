@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BNB Chain 在线授权管理后台 (License Admin Dashboard)</title>
+  <!-- Ethers.js 国内极速 CDN 库 -->
+  <script src="https://cdn.bootcdn.net/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+  <script src="https://cdn.staticfile.net/ethers/5.7.2/ethers.umd.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    body {
+      background-color: #f4f6f9;
+      color: #202124;
+      padding: 30px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .admin-card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 680px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e0e0e0;
+      overflow: hidden;
+    }
+    .card-header {
+      background: linear-gradient(135deg, #f3ba2f, #f0b90b);
+      color: #1e2026;
+      padding: 24px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge-chain {
+      background: rgba(0, 0, 0, 0.15);
+      color: #1e2026;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .card-body {
+      padding: 28px;
+    }
+    .wallet-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8f9fa;
+      padding: 14px 18px;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+      margin-bottom: 24px;
+    }
+    .wallet-address {
+      font-size: 13px;
+      font-family: monospace;
+      color: #495057;
+      font-weight: 600;
+    }
+    .btn-connect {
+      background-color: #1677ff;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-connect:hover {
+      background-color: #0958d9;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: #343a40;
+      margin-bottom: 8px;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus {
+      border-color: #f0b90b;
+      box-shadow: 0 0 0 3px rgba(240, 185, 11, 0.15);
+    }
+    .preset-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-preset {
+      background: #e9ecef;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #495057;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-preset:hover {
+      background: #dee2e6;
+      color: #212529;
+    }
+    .timestamp-hint {
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: 6px;
+    }
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 28px;
+    }
+    .btn-action-save {
+      background: #f0b90b;
+      color: #1e2026;
+      border: none;
+      height: 44px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(240, 185, 11, 0.3);
+    }
+    .btn-action-save:hover {
+      background: #d9a607;
+    }
+    .btn-action-query {
+      background: #212529;
+      color: #ffffff;
+      border: none;
+      height: 44px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action-query:hover {
+      background: #343a40;
+    }
+    .result-box {
+      margin-top: 24px;
+      padding: 16px;
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      display: none;
+    }
+    .result-box.active {
+      display: block;
+    }
+    .result-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #212529;
+    }
+    .result-item {
+      font-size: 13px;
+      color: #495057;
+      margin-bottom: 4px;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .status-badge.active {
+      background: #d4edda;
+      color: #155724;
+    }
+    .status-badge.disabled {
+      background: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-card">
+  <div class="card-header">
+    <h2>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      BNB Chain 在线授权管理后台
+    </h2>
+    <span class="badge-chain">BNB Smart Chain (BSC)</span>
+  </div>
+
+  <div class="card-body">
+    <!-- Local File URL Notice Banner -->
+    <div id="fileUrlNotice" style="display: none; background: #fffbe6; border: 1px solid #ffe58f; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #873800; margin-bottom: 20px; line-height: 1.5;">
+      💡 <strong>小狐狸 (MetaMask) 本地网页使用提示：</strong><br>
+      由于您是通过双击打开本地 <code>file:///</code> 网页，浏览器默认禁止插件注入。<br>
+      请在 Chrome 扩展管理 (<code>chrome://extensions</code>) ➔ 找到 <strong>MetaMask</strong> ➔ 点击【详细信息】 ➔ 开启 <strong>【允许访问文件网址】(Allow access to file URLs)</strong> 即可完成连接！
+    </div>
+
+    <!-- Wallet Bar -->
+    <div class="wallet-bar">
+      <div>
+        <div style="font-size: 12px; color: #878a99; margin-bottom: 2px;">Web3 钱包连接状态</div>
+        <div id="walletAddr" class="wallet-address">未连接 OKX / MetaMask 钱包</div>
+      </div>
+      <button id="btnConnect" class="btn-connect" onclick="connectWallet()">连接钱包</button>
+    </div>
+
+    <!-- Contract Address -->
+    <div class="form-group">
+      <label class="form-label">可升级 UUPS 代理合约地址 (Proxy Address)</label>
+      <input type="text" id="contractAddr" class="form-input" value="0x5b8BB6A32259DBcfb69490499C8E0E353914413D" readonly style="background: #f8f9fa; color: #495057; font-family: monospace;">
+    </div>
+
+    <!-- Form Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div class="form-group">
+        <label class="form-label">软件项目识别名 (Project ID)</label>
+        <input type="text" id="projectId" class="form-input" value="google-adsense" placeholder="例如: google-adsense">
+      </div>
+      <div class="form-group">
+        <label class="form-label">客户用户识别名 (User ID)</label>
+        <input type="text" id="userId" class="form-input" value="zw862001" placeholder="例如: zw862001">
+      </div>
+    </div>
+
+    <!-- Date Picker & Presets -->
+    <div class="form-group">
+      <label class="form-label">授权到期年月日时间 (Visual Date & Time)</label>
+      <input type="datetime-local" id="datetimePicker" class="form-input" onchange="updateTimestampFromDate()">
+      <div class="preset-btns">
+        <button class="btn-preset" onclick="setPresetMonths(1)">+ 1 个月</button>
+        <button class="btn-preset" onclick="setPresetMonths(3)">+ 3 个月</button>
+        <button class="btn-preset" onclick="setPresetMonths(6)">+ 6 个月</button>
+        <button class="btn-preset" onclick="setPresetYears(1)">+ 1 年</button>
+        <button class="btn-preset" onclick="setPresetPermanent()">永久授权 (2099年)</button>
+      </div>
+      <div class="timestamp-hint">
+        自动换算 13 位毫秒时间戳: <strong id="tsDisplay" style="color: #f0b90b;">-</strong>
+      </div>
+    </div>
+
+    <!-- Status Choice -->
+    <div class="form-group">
+      <label class="form-label">软件授权状态 (Active Status)</label>
+      <select id="activeStatus" class="form-select" style="font-weight: 700;">
+        <option value="true" style="color: #155724;">✅ 正常启用 (Active / Authorized)</option>
+        <option value="false" style="color: #721c24;">⛔ 禁用封号 (Disabled / Revoked)</option>
+      </select>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-grid">
+      <button class="btn-action-save" onclick="saveLicenseToChain()">写入 BNB 链保存授权</button>
+      <button class="btn-action-query" onclick="queryLicenseFromChain()">在线免费查询授权数据</button>
+    </div>
+
+    <!-- Result Display -->
+    <div id="resultBox" class="result-box">
+      <div id="txStatusMsg" style="color: #0958d9; font-weight: 700; font-size: 13px; margin-bottom: 8px;"></div>
+      <div class="result-title">链上查询结果反馈：</div>
+      <div class="result-item">许可到期时间：<strong id="resExpireDate">-</strong></div>
+      <div class="result-item">到期时间戳 (ms)：<span id="resExpireTs" style="font-family: monospace;">-</span></div>
+      <div class="result-item">账号启用状态：<span id="resStatusBadge" class="status-badge">-</span></div>
+      <div class="result-item">BNB 链共识客观时间：<span id="resBlockTime" style="font-family: monospace;">-</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const CONTRACT_ABI = [
+    "function setLicense(string projectId, string userId, uint256 expireTimestampMs, bool isActive) public",
+    "function getLicense(string projectId, string userId) external view returns (uint256 expireTimestampMs, bool isActive, bool isExpired, uint256 blockTimestampMs)"
+  ];
+
+  let userSigner = null;
+
+  // 初始化检查与设置默认到期时间为 2026-10-18
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      const isFile = window.location.protocol === 'file:';
+      const hasEth = typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined';
+      if (!hasEth) {
+        document.getElementById('fileUrlNotice').style.display = 'block';
+      }
+    }, 300);
+
+    const defaultDate = new Date("2026-10-18T00:00:00");
+    setPickerValue(defaultDate);
+  });
+
+  function setPickerValue(dateObj) {
+    const pad = (n) => String(n).padStart(2, '0');
+    const localIso = `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}T${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
+    document.getElementById('datetimePicker').value = localIso;
+    updateTimestampFromDate();
+  }
+
+  function updateTimestampFromDate() {
+    const val = document.getElementById('datetimePicker').value;
+    if (val) {
+      const ts = new Date(val).getTime();
+      document.getElementById('tsDisplay').innerText = ts;
+    }
+  }
+
+  function setPresetMonths(months) {
+    const d = new Date();
+    d.setMonth(d.getMonth() + months);
+    setPickerValue(d);
+  }
+
+  function setPresetYears(years) {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + years);
+    setPickerValue(d);
+  }
+
+  function setPresetPermanent() {
+    const d = new Date("2099-12-31T23:59:59");
+    setPickerValue(d);
+  }
+
+  async function connectWallet() {
+    let ethereumProvider = window.ethereum;
+    if (!ethereumProvider && window.web3) {
+      ethereumProvider = window.web3.currentProvider;
+    }
+
+    if (!ethereumProvider) {
+      if (window.location.protocol === 'file:') {
+        alert("未检测到小狐狸 (MetaMask) 钱包！\n\n原因：由于您是双击打开本地 HTML 网页 (file://)，Chrome/Edge 默认禁止插件注入。\n\n请在浏览器扩展管理 (chrome://extensions) 找到 MetaMask ➔ 开启【允许访问文件网址】(Allow access to file URLs)，刷新网页后再点击！");
+      } else {
+        alert("未检测到小狐狸 (MetaMask) 钱包插件，请确保浏览器已安装小狐狸钱包！");
+      }
+      return;
+    }
+
+    try {
+      // 使用原生以太坊注入对象发起连接，100% 唤起小狐狸弹窗
+      const accounts = await ethereumProvider.request({ method: 'eth_requestAccounts' });
+      if (accounts && accounts.length > 0) {
+        const addr = accounts[0];
+        document.getElementById('walletAddr').innerText = `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
+        document.getElementById('btnConnect').innerText = "已连接小狐狸";
+        document.getElementById('btnConnect').style.backgroundColor = "#52c41a";
+        document.getElementById('fileUrlNotice').style.display = 'none';
+
+        if (window.ethers) {
+          const provider = new ethers.providers.Web3Provider(ethereumProvider);
+          userSigner = provider.getSigner();
+        }
+
+        // 尝试自动切换到 BSC 链 (ChainID: 56 / 0x38)
+        try {
+          await ethereumProvider.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x38' }],
+          });
+        } catch (e) {
+          console.warn("网络切换提醒:", e);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      alert("连接小狐狸钱包失败: " + (err.message || err));
+    }
+  }
+
+  async function saveLicenseToChain() {
+    if (!userSigner) {
+      await connectWallet();
+      if (!userSigner) return;
+    }
+
+    const contractAddr = document.getElementById('contractAddr').value.trim();
+    const projectId = document.getElementById('projectId').value.trim();
+    const userId = document.getElementById('userId').value.trim();
+    const dateVal = document.getElementById('datetimePicker').value;
+    const isActive = document.getElementById('activeStatus').value === "true";
+
+    if (!projectId || !userId || !dateVal) {
+      alert("请完整填写项目 ID、用户 ID 和到期时间！");
+      return;
+    }
+
+    const expireTimestampMs = new Date(dateVal).getTime();
+
+    try {
+      const contract = new ethers.Contract(contractAddr, CONTRACT_ABI, userSigner);
+      alert(`准备向 BNB 链写入授权：\n项目: ${projectId}\n用户: ${userId}\n到期时间戳: ${expireTimestampMs}\n状态: ${isActive ? "启用" : "禁用"}\n\n请在 OKX 钱包中确认交易！`);
+
+      const tx = await contract.setLicense(projectId, userId, expireTimestampMs, isActive);
+      document.getElementById('resultBox').className = "result-box active";
+      document.getElementById('txStatusMsg').innerText = `⏳ 交易已广播，等待 BNB 链上打包确认... (Hash: ${tx.hash.substring(0, 10)}...)`;
+
+      await tx.wait();
+      document.getElementById('txStatusMsg').innerText = "🎉 交易已上链确认！授权生效！";
+      alert("🎉 恭喜！授权已成功写入 BNB 链！全网软件客户端将在 60 分钟内或启动时自动同步生效！");
+      queryLicenseFromChain();
+    } catch (err) {
+      console.error(err);
+      alert("写入失败: " + (err.reason || err.message));
+    }
+  }
+
+  async function queryLicenseFromChain() {
+    const contractAddr = document.getElementById('contractAddr').value.trim();
+    const projectId = document.getElementById('projectId').value.trim();
+    const userId = document.getElementById('userId').value.trim();
+
+    if (!projectId || !userId) {
+      alert("请填写要查询的项目 ID 和用户 ID！");
+      return;
+    }
+
+    try {
+      const provider = new ethers.providers.JsonRpcProvider("https://bnb-mainnet.g.alchemy.com/v2/G1X7mDlYUN9Y35_Lix2QzoAxTssQs1Bj");
+      const contract = new ethers.Contract(contractAddr, CONTRACT_ABI, provider);
+
+      const res = await contract.getLicense(projectId, userId);
+      const expireMs = res.expireTimestampMs.toNumber();
+      const isActive = res.isActive;
+      const isExpired = res.isExpired;
+      const blockMs = res.blockTimestampMs.toNumber();
+
+      const box = document.getElementById('resultBox');
+      box.className = "result-box active";
+
+      document.getElementById('resExpireTs').innerText = expireMs;
+      document.getElementById('resBlockTime').innerText = `${new Date(blockMs).toLocaleString()} (${blockMs})`;
+
+      if (expireMs === 0) {
+        document.getElementById('resExpireDate').innerText = "未配置/无记录";
+      } else {
+        const dStr = new Date(expireMs).toLocaleString();
+        document.getElementById('resExpireDate').innerText = `${dStr} (${isExpired ? "⚠️ 已超期" : "✅ 有效期内"})`;
+      }
+
+      const badge = document.getElementById('resStatusBadge');
+      if (isActive) {
+        badge.className = "status-badge active";
+        badge.innerText = "✅ 正常启用";
+      } else {
+        badge.className = "status-badge disabled";
+        badge.innerText = "⛔ 禁用封号";
+      }
+    } catch (err) {
+      console.error(err);
+      alert("查询失败: " + err.message);
+    }
+  }
+</script>
+
+</body>
+</html>
