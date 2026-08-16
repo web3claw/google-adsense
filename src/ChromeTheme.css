@@ -2173,13 +2173,16 @@ input,
 }
 
 @keyframes googleSpinnerColors {
-  0%, 100% {
-    stroke: #4285f4; /* 蓝色 Blue */
+  0%, 28% {
+    stroke: #4285f4; /* 纯正蓝色 Blue */
   }
-  33% {
-    stroke: #ea4335; /* 红色 Red */
+  33%, 61% {
+    stroke: #ea4335; /* 纯正红色 Red */
   }
-  66% {
-    stroke: #fbbc05; /* 橙黄色 Orange */
+  66%, 94% {
+    stroke: #fbbc05; /* 纯正橙黄色 Orange */
+  }
+  100% {
+    stroke: #4285f4; /* 纯正蓝色 Blue */
   }
 }
