@@ -28,6 +28,9 @@ interface BrowserContextType {
   currencySymbol: string;
   uiScalePercent: number;
   isSettingsModalOpen: boolean;
+  productMode: "admanager" | "adsense";
+  adManagerNetworkCode: string;
+  adManagerDomain: string;
 
   // Actions
   setActiveTabId: (id: string) => void;
@@ -41,6 +44,9 @@ interface BrowserContextType {
   setNetworkDelay: (ms: number) => void;
   setCurrencySymbol: (symbol: string) => void;
   setUiScalePercent: (val: number) => void;
+  setProductMode: (mode: "admanager" | "adsense") => void;
+  setAdManagerNetworkCode: (code: string) => void;
+  setAdManagerDomain: (domain: string) => void;
   formatCurrency: (val: string | number) => string;
 }
 
@@ -83,6 +89,22 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return saved ? Number(saved) : 110;
   });
 
+  // Product Mode: "admanager" | "adsense" (Default: "admanager")
+  const [productMode, setProductModeState] = useState<"admanager" | "adsense">(() => {
+    const saved = localStorage.getItem("adsense_product_mode");
+    return (saved as "admanager" | "adsense") || "admanager";
+  });
+
+  // Ad Manager Network Code (Default: "23355001669")
+  const [adManagerNetworkCode, setAdManagerNetworkCodeState] = useState<string>(() => {
+    return localStorage.getItem("adsense_network_code") || "23355001669";
+  });
+
+  // Ad Manager Domain (Default: "falgeldi.com")
+  const [adManagerDomain, setAdManagerDomainState] = useState<string>(() => {
+    return localStorage.getItem("adsense_domain") || "falgeldi.com";
+  });
+
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
@@ -92,6 +114,18 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     localStorage.setItem("adsense_currency_symbol", currencySymbol);
   }, [currencySymbol]);
+
+  useEffect(() => {
+    localStorage.setItem("adsense_product_mode", productMode);
+  }, [productMode]);
+
+  useEffect(() => {
+    localStorage.setItem("adsense_network_code", adManagerNetworkCode);
+  }, [adManagerNetworkCode]);
+
+  useEffect(() => {
+    localStorage.setItem("adsense_domain", adManagerDomain);
+  }, [adManagerDomain]);
 
   useEffect(() => {
     localStorage.setItem("adsense_ui_scale_percent", String(uiScalePercent));
@@ -261,6 +295,9 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
         currencySymbol,
         uiScalePercent,
         isSettingsModalOpen,
+        productMode,
+        adManagerNetworkCode,
+        adManagerDomain,
         setActiveTabId,
         goBack,
         goForward,
@@ -272,6 +309,9 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setNetworkDelay: setNetworkDelayState,
         setCurrencySymbol: setCurrencySymbolState,
         setUiScalePercent: setUiScalePercentState,
+        setProductMode: setProductModeState,
+        setAdManagerNetworkCode: setAdManagerNetworkCodeState,
+        setAdManagerDomain: setAdManagerDomainState,
         formatCurrency,
       }}
     >

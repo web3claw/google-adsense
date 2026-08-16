@@ -11,6 +11,12 @@ export const GlobalSettingsModal: React.FC = () => {
     setCurrencySymbol,
     uiScalePercent,
     setUiScalePercent,
+    productMode,
+    setProductMode,
+    adManagerNetworkCode,
+    setAdManagerNetworkCode,
+    adManagerDomain,
+    setAdManagerDomain,
   } = useBrowser();
 
   if (!isSettingsModalOpen) return null;
@@ -64,6 +70,60 @@ export const GlobalSettingsModal: React.FC = () => {
             </i>
             Global Preferences & Network Simulation (全局设置)
           </h4>
+
+          {/* Section 0: Product Mode & Ad Manager Configuration */}
+          <div className="settings-group" style={{ backgroundColor: "#f8f9fa", padding: "12px 14px", borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+            <label className="settings-label" style={{ color: "#202124", fontSize: "14px" }}>
+              App Product Theme Mode (产品界面外观与模式)
+            </label>
+            <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
+              <button
+                type="button"
+                className={`currency-option-btn ${productMode === "admanager" ? "selected" : ""}`}
+                onClick={() => setProductMode("admanager")}
+                style={{ flex: 1, padding: "8px 12px", justifyContent: "center" }}
+              >
+                <span style={{ fontSize: "13px", fontWeight: 700 }}>Google Ad Manager 模式</span>
+              </button>
+              <button
+                type="button"
+                className={`currency-option-btn ${productMode === "adsense" ? "selected" : ""}`}
+                onClick={() => setProductMode("adsense")}
+                style={{ flex: 1, padding: "8px 12px", justifyContent: "center" }}
+              >
+                <span style={{ fontSize: "13px", fontWeight: 700 }}>Google AdSense 模式</span>
+              </button>
+            </div>
+
+            {productMode === "admanager" && (
+              <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px dashed #ccc", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <div>
+                  <label className="settings-hint" style={{ fontWeight: 700, color: "#3c4043", marginBottom: "4px", display: "block" }}>
+                    Network Code 网络代码 (如 23355001669):
+                  </label>
+                  <input
+                    type="text"
+                    value={adManagerNetworkCode}
+                    onChange={(e) => setAdManagerNetworkCode(e.target.value)}
+                    className="settings-num-input"
+                    style={{ width: "100%", height: "34px", padding: "0 8px", fontSize: "13px", fontWeight: 700, color: "#1a73e8", backgroundColor: "#ffffff" }}
+                  />
+                </div>
+                <div>
+                  <label className="settings-hint" style={{ fontWeight: 700, color: "#3c4043", marginBottom: "4px", display: "block" }}>
+                    Sidebar Domain 侧边栏域名 (如 falgeldi.com):
+                  </label>
+                  <input
+                    type="text"
+                    value={adManagerDomain}
+                    onChange={(e) => setAdManagerDomain(e.target.value)}
+                    className="settings-num-input"
+                    style={{ width: "100%", height: "34px", padding: "0 8px", fontSize: "13px", fontWeight: 700, color: "#1a73e8", backgroundColor: "#ffffff" }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Section 1: Display Resolution & UI Scale */}
           <div className="settings-group">

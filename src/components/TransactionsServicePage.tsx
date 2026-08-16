@@ -16,7 +16,7 @@ export const TransactionsServicePage: React.FC<{
   onNavigateToPolicy?: () => void;
   onNavigateBackToPayments?: () => void;
 }> = ({ onNavigateBackToPayments }) => {
-  const { currentEntry, formatCurrency, setIsSettingsModalOpen, currencySymbol } = useBrowser();
+  const { currentEntry, formatCurrency, setIsSettingsModalOpen, currencySymbol, productMode } = useBrowser();
 
   // Financial Config Persistence
   const [earningsConfig, setEarningsConfig] = useState<EarningsConfigData>(() => {
@@ -211,46 +211,52 @@ export const TransactionsServicePage: React.FC<{
       title="Double-click to edit parameters and recalculate balances"
       style={{ userSelect: "none" }}
     >
-      {/* Top Header Bar */}
-      <div className="adsense-topbar">
-        <h1 className="adsense-topbar-title">Payments info</h1>
-        <div className="adsense-topbar-right">
-          <button className="topbar-icon-btn" title="Help">
-            <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ fontSize: "20px", color: "#5F6368" }}>
-              help_outline
-            </i>
-          </button>
-          <button className="topbar-icon-btn" title="Notifications">
-            <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ fontSize: "20px", color: "#5F6368" }}>
-              notifications_none
-            </i>
-          </button>
-          <div
-            className="topbar-avatar"
-            title="Google Account & Global Settings"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsSettingsModalOpen(true);
-            }}
-            style={{ cursor: "pointer" }}
-          >
-            <svg width="28" height="28" viewBox="0 0 32 32">
-              <circle cx="16" cy="16" r="16" fill="#1A73E8" />
-              <path d="M16 18c-3.5 0-10 1.75-10 5.25V26h20v-2.75C26 19.75 19.5 18 16 18z" fill="#FFF" />
-              <circle cx="16" cy="11" r="4.5" fill="#FFF" />
-            </svg>
+      {/* Top Header Bar (Only in AdSense Mode) */}
+      {productMode === "adsense" && (
+        <div className="adsense-topbar">
+          <h1 className="adsense-topbar-title">Payments info</h1>
+          <div className="adsense-topbar-right">
+            <button className="topbar-icon-btn" title="Help">
+              <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ fontSize: "20px", color: "#5F6368" }}>
+                help_outline
+              </i>
+            </button>
+            <button className="topbar-icon-btn" title="Notifications">
+              <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ fontSize: "20px", color: "#5F6368" }}>
+                notifications_none
+              </i>
+            </button>
+            <div
+              className="topbar-avatar"
+              title="Google Account & Global Settings"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsSettingsModalOpen(true);
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              <svg width="28" height="28" viewBox="0 0 32 32">
+                <circle cx="16" cy="16" r="16" fill="#1A73E8" />
+                <path d="M16 18c-3.5 0-10 1.75-10 5.25V26h20v-2.75C26 19.75 19.5 18 16 18z" fill="#FFF" />
+                <circle cx="16" cy="11" r="4.5" fill="#FFF" />
+              </svg>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Content Viewport */}
       <div className="payments-page-content">
         {/* Main Body */}
         <div className="payments-main-body">
-          {/* Header & Breadcrumb */}
+          {/* Payments Account Header */}
           <div className="payments-account-header">
-            <span className="payments-account-sublabel">PAYMENTS ACCOUNT</span>
-            <span className="payments-account-title">AdSense ({earningsConfig.countryName || "United Kingdom"})</span>
+            {productMode === "adsense" && (
+              <>
+                <span className="payments-account-sublabel">PAYMENTS ACCOUNT</span>
+                <span className="payments-account-title">AdSense ({earningsConfig.countryName || "United Kingdom"})</span>
+              </>
+            )}
             <div className="breadcrumb-title-row">
               <span
                 className="breadcrumb-link"

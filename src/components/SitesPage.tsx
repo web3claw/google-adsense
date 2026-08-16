@@ -29,7 +29,7 @@ export const SitesPage: React.FC<{
   onNavigateToDetail?: (siteUrl: string) => void;
   onNavigateToPolicy?: () => void;
 }> = ({ onNavigateToDetail }) => {
-  const { setIsSettingsModalOpen } = useBrowser();
+  const { setIsSettingsModalOpen, productMode } = useBrowser();
   const [sites, setSites] = useState<SiteItem[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -160,44 +160,46 @@ export const SitesPage: React.FC<{
 
   return (
     <div className="sites-page-container">
-      {/* Top Header Bar */}
-      <div className="adsense-topbar">
-        <h1 className="adsense-topbar-title">Sites</h1>
-        <div className="adsense-topbar-right">
-          <button className="topbar-icon-btn" title="Help">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="9" stroke="#5F6368" strokeWidth="1.8" />
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" stroke="#5F6368" strokeWidth="1.8" strokeLinecap="round" />
-              <circle cx="12" cy="17" r="1" fill="#5F6368" />
-            </svg>
-          </button>
-          <button className="topbar-icon-btn" title="Notifications">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5F6368" strokeWidth="1.8">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" />
-            </svg>
-          </button>
-          <div
-            className="topbar-avatar"
-            title="Google Account & Global Settings"
-            onClick={() => setIsSettingsModalOpen(true)}
-            style={{ cursor: "pointer" }}
-          >
-            <svg width="28" height="28" viewBox="0 0 32 32">
-              <circle cx="16" cy="16" r="16" fill="#1A73E8" />
-              <path d="M16 18c-3.5 0-10 1.75-10 5.25V26h20v-2.75C26 19.75 19.5 18 16 18z" fill="#FFF" />
-              <circle cx="16" cy="11" r="4.5" fill="#FFF" />
-            </svg>
+      {/* Top Header Bar (Only in AdSense Mode) */}
+      {productMode === "adsense" && (
+        <div className="adsense-topbar">
+          <h1 className="adsense-topbar-title">Sites</h1>
+          <div className="adsense-topbar-right">
+            <button className="topbar-icon-btn" title="Help">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" stroke="#5F6368" strokeWidth="1.8" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" stroke="#5F6368" strokeWidth="1.8" strokeLinecap="round" />
+                <circle cx="12" cy="17" r="1" fill="#5F6368" />
+              </svg>
+            </button>
+            <button className="topbar-icon-btn" title="Notifications">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5F6368" strokeWidth="1.8">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" />
+              </svg>
+            </button>
+            <div
+              className="topbar-avatar"
+              title="Google Account & Global Settings"
+              onClick={() => setIsSettingsModalOpen(true)}
+              style={{ cursor: "pointer" }}
+            >
+              <svg width="28" height="28" viewBox="0 0 32 32">
+                <circle cx="16" cy="16" r="16" fill="#1A73E8" />
+                <path d="M16 18c-3.5 0-10 1.75-10 5.25V26h20v-2.75C26 19.75 19.5 18 16 18z" fill="#FFF" />
+                <circle cx="16" cy="11" r="4.5" fill="#FFF" />
+              </svg>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Content Viewport */}
       <div className="sites-page-content">
         {/* Manage Your Sites Hero */}
         <div className="manage-sites-hero">
           <div className="hero-text-side">
-            <h2 className="hero-title">Manage your sites</h2>
+            <h2 className="hero-title">Sites</h2>
             <p className="hero-subtitle">
               Add sites you want to monetize with AdSense.{" "}
               <a href="#learn-more" className="hero-link" onClick={(e) => e.preventDefault()}>

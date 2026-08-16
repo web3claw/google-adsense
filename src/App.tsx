@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import { BrowserProvider, useBrowser } from "./context/BrowserContext";
 import { ChromeHeader } from "./components/ChromeHeader";
 import { Sidebar } from "./components/Sidebar";
+import { AdManagerHeader } from "./components/AdManagerHeader";
+import { AdManagerSidebar } from "./components/AdManagerSidebar";
 import { SitesPage } from "./components/SitesPage";
 import { PaymentsInfoPage } from "./components/PaymentsInfoPage";
 import { TransactionsServicePage } from "./components/TransactionsServicePage";
 import "./ChromeTheme.css";
 
 const PageViewport: React.FC = () => {
-  const { currentEntry, refreshKey, isRefreshing, isNavigatingLoading, navigateTo } = useBrowser();
+  const { currentEntry, refreshKey, isRefreshing, isNavigatingLoading, navigateTo, productMode } = useBrowser();
   const [loadTime, setLoadTime] = useState<string>(new Date().toLocaleTimeString());
 
   useEffect(() => {
@@ -18,32 +20,34 @@ const PageViewport: React.FC = () => {
   if (isNavigatingLoading) {
     return (
       <div className="viewport-content">
-        <div className="adsense-topbar">
-          <h1 className="adsense-topbar-title">
-            {currentEntry.pageId === "payments-info" || currentEntry.pageId === "transactions-service"
-              ? "Payments info"
-              : "Sites"}
-          </h1>
-          <div className="adsense-topbar-right">
-            <button className="topbar-icon-btn" title="Help">
-              <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px", color: "#5F6368" }}>
-                help_outline
-              </i>
-            </button>
-            <button className="topbar-icon-btn" title="Notifications">
-              <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px", color: "#5F6368" }}>
-                notifications_none
-              </i>
-            </button>
-            <div className="topbar-avatar" title="Google Account">
-              <svg width="28" height="28" viewBox="0 0 32 32">
-                <circle cx="16" cy="16" r="16" fill="#1A73E8" />
-                <path d="M16 18c-3.5 0-10 1.75-10 5.25V26h20v-2.75C26 19.75 19.5 18 16 18z" fill="#FFF" />
-                <circle cx="16" cy="11" r="4.5" fill="#FFF" />
-              </svg>
+        {productMode === "adsense" && (
+          <div className="adsense-topbar">
+            <h1 className="adsense-topbar-title">
+              {currentEntry.pageId === "payments-info" || currentEntry.pageId === "transactions-service"
+                ? "Payments info"
+                : "Sites"}
+            </h1>
+            <div className="adsense-topbar-right">
+              <button className="topbar-icon-btn" title="Help">
+                <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px", color: "#5F6368" }}>
+                  help_outline
+                </i>
+              </button>
+              <button className="topbar-icon-btn" title="Notifications">
+                <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px", color: "#5F6368" }}>
+                  notifications_none
+                </i>
+              </button>
+              <div className="topbar-avatar" title="Google Account">
+                <svg width="28" height="28" viewBox="0 0 32 32">
+                  <circle cx="16" cy="16" r="16" fill="#1A73E8" />
+                  <path d="M16 18c-3.5 0-10 1.75-10 5.25V26h20v-2.75C26 19.75 19.5 18 16 18z" fill="#FFF" />
+                  <circle cx="16" cy="11" r="4.5" fill="#FFF" />
+                </svg>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Topbar Linear Progress Bar */}
         <div className="google-linear-progress">
@@ -328,7 +332,7 @@ const PageViewport: React.FC = () => {
 import { GlobalSettingsModal } from "./components/GlobalSettingsModal";
 
 export function App() {
-  const { uiScalePercent } = useBrowser();
+  const { uiScalePercent, productMode } = useBrowser();
   const factor = (uiScalePercent || 110) / 100;
 
   return (
@@ -344,9 +348,9 @@ export function App() {
         overflow: "hidden",
       }}
     >
-      <ChromeHeader />
+      {productMode === "admanager" ? <AdManagerHeader /> : <ChromeHeader />}
       <main className="chrome-viewport">
-        <Sidebar />
+        {productMode === "admanager" ? <AdManagerSidebar /> : <Sidebar />}
         <PageViewport />
       </main>
 
