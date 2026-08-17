@@ -29,6 +29,10 @@ interface BrowserContextType {
   uiScalePercent: number;
   isSettingsModalOpen: boolean;
 
+  // User Profile Settings State
+  userProfileName: string;
+  userProfileEmail: string;
+
   // Actions
   setActiveTabId: (id: string) => void;
   goBack: () => void;
@@ -41,6 +45,8 @@ interface BrowserContextType {
   setNetworkDelay: (ms: number) => void;
   setCurrencySymbol: (symbol: string) => void;
   setUiScalePercent: (val: number) => void;
+  setUserProfileName: (name: string) => void;
+  setUserProfileEmail: (email: string) => void;
   formatCurrency: (val: string | number) => string;
 }
 
@@ -84,6 +90,22 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
   });
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+
+  const [userProfileName, setUserProfileNameState] = useState<string>(() => {
+    return localStorage.getItem("adsense_profile_name") || "Sashmita Caglar";
+  });
+
+  const [userProfileEmail, setUserProfileEmailState] = useState<string>(() => {
+    return localStorage.getItem("adsense_profile_email") || "sashmitacaglar@gmail.com";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("adsense_profile_name", userProfileName);
+  }, [userProfileName]);
+
+  useEffect(() => {
+    localStorage.setItem("adsense_profile_email", userProfileEmail);
+  }, [userProfileEmail]);
 
   useEffect(() => {
     localStorage.setItem("adsense_network_delay", String(networkDelay));
@@ -261,6 +283,8 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
         currencySymbol,
         uiScalePercent,
         isSettingsModalOpen,
+        userProfileName,
+        userProfileEmail,
         setActiveTabId,
         goBack,
         goForward,
@@ -272,6 +296,8 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setNetworkDelay: setNetworkDelayState,
         setCurrencySymbol: setCurrencySymbolState,
         setUiScalePercent: setUiScalePercentState,
+        setUserProfileName: setUserProfileNameState,
+        setUserProfileEmail: setUserProfileEmailState,
         formatCurrency,
       }}
     >

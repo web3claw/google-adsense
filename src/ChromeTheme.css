@@ -1888,12 +1888,16 @@ input,
    ========================================================================== */
 
 .settings-modal-card {
-  width: 520px;
+  width: 540px;
   max-width: 95vw;
+  max-height: 60vh;
   border-radius: 16px;
   padding: 24px;
   background-color: #ffffff;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .settings-modal-header {
@@ -1954,6 +1958,23 @@ input,
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding-right: 4px;
+}
+
+.settings-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.settings-modal-body::-webkit-scrollbar-thumb {
+  background-color: #dadce0;
+  border-radius: 3px;
+}
+
+.settings-modal-body::-webkit-scrollbar-thumb:hover {
+  background-color: #bdc1c6;
 }
 
 .settings-section-title {
@@ -2185,4 +2206,109 @@ input,
   100% {
     stroke: #4285f4; /* 纯正蓝色 Blue */
   }
+}
+
+/* ==========================================================================
+   Google Official User Profile Popover Card Styles (1:1 Matching Original)
+   ========================================================================== */
+.as-profile-popover-dialog {
+  position: absolute;
+  top: 34px;
+  right: -32px;
+  width: 320px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18), 0 0 1px rgba(0, 0, 0, 0.12);
+  z-index: 9999;
+  user-select: none;
+  animation: profilePopoverFadeIn 0.15s ease-out;
+}
+
+@keyframes profilePopoverFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.as-profile-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.selected-profile-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 20px 16px 20px;
+}
+
+.profile-photo-container {
+  flex-shrink: 0;
+}
+
+.profile-details {
+  flex: 1;
+  overflow: hidden;
+}
+
+.profile-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #202124;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-email {
+  font-size: 13px;
+  color: #5f6368;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.profile-actions {
+  margin-top: 6px;
+}
+
+.my-account-link {
+  font-size: 13px;
+  color: #1a73e8;
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.as-gaia-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-top: 1px solid #e0e0e0;
+  background-color: #f8f9fa;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.profile-btn-action {
+  background: transparent;
+  border: none;
+  color: #1a73e8;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.profile-btn-action:hover {
+  background-color: rgba(26, 115, 232, 0.08);
 }

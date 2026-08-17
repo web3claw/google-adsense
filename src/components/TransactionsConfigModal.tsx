@@ -254,7 +254,7 @@ export const TransactionsConfigModal: React.FC<TransactionsConfigModalProps> = (
       <div
         className="modal-card settings-modal-card"
         onClick={(e) => e.stopPropagation()}
-        style={{ width: "880px", maxWidth: "94vw", maxHeight: "90vh", overflowY: "auto", padding: "28px" }}
+        style={{ width: "880px", maxWidth: "94vw", maxHeight: "75vh", overflowY: "auto", padding: "28px" }}
       >
         {/* Header */}
         <div className="settings-modal-header" style={{ paddingBottom: "12px" }}>

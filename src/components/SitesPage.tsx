@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useBrowser } from "../context/BrowserContext";
+import { UserProfilePopover } from "./UserProfilePopover";
 
 export interface SiteItem {
   id: string;
@@ -29,7 +29,7 @@ export const SitesPage: React.FC<{
   onNavigateToDetail?: (siteUrl: string) => void;
   onNavigateToPolicy?: () => void;
 }> = ({ onNavigateToDetail }) => {
-  const { setIsSettingsModalOpen } = useBrowser();
+  const [isProfilePopoverOpen, setIsProfilePopoverOpen] = useState<boolean>(false);
   const [sites, setSites] = useState<SiteItem[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -163,7 +163,7 @@ export const SitesPage: React.FC<{
       {/* Top Header Bar */}
       <div className="adsense-topbar">
         <h1 className="adsense-topbar-title">Sites</h1>
-        <div className="adsense-topbar-right">
+        <div className="adsense-topbar-right" style={{ position: "relative" }}>
           <button className="topbar-icon-btn" title="Help">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="9" stroke="#5F6368" strokeWidth="1.8" />
@@ -179,8 +179,8 @@ export const SitesPage: React.FC<{
           </button>
           <div
             className="topbar-avatar"
-            title="Google Account & Global Settings"
-            onClick={() => setIsSettingsModalOpen(true)}
+            title="Google Account"
+            onClick={() => setIsProfilePopoverOpen(!isProfilePopoverOpen)}
             style={{ cursor: "pointer" }}
           >
             <svg width="28" height="28" viewBox="0 0 32 32">
@@ -189,6 +189,10 @@ export const SitesPage: React.FC<{
               <circle cx="16" cy="11" r="4.5" fill="#FFF" />
             </svg>
           </div>
+          <UserProfilePopover
+            isOpen={isProfilePopoverOpen}
+            onClose={() => setIsProfilePopoverOpen(false)}
+          />
         </div>
       </div>
 

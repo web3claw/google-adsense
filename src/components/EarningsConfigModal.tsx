@@ -175,7 +175,7 @@ export const EarningsConfigModal: React.FC<EarningsConfigModalProps> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card settings-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "560px", maxHeight: "85vh", overflowY: "auto" }}>
+      <div className="modal-card settings-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "560px", maxHeight: "75vh", overflowY: "auto" }}>
         {/* Header */}
         <div className="settings-modal-header" style={{ paddingBottom: "12px" }}>
           <div className="settings-user-info">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useBrowser } from "../context/BrowserContext";
+import { UserProfilePopover } from "./UserProfilePopover";
 import {
   EarningsConfigModal,
   EarningsConfigData,
@@ -12,7 +13,8 @@ export const PaymentsInfoPage: React.FC<{
   onNavigateToPolicy?: () => void;
   onNavigateToTransactions?: (hash?: string) => void;
 }> = ({ onNavigateToTransactions }) => {
-  const { formatCurrency, setIsSettingsModalOpen } = useBrowser();
+  const { formatCurrency } = useBrowser();
+  const [isProfilePopoverOpen, setIsProfilePopoverOpen] = useState<boolean>(false);
 
   const [earningsConfig, setEarningsConfig] = useState<EarningsConfigData>(() => {
     try {
@@ -76,7 +78,7 @@ export const PaymentsInfoPage: React.FC<{
       {/* Top Header Bar */}
       <div className="adsense-topbar">
         <h1 className="adsense-topbar-title">Payments info</h1>
-        <div className="adsense-topbar-right">
+        <div className="adsense-topbar-right" style={{ position: "relative" }}>
           <button className="topbar-icon-btn" title="Help">
             <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ fontSize: "20px", color: "#5F6368" }}>
               help_outline
@@ -89,8 +91,8 @@ export const PaymentsInfoPage: React.FC<{
           </button>
           <div
             className="topbar-avatar"
-            title="Google Account & Global Settings"
-            onClick={() => setIsSettingsModalOpen(true)}
+            title="Google Account"
+            onClick={() => setIsProfilePopoverOpen(!isProfilePopoverOpen)}
             style={{ cursor: "pointer" }}
           >
             <svg width="28" height="28" viewBox="0 0 32 32">
@@ -99,6 +101,10 @@ export const PaymentsInfoPage: React.FC<{
               <circle cx="16" cy="11" r="4.5" fill="#FFF" />
             </svg>
           </div>
+          <UserProfilePopover
+            isOpen={isProfilePopoverOpen}
+            onClose={() => setIsProfilePopoverOpen(false)}
+          />
         </div>
       </div>
 

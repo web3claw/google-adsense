@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useBrowser } from "../context/BrowserContext";
+import { UserProfilePopover } from "./UserProfilePopover";
 import {
   EarningsConfigData,
   TransactionItem,
@@ -16,7 +17,8 @@ export const TransactionsServicePage: React.FC<{
   onNavigateToPolicy?: () => void;
   onNavigateBackToPayments?: () => void;
 }> = ({ onNavigateBackToPayments }) => {
-  const { currentEntry, formatCurrency, setIsSettingsModalOpen, currencySymbol } = useBrowser();
+  const { currentEntry, formatCurrency, currencySymbol } = useBrowser();
+  const [isProfilePopoverOpen, setIsProfilePopoverOpen] = useState<boolean>(false);
 
   // Financial Config Persistence
   const [earningsConfig, setEarningsConfig] = useState<EarningsConfigData>(() => {
@@ -214,7 +216,7 @@ export const TransactionsServicePage: React.FC<{
       {/* Top Header Bar */}
       <div className="adsense-topbar">
         <h1 className="adsense-topbar-title">Payments info</h1>
-        <div className="adsense-topbar-right">
+        <div className="adsense-topbar-right" style={{ position: "relative" }}>
           <button className="topbar-icon-btn" title="Help">
             <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ fontSize: "20px", color: "#5F6368" }}>
               help_outline
@@ -227,10 +229,10 @@ export const TransactionsServicePage: React.FC<{
           </button>
           <div
             className="topbar-avatar"
-            title="Google Account & Global Settings"
+            title="Google Account"
             onClick={(e) => {
               e.stopPropagation();
-              setIsSettingsModalOpen(true);
+              setIsProfilePopoverOpen(!isProfilePopoverOpen);
             }}
             style={{ cursor: "pointer" }}
           >
@@ -240,6 +242,10 @@ export const TransactionsServicePage: React.FC<{
               <circle cx="16" cy="11" r="4.5" fill="#FFF" />
             </svg>
           </div>
+          <UserProfilePopover
+            isOpen={isProfilePopoverOpen}
+            onClose={() => setIsProfilePopoverOpen(false)}
+          />
         </div>
       </div>
 

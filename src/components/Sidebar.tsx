@@ -309,11 +309,11 @@ export const Sidebar: React.FC = () => {
           {paymentsExpanded && !isCollapsed && (
             <div className="sidebar-subgroup">
               <div
-                className={`sidebar-item subitem ${activePageId === "payments-info" ? "active" : ""}`}
+                className={`sidebar-item subitem ${activePageId === "payments-info" || activePageId === "transactions-service" ? "active" : ""}`}
                 onClick={() => handleNav("payments-info", "Payments info – Payments", "payments")}
               >
                 <div className="sidebar-item-content">
-                  <span className="sidebar-subicon"><DotIcon active={activePageId === "payments-info"} /></span>
+                  <span className="sidebar-subicon"><DotIcon active={activePageId === "payments-info" || activePageId === "transactions-service"} /></span>
                   <span className="sidebar-label">Payments info</span>
                 </div>
               </div>

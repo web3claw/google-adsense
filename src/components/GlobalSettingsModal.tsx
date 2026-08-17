@@ -11,6 +11,10 @@ export const GlobalSettingsModal: React.FC = () => {
     setCurrencySymbol,
     uiScalePercent,
     setUiScalePercent,
+    userProfileName,
+    setUserProfileName,
+    userProfileEmail,
+    setUserProfileEmail,
   } = useBrowser();
 
   if (!isSettingsModalOpen) return null;
@@ -19,6 +23,8 @@ export const GlobalSettingsModal: React.FC = () => {
     setNetworkDelay(1000);
     setCurrencySymbol("$");
     setUiScalePercent(110);
+    setUserProfileName("Sashmita Caglar");
+    setUserProfileEmail("sashmitacaglar@gmail.com");
   };
 
   const currencyOptions = [
@@ -43,8 +49,8 @@ export const GlobalSettingsModal: React.FC = () => {
         <div className="settings-modal-header">
           <div className="settings-user-avatar">A</div>
           <div className="settings-user-info">
-            <h3 className="settings-user-name">ABAYOMI ADEMOLA ALLI-BALOGUN</h3>
-            <span className="settings-user-pub">pub-2229538054781862</span>
+            <h3 className="settings-user-name">{userProfileName}</h3>
+            <span className="settings-user-pub">{userProfileEmail}</span>
           </div>
           <button
             className="settings-modal-close-btn"
@@ -64,6 +70,41 @@ export const GlobalSettingsModal: React.FC = () => {
             </i>
             Global Preferences & Network Simulation (全局设置)
           </h4>
+
+          {/* Section 0.5: Google User Profile Settings (姓名与邮箱) */}
+          <div className="settings-group" style={{ backgroundColor: "#f8f9fa", padding: "12px 14px", borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+            <label className="settings-label" style={{ color: "#202124", fontSize: "14px" }}>
+              Google Profile Information (个人账号姓名与邮箱)
+            </label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 600, color: "#3c4043", width: "80px", flexShrink: 0 }}>
+                  Account Name:
+                </label>
+                <input
+                  type="text"
+                  value={userProfileName}
+                  onChange={(e) => setUserProfileName(e.target.value)}
+                  placeholder="e.g. Sashmita Caglar"
+                  className="settings-num-input"
+                  style={{ flex: 1, height: "34px", padding: "0 10px", fontSize: "13.5px", backgroundColor: "#ffffff" }}
+                />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 600, color: "#3c4043", width: "80px", flexShrink: 0 }}>
+                  Account Email:
+                </label>
+                <input
+                  type="email"
+                  value={userProfileEmail}
+                  onChange={(e) => setUserProfileEmail(e.target.value)}
+                  placeholder="e.g. sashmitacaglar@gmail.com"
+                  className="settings-num-input"
+                  style={{ flex: 1, height: "34px", padding: "0 10px", fontSize: "13.5px", backgroundColor: "#ffffff" }}
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Section 1: Display Resolution & UI Scale */}
           <div className="settings-group">
