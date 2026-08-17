@@ -6,6 +6,7 @@ import {
   EarningsConfigData,
   DEFAULT_EARNINGS_CONFIG,
 } from "./EarningsConfigModal";
+import { computeMonthDateInfo } from "./TransactionsConfigModal";
 
 const EARNINGS_STORAGE_KEY = "adsense_earnings_config";
 
@@ -41,32 +42,42 @@ export const PaymentsInfoPage: React.FC<{
     }
   }, [earningsConfig]);
 
+  const computedMonthlyBalances = useMemo(() => {
+    let monthsData = earningsConfig.monthsData;
+
+    if (!monthsData || monthsData.length === 0) {
+      monthsData = [
+        { id: "mb-1", items: earningsConfig.month1Items || DEFAULT_EARNINGS_CONFIG.month1Items || [] },
+        { id: "mb-2", items: earningsConfig.month2Items || DEFAULT_EARNINGS_CONFIG.month2Items || [] },
+        { id: "mb-3", items: earningsConfig.month3Items || DEFAULT_EARNINGS_CONFIG.month3Items || [] },
+      ];
+    }
+
+    const N = monthsData.length;
+    const initialStart = Number(earningsConfig.initialStartingBalance ?? 0.37);
+
+    let currentStart = initialStart;
+    const ends: number[] = new Array(N);
+
+    for (let i = N - 1; i >= 0; i--) {
+      const items = monthsData[i].items || [];
+      const sum = items.reduce((acc, item) => acc + (Number(item.amount) || 0), 0);
+      const start = currentStart;
+      const end = Number((start + sum).toFixed(2));
+      ends[i] = end;
+      currentStart = end;
+    }
+
+    return ends;
+  }, [earningsConfig]);
+
   const dateRanges = useMemo(() => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const day = now.getDate();
-
-    // Row 1: Current month (e.g. Sep 1 – 20, 2026 or Aug 1 – 9, 2026)
-    const m1 = now.toLocaleDateString("en-US", { month: "short" });
-    const row1Text = `${m1} 1\u2009\u2013\u2009${day}, ${year}`;
-
-    // Row 2: 1 month ago (e.g. Aug 1 – 31, 2026 or Jul 1 – 31, 2026)
-    const d2 = new Date(year, month - 1, 1);
-    const m2 = d2.toLocaleDateString("en-US", { month: "short" });
-    const y2 = d2.getFullYear();
-    const lastDay2 = new Date(year, month, 0).getDate();
-    const row2Text = `${m2} 1\u2009\u2013\u2009${lastDay2}, ${y2}`;
-
-    // Row 3: 2 months ago (e.g. Jul 1 – 31, 2026 or Jun 1 – 30, 2026)
-    const d3 = new Date(year, month - 2, 1);
-    const m3 = d3.toLocaleDateString("en-US", { month: "short" });
-    const y3 = d3.getFullYear();
-    const lastDay3 = new Date(year, month - 1, 0).getDate();
-    const row3Text = `${m3} 1\u2009\u2013\u2009${lastDay3}, ${y3}`;
-
-    return { row1Text, row2Text, row3Text };
-  }, []);
+    return {
+      row1Text: computeMonthDateInfo(earningsConfig.customBaseDate, 0),
+      row2Text: computeMonthDateInfo(earningsConfig.customBaseDate, 1),
+      row3Text: computeMonthDateInfo(earningsConfig.customBaseDate, 2),
+    };
+  }, [earningsConfig.customBaseDate]);
 
   const progressPercent =
     earningsConfig.threshold > 0
@@ -195,7 +206,9 @@ export const PaymentsInfoPage: React.FC<{
                     >
                       {dateRanges.row1Text}
                     </a>
-                    <span className="transaction-amount">{formatCurrency(earningsConfig.augAmount ?? 0.42)}</span>
+                    <span className="transaction-amount">
+                      {formatCurrency(computedMonthlyBalances[0] !== undefined ? computedMonthlyBalances[0] : (earningsConfig.augAmount ?? 0.42))}
+                    </span>
                   </div>
                   <div className="transaction-item">
                     <a
@@ -208,7 +221,9 @@ export const PaymentsInfoPage: React.FC<{
                     >
                       {dateRanges.row2Text}
                     </a>
-                    <span className="transaction-amount">{formatCurrency(earningsConfig.julAmount ?? 0.42)}</span>
+                    <span className="transaction-amount">
+                      {formatCurrency(computedMonthlyBalances[1] !== undefined ? computedMonthlyBalances[1] : (earningsConfig.julAmount ?? 0.42))}
+                    </span>
                   </div>
                   <div className="transaction-item">
                     <a
@@ -221,7 +236,9 @@ export const PaymentsInfoPage: React.FC<{
                     >
                       {dateRanges.row3Text}
                     </a>
-                    <span className="transaction-amount">{formatCurrency(earningsConfig.junAmount ?? 392.47)}</span>
+                    <span className="transaction-amount">
+                      {formatCurrency(computedMonthlyBalances[2] !== undefined ? computedMonthlyBalances[2] : (earningsConfig.junAmount ?? 392.47))}
+                    </span>
                   </div>
                 </div>
               </div>
