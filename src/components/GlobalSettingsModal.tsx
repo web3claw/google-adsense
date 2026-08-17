@@ -47,7 +47,11 @@ export const GlobalSettingsModal: React.FC = () => {
       <div className="modal-card settings-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "580px" }}>
         {/* Header with Google Profile Info */}
         <div className="settings-modal-header">
-          <div className="settings-user-avatar">A</div>
+          <div className="settings-user-avatar">
+            {userProfileEmail && userProfileEmail.trim().length > 0
+              ? userProfileEmail.trim().charAt(0).toUpperCase()
+              : "A"}
+          </div>
           <div className="settings-user-info">
             <h3 className="settings-user-name">{userProfileName}</h3>
             <span className="settings-user-pub">{userProfileEmail}</span>

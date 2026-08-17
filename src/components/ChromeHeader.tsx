@@ -24,6 +24,7 @@ export const ChromeHeader: React.FC = () => {
     addTab,
     closeTab,
     setIsSettingsModalOpen,
+    userProfileEmail,
   } = useBrowser();
 
   const cleanUrlDisplay = (url: string) => {
@@ -232,7 +233,11 @@ export const ChromeHeader: React.FC = () => {
             title="Google Account & Global Settings"
             onClick={() => setIsSettingsModalOpen(true)}
           >
-            <span className="profile-avatar">A</span>
+            <span className="profile-avatar">
+              {userProfileEmail && userProfileEmail.trim().length > 0
+                ? userProfileEmail.trim().charAt(0).toUpperCase()
+                : "A"}
+            </span>
           </button>
 
           {/* 3-dots Menu */}
