@@ -26,17 +26,23 @@ export const ChromeHeader: React.FC = () => {
     setIsSettingsModalOpen,
   } = useBrowser();
 
-  const [inputUrl, setInputUrl] = useState(currentEntry.url);
+  const cleanUrlDisplay = (url: string) => {
+    return url.replace(/^https?:\/\//i, "");
+  };
+
+  const [inputUrl, setInputUrl] = useState(() => cleanUrlDisplay(currentEntry.url));
 
   useEffect(() => {
-    setInputUrl(currentEntry.url);
+    setInputUrl(cleanUrlDisplay(currentEntry.url));
   }, [currentEntry.url]);
 
   const handleUrlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const raw = inputUrl.trim();
+    const formatted = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
     navigateTo({
-      title: inputUrl.replace(/^https?:\/\//, ""),
-      url: inputUrl,
+      title: cleanUrlDisplay(raw),
+      url: formatted,
       pageId: "custom",
     });
   };
