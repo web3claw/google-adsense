@@ -328,7 +328,6 @@ export const SitesPage: React.FC<{
                     <tr
                       key={site.id}
                       onDoubleClick={() => handleOpenEditModal(site)}
-                      title="Double-click to edit Site URL and Last updated"
                       style={{ cursor: "pointer" }}
                     >
                       <td className="col-site-url">

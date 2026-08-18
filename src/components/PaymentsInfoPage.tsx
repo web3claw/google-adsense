@@ -134,7 +134,6 @@ export const PaymentsInfoPage: React.FC<{
           <div
             className="earnings-card"
             onDoubleClick={() => setIsConfigModalOpen(true)}
-            title="Double-click to configure parameters"
             style={{ cursor: "pointer" }}
           >
             <div className="earnings-card-top">
@@ -189,7 +188,6 @@ export const PaymentsInfoPage: React.FC<{
             <div
               className="payments-card"
               onDoubleClick={() => setIsConfigModalOpen(true)}
-              title="Double-click to edit parameters"
               style={{ cursor: "pointer" }}
             >
               <div className="payments-card-body">
@@ -256,7 +254,6 @@ export const PaymentsInfoPage: React.FC<{
             <div
               className="payments-card"
               onDoubleClick={() => setIsConfigModalOpen(true)}
-              title="Double-click to edit parameters"
               style={{ cursor: "pointer" }}
             >
               <div className="payments-card-body">
@@ -287,8 +284,8 @@ export const PaymentsInfoPage: React.FC<{
                     <div style={{ fontSize: "11px", color: "#3c4043", fontWeight: 500, letterSpacing: "0.2px" }}>
                       {earningsConfig.bankMasked || "DE••\u2009••••\u2009••••\u2009••••\u2009••07\u200949"}
                     </div>
-                    <div style={{ fontSize: "10.5px", color: "#5f6368", textTransform: "uppercase", marginTop: "3px", letterSpacing: "0.2px" }}>
-                      {earningsConfig.payeeName || "EMMANUEL DELLBRÜGGER"}
+                    <div style={{ fontSize: "10.5px", color: "#5f6368", marginTop: "3px", letterSpacing: "0.2px" }}>
+                      {earningsConfig.payeeName || "Emmanuel Dellbrügger"}
                     </div>
                   </div>
                 </div>
@@ -304,7 +301,6 @@ export const PaymentsInfoPage: React.FC<{
             <div
               className="payments-card"
               onDoubleClick={() => setIsConfigModalOpen(true)}
-              title="Double-click to edit parameters"
               style={{ cursor: "pointer" }}
             >
               <div className="payments-card-body">
@@ -314,7 +310,7 @@ export const PaymentsInfoPage: React.FC<{
                     AdSense {earningsConfig.pubId || "pub-8666469182451238"}
                   </div>
                   <div style={{ fontSize: "10.5px", color: "#202124", fontWeight: 500 }}>
-                    {earningsConfig.payeeName || "EMMANUEL DELLBRÜGGER"}
+                    {earningsConfig.payeeName || "Emmanuel Dellbrügger"}
                   </div>
                   <div>
                     <a href="#user" style={{ fontSize: "11px", color: "#1a73e8", textDecoration: "none" }}>

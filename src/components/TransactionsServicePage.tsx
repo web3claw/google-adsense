@@ -161,7 +161,7 @@ export const TransactionsServicePage: React.FC<{
     }));
   };
 
-  const renderTableRows = (items: TransactionItem[]) => {
+  const renderTableRows = (items: TransactionItem[], dateHeader?: string) => {
     if (!items || items.length === 0) {
       return (
         <tr>
@@ -185,10 +185,11 @@ export const TransactionsServicePage: React.FC<{
       const isNegative = item.amount < 0;
       const formatted = formatCurrency(Math.abs(item.amount));
       const isPaymentLink = item.description.toLowerCase().includes("automatic payment");
+      const displayDate = item.date || dateHeader || "";
 
       return (
         <tr key={item.id || index}>
-          <td className="col-date">{item.date}</td>
+          <td className="col-date">{displayDate}</td>
           <td className="col-desc">
             {isPaymentLink ? (
               <a href="#payment-detail" className="blue-payment-link" onClick={(e) => e.preventDefault()}>
@@ -210,7 +211,6 @@ export const TransactionsServicePage: React.FC<{
     <div
       className="payments-page-container"
       onDoubleClick={() => setIsConfigModalOpen(true)}
-      title="Double-click to edit parameters and recalculate balances"
       style={{ userSelect: "none" }}
     >
       {/* Top Header Bar */}
@@ -357,7 +357,7 @@ export const TransactionsServicePage: React.FC<{
                               <th className="col-amount align-right">Amount ({displayCurrencyCode})</th>
                             </tr>
                           </thead>
-                          <tbody>{renderTableRows(block.items)}</tbody>
+                          <tbody>{renderTableRows(block.items, block.dateHeader)}</tbody>
                         </table>
                       </div>
 

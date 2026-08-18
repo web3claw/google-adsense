@@ -55,7 +55,7 @@ export const DEFAULT_EARNINGS_CONFIG: EarningsConfigData = {
   lastPaymentDate: "Jul 21",
   lastPaymentAmount: 392.45,
 
-  payeeName: "EMMANUEL DELLBRÜGGER",
+  payeeName: "Emmanuel Dellbrügger",
   pubId: "pub-8666469182451238",
   bankMasked: "DE••\u2009••••\u2009••••\u2009••••\u2009••07\u200949",
   augAmount: 0.42,
@@ -186,7 +186,7 @@ export const EarningsConfigModal: React.FC<EarningsConfigModalProps> = ({
               Configure Payments Parameters (配置 Payments 页面所有参数)
             </h3>
             <span className="settings-user-pub" style={{ color: "#5f6368", fontSize: "12px" }}>
-              Double-click card settings • Changes apply immediately
+              Card Settings • Changes apply immediately
             </span>
           </div>
           <button className="settings-modal-close-btn" onClick={onClose} title="Close">

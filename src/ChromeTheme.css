@@ -1828,7 +1828,7 @@ input,
 }
 
 .period-balance-line.starting-line {
-  margin-top: 16px;
+  margin-top: 0;
   padding: 16px 24px 0 24px;
   border-top: 1px solid #f1f3f4;
   margin-bottom: 0;
@@ -1843,18 +1843,36 @@ input,
 /* Period Transactions Table & Line Borders */
 .transactions-table-wrap {
   width: 100%;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .transactions-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.transactions-table th.col-date,
+.transactions-table td.col-date {
+  width: 200px;
+  white-space: nowrap;
+}
+
+.transactions-table th.col-desc,
+.transactions-table td.col-desc {
+  width: auto;
+}
+
+.transactions-table th.col-amount,
+.transactions-table td.col-amount {
+  width: 180px;
+  white-space: nowrap;
 }
 
 .transactions-table th {
-  font-size: 10.5px;
-  font-weight: 500;
-  color: #5f6368;
+  font-size: 11px;
+  font-weight: 400;
+  color: #70757a;
   text-align: left;
   padding: 10px 24px;
   border-bottom: 1px solid #f1f3f4;
@@ -1866,15 +1884,16 @@ input,
 }
 
 .transactions-table td {
-  font-size: 11.5px;
-  color: #3c4043;
+  font-size: 12px;
+  font-weight: 500;
+  color: #202124;
   padding: 14px 24px;
   border-bottom: 1px solid #f1f3f4;
   vertical-align: middle;
 }
 
 .transactions-table tr:last-child td {
-  border-bottom: 1px solid #f1f3f4;
+  border-bottom: none;
 }
 
 .blue-payment-link {
