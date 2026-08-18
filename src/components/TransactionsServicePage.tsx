@@ -276,33 +276,47 @@ export const TransactionsServicePage: React.FC<{
           <div className="transactions-filter-row">
             <div className="transactions-filter-controls" onClick={(e) => e.stopPropagation()}>
               <div className="trans-select-wrap">
-                <select defaultValue="detailed">
-                  <option value="detailed">Detailed transaction view</option>
-                  <option value="summary">Summary view</option>
-                </select>
-                <span className="select-arrow">▾</span>
+                <div className="select-box-wrap">
+                  <select defaultValue="detailed">
+                    <option value="detailed">Detailed transaction view</option>
+                    <option value="summary">Summary view</option>
+                  </select>
+                  <span className="select-arrow">▾</span>
+                </div>
               </div>
 
               <div className="trans-select-wrap">
-                <select defaultValue="all">
-                  <option value="all">All transactions</option>
-                  <option value="earnings">Earnings</option>
-                  <option value="payments">Payments</option>
-                </select>
-                <span className="select-arrow">▾</span>
+                <div className="select-box-wrap">
+                  <select defaultValue="all">
+                    <option value="all">All transactions</option>
+                    <option value="earnings">Earnings</option>
+                    <option value="payments">Payments</option>
+                  </select>
+                  <span className="select-arrow">▾</span>
+                </div>
               </div>
 
               <div className="trans-select-wrap calendar-select">
-                <i className="material-icon-i material-icons-extended" style={{ fontSize: "16px", color: "#5f6368", marginRight: "4px" }}>
-                  calendar_today
-                </i>
-                <select defaultValue="all">
-                  <option value="all">All history</option>
-                  <option value="3months">Last 3 months</option>
-                  <option value="6months">Last 6 months</option>
-                  <option value="year">This year</option>
-                </select>
-                <span className="select-arrow">▾</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="#5f6368"
+                  style={{ marginRight: "10px", flexShrink: 0 }}
+                >
+                  <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z" />
+                  <path d="M0 0h24v24H0z" fill="none" />
+                </svg>
+                <div className="select-box-wrap">
+                  <select defaultValue="all">
+                    <option value="all">All history</option>
+                    <option value="3months">Last 3 months</option>
+                    <option value="6months">Last 6 months</option>
+                    <option value="year">This year</option>
+                  </select>
+                  <span className="select-arrow">▾</span>
+                </div>
               </div>
             </div>
           </div>

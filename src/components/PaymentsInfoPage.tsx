@@ -7,6 +7,7 @@ import {
   DEFAULT_EARNINGS_CONFIG,
 } from "./EarningsConfigModal";
 import { computeMonthDateInfo } from "./TransactionsConfigModal";
+import paymentInstrumentImg from "../assets/payment_instrument.png";
 
 const EARNINGS_STORAGE_KEY = "adsense_earnings_config";
 
@@ -259,27 +260,13 @@ export const PaymentsInfoPage: React.FC<{
               <div className="payments-card-body">
                 <h3 className="payments-card-title">How you get paid</h3>
                 <div className="how-paid-flex-row" style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "12px", marginBottom: "8px" }}>
-                  <div
-                    className="blue-bank-icon-box"
-                    style={{
-                      width: "88px",
-                      height: "58px",
-                      backgroundColor: "#d3e3fd",
-                      borderRadius: "4px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <svg width="34" height="34" viewBox="0 0 24 24" fill="#041e49">
-                      <path d="M4 10h2v7H4zm5 0h2v7H9zm6 0h2v7h-2zm5 0h2v7h-2zM2 22h20v-3H2v3zm10-20L2 6v2h20V6l-10-4z" />
-                      <circle cx="18" cy="15" r="3.2" fill="#041e49" stroke="#d3e3fd" strokeWidth="0.8" />
-                      <text x="18" y="16.8" fontSize="3.8" fill="#d3e3fd" textAnchor="middle" fontWeight="bold">
-                        $
-                      </text>
-                    </svg>
-                  </div>
+                  <img
+                    src={paymentInstrumentImg}
+                    alt="Payment Instrument"
+                    aria-hidden="true"
+                    className="b3-image b3id-image-with-data b3-instrument-details-image"
+                    style={{ width: "88px", height: "58px", objectFit: "contain", flexShrink: 0 }}
+                  />
                   <div className="how-paid-info-text">
                     <div style={{ fontSize: "11px", color: "#3c4043", fontWeight: 500, letterSpacing: "0.2px" }}>
                       {earningsConfig.bankMasked || "DE••\u2009••••\u2009••••\u2009••••\u2009••07\u200949"}
@@ -306,10 +293,10 @@ export const PaymentsInfoPage: React.FC<{
               <div className="payments-card-body">
                 <h3 className="payments-card-title">Settings</h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-                  <div style={{ fontSize: "11px", color: "#5f6368" }}>
+                  <div style={{ fontSize: "11px", color: "#3c4043" }}>
                     AdSense {earningsConfig.pubId || "pub-8666469182451238"}
                   </div>
-                  <div style={{ fontSize: "10.5px", color: "#202124", fontWeight: 500 }}>
+                  <div style={{ fontSize: "10.5px", color: "#3c4043" }}>
                     {earningsConfig.payeeName || "Emmanuel Dellbrügger"}
                   </div>
                   <div>

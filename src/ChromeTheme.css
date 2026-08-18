@@ -1538,6 +1538,7 @@ input,
   color: #1a73e8;
   font-size: 11px;
   text-decoration: none;
+  font-family: Google Sans, Arial, sans-serif !important;
 }
 
 .transaction-date-link:hover {
@@ -1683,15 +1684,20 @@ input,
 }
 
 .trans-select-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.select-box-wrap {
   position: relative;
   display: flex;
   align-items: center;
   border-bottom: 1px solid #dadce0;
   padding-bottom: 4px;
-  min-width: 175px;
+  min-width: 150px;
 }
 
-.trans-select-wrap select {
+.select-box-wrap select {
   border: none;
   outline: none;
   background: transparent;
@@ -1889,8 +1895,8 @@ input,
 
 .transactions-table td {
   font-size: 12px;
-  font-weight: 500;
-  color: #202124;
+  font-weight: 400;
+  color: #3c4043;
   height: 48px;
   line-height: 48px;
   padding: 0 24px;
