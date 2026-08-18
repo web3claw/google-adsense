@@ -1874,8 +1874,12 @@ input,
   font-weight: 400;
   color: #70757a;
   text-align: left;
-  padding: 10px 24px;
+  height: 20px;
+  line-height: 10px;
+  padding: 0 24px 14px 24px;
+  vertical-align: top;
   border-bottom: 1px solid #f1f3f4;
+  box-sizing: border-box;
 }
 
 .transactions-table th.align-right,
@@ -1887,9 +1891,12 @@ input,
   font-size: 12px;
   font-weight: 500;
   color: #202124;
-  padding: 14px 24px;
+  height: 48px;
+  line-height: 48px;
+  padding: 0 24px;
   border-bottom: 1px solid #f1f3f4;
   vertical-align: middle;
+  box-sizing: border-box;
 }
 
 .transactions-table tr:last-child td {
