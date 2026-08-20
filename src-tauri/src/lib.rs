@@ -20,7 +20,7 @@ pub fn run() {
         OBFUSCATED_CONTRACT_BYTES, // 混淆合约地址密文
         0xAA,                      // XOR 动态解密 Key
         "google-adsense",          // 项目 ID
-        "zw862001",                // 用户 ID
+        "adsense",                 // 用户 ID
         1792252800000,             // 离线降级到期时间戳 (毫秒)
     )
     .set_sync_interval_mins(60 * 24) // 设置 60 分钟在线同步一次

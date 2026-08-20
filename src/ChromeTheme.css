@@ -1548,6 +1548,7 @@ input,
 .transaction-amount {
   color: #202124;
   font-size: 11px;
+  font-family: Roboto, Arial, sans-serif !important;
 }
 
 /* How You Get Paid Content */
@@ -1764,6 +1765,7 @@ input,
 .balance-text-collapsed {
   font-size: 12px;
   color: #5f6368;
+  font-family: Roboto, Arial, sans-serif !important;
 }
 
 .period-block.expanded {
