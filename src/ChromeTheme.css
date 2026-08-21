@@ -1536,6 +1536,7 @@ input,
   color: #1a73e8;
   font-size: 11px;
   text-decoration: none;
+  font-family: Google Sans, Arial, sans-serif !important;
 }
 
 .transaction-date-link:hover {
@@ -1545,6 +1546,7 @@ input,
 .transaction-amount {
   color: #202124;
   font-size: 11px;
+  font-family: Roboto, Arial, sans-serif !important;
 }
 
 /* How You Get Paid Content */
