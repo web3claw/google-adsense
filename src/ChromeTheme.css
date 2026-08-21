@@ -1456,12 +1456,14 @@ input,
 .earnings-subtitle {
   font-size: 12px;
   color: #5f6368;
+  font-family: Roboto, Arial, sans-serif !important;
 }
 
 .earnings-amount {
   font-size: 28px;
   font-weight: 400;
   color: #202124;
+  font-family: Roboto, Arial, sans-serif !important;
 }
 
 .earnings-progress-section {
@@ -1489,6 +1491,13 @@ input,
   justify-content: space-between;
   font-size: 10px;
   color: #5f6368;
+  font-family: Roboto, Arial, sans-serif !important;
+}
+
+.earnings-card-footer-text span,
+.last-payment-line,
+.last-payment-line span {
+  font-family: Roboto, Arial, sans-serif !important;
 }
 
 /* Two Column Grid Row */

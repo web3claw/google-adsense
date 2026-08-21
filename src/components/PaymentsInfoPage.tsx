@@ -155,7 +155,9 @@ export const PaymentsInfoPage: React.FC<{
 
               <div className="earnings-card-footer-text">
                 <span>You've reached {progressPercent}% of your payment threshold</span>
-                <span>Payment threshold: {formatCurrency(earningsConfig.threshold)}</span>
+                <span style={{ fontFamily: "Roboto, Arial, sans-serif" }}>
+                  Payment threshold: {formatCurrency(earningsConfig.threshold)}
+                </span>
               </div>
             </div>
 
@@ -170,13 +172,14 @@ export const PaymentsInfoPage: React.FC<{
                 paddingTop: "10px",
                 color: "#5f6368",
                 fontSize: "12.5px",
+                fontFamily: "Roboto, Arial, sans-serif",
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="#5f6368" style={{ flexShrink: 0 }}>
                 <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z" />
                 <path d="M0 0h24v24H0z" fill="none" />
               </svg>
-              <span>
+              <span style={{ fontFamily: "Roboto, Arial, sans-serif" }}>
                 Your last payment was issued on {earningsConfig.lastPaymentDate} for{" "}
                 {formatCurrency(earningsConfig.lastPaymentAmount)}.
               </span>
