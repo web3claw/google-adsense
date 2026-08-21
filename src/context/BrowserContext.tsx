@@ -5,6 +5,7 @@ export interface HistoryEntry {
   url: string;
   pageId: string;
   targetMonth?: string;
+  hash?: string;
 }
 
 export interface TabItem {
@@ -32,6 +33,10 @@ interface BrowserContextType {
   adManagerNetworkCode: string;
   adManagerDomain: string;
 
+  // User Profile Settings State
+  userProfileName: string;
+  userProfileEmail: string;
+
   // Actions
   setActiveTabId: (id: string) => void;
   goBack: () => void;
@@ -47,6 +52,8 @@ interface BrowserContextType {
   setProductMode: (mode: "admanager" | "adsense") => void;
   setAdManagerNetworkCode: (code: string) => void;
   setAdManagerDomain: (domain: string) => void;
+  setUserProfileName: (name: string) => void;
+  setUserProfileEmail: (email: string) => void;
   formatCurrency: (val: string | number) => string;
 }
 
@@ -105,7 +112,23 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return localStorage.getItem("adsense_domain") || "falgeldi.com";
   });
 
+  const [userProfileName, setUserProfileNameState] = useState<string>(() => {
+    return localStorage.getItem("adsense_profile_name") || "Sashmita Caglar";
+  });
+
+  const [userProfileEmail, setUserProfileEmailState] = useState<string>(() => {
+    return localStorage.getItem("adsense_profile_email") || "sashmitacaglar@gmail.com";
+  });
+
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    localStorage.setItem("adsense_profile_name", userProfileName);
+  }, [userProfileName]);
+
+  useEffect(() => {
+    localStorage.setItem("adsense_profile_email", userProfileEmail);
+  }, [userProfileEmail]);
 
   useEffect(() => {
     localStorage.setItem("adsense_network_delay", String(networkDelay));
@@ -298,6 +321,8 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
         productMode,
         adManagerNetworkCode,
         adManagerDomain,
+        userProfileName,
+        userProfileEmail,
         setActiveTabId,
         goBack,
         goForward,
@@ -312,6 +337,8 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setProductMode: setProductModeState,
         setAdManagerNetworkCode: setAdManagerNetworkCodeState,
         setAdManagerDomain: setAdManagerDomainState,
+        setUserProfileName: setUserProfileNameState,
+        setUserProfileEmail: setUserProfileEmailState,
         formatCurrency,
       }}
     >

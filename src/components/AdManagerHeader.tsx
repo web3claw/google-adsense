@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useBrowser } from "../context/BrowserContext";
+import { UserProfilePopover } from "./UserProfilePopover";
 import { WindowControls } from "./WindowControls";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
@@ -30,15 +31,22 @@ export const AdManagerHeader: React.FC = () => {
     closeTab,
     setIsSettingsModalOpen,
     adManagerNetworkCode,
+    userProfileEmail,
   } = useBrowser();
+
+  const [isProfilePopoverOpen, setIsProfilePopoverOpen] = useState(false);
+
+  const cleanUrlDisplay = (url: string) => {
+    return url.replace(/^https?:\/\//i, "");
+  };
 
   // Dynamic URL construction with custom network code ID
   const displayUrl =
     currentEntry.pageId === "payments-info" || currentEntry.pageId === "transactions-service"
-      ? `https://admanager.google.com/${adManagerNetworkCode}#payments`
-      : `https://admanager.google.com/${adManagerNetworkCode}#inventory/site/list`;
+      ? `admanager.google.com/${adManagerNetworkCode}#payments`
+      : `admanager.google.com/${adManagerNetworkCode}#inventory/site/list`;
 
-  const [inputUrl, setInputUrl] = useState(displayUrl);
+  const [inputUrl, setInputUrl] = useState(() => cleanUrlDisplay(displayUrl));
 
   useEffect(() => {
     setInputUrl(displayUrl);
@@ -240,7 +248,11 @@ export const AdManagerHeader: React.FC = () => {
             title="Google Account & Global Settings"
             onClick={() => setIsSettingsModalOpen(true)}
           >
-            <span className="profile-avatar">A</span>
+            <span className="profile-avatar">
+              {userProfileEmail && userProfileEmail.trim().length > 0
+                ? userProfileEmail.trim().charAt(0).toUpperCase()
+                : "A"}
+            </span>
           </button>
 
           {/* 3-dots Menu */}
@@ -315,11 +327,22 @@ export const AdManagerHeader: React.FC = () => {
             </svg>
           </button>
 
-          {/* 4. Google Account Blue Profile Avatar */}
-          <div className="adm-blue-user-avatar" title="Google Account" onMouseDown={stopProp}>
+          {/* 4. Google Account Blue Profile Avatar -> Toggles UserProfilePopover */}
+          <div
+            className="adm-blue-user-avatar"
+            title="Google Account"
+            onMouseDown={stopProp}
+            onClick={() => setIsProfilePopoverOpen(!isProfilePopoverOpen)}
+            style={{ cursor: "pointer", position: "relative" }}
+          >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="#1a73e8">
               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
             </svg>
+
+            <UserProfilePopover
+              isOpen={isProfilePopoverOpen}
+              onClose={() => setIsProfilePopoverOpen(false)}
+            />
           </div>
         </div>
       </div>

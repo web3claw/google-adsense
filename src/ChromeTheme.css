@@ -1637,10 +1637,11 @@ input,
   margin-top: 4px;
 }
 
+.transactions-breadcrumb-bar,
 .breadcrumb-title-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin-top: 12px;
 }
 
@@ -1648,21 +1649,24 @@ input,
   font-size: 16px;
   font-weight: 400;
   color: #5f6368;
+  text-decoration: none !important;
   cursor: pointer;
 }
 
 .breadcrumb-link:hover {
-  text-decoration: underline;
+  text-decoration: none !important;
+  color: #202124;
 }
 
 .breadcrumb-separator {
   font-size: 13px;
   color: #5f6368;
+  user-select: none;
 }
 
 .breadcrumb-current {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
   color: #202124;
 }
 
@@ -1680,16 +1684,26 @@ input,
   gap: 28px;
 }
 
-.trans-select-wrap {
+.select-box-wrap {
   position: relative;
   display: flex;
   align-items: center;
   border-bottom: 1px solid #dadce0;
   padding-bottom: 4px;
+  flex: 1;
+}
+
+.trans-select-wrap {
+  display: flex;
+  align-items: center;
   min-width: 175px;
 }
 
-.trans-select-wrap select {
+.trans-select-wrap.calendar-select {
+  min-width: 195px;
+}
+
+.select-box-wrap select {
   border: none;
   outline: none;
   background: transparent;
@@ -1836,26 +1850,49 @@ input,
   font-size: 11.5px;
   font-weight: 500;
   color: #3c4043;
+  font-family: Roboto, Arial, sans-serif !important;
 }
 
 /* Period Transactions Table & Line Borders */
 .transactions-table-wrap {
   width: 100%;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .transactions-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.transactions-table th.col-date,
+.transactions-table td.col-date {
+  width: 200px;
+  white-space: nowrap;
+}
+
+.transactions-table th.col-desc,
+.transactions-table td.col-desc {
+  width: auto;
+}
+
+.transactions-table th.col-amount,
+.transactions-table td.col-amount {
+  width: 180px;
+  white-space: nowrap;
 }
 
 .transactions-table th {
-  font-size: 10.5px;
-  font-weight: 500;
-  color: #5f6368;
+  font-size: 11px;
+  font-weight: 400;
+  color: #70757a;
   text-align: left;
-  padding: 10px 24px;
+  height: 20px;
+  line-height: 10px;
+  padding: 0 24px 14px 24px;
+  vertical-align: top;
   border-bottom: 1px solid #f1f3f4;
+  box-sizing: border-box;
 }
 
 .transactions-table th.align-right,
@@ -1864,15 +1901,20 @@ input,
 }
 
 .transactions-table td {
-  font-size: 11.5px;
+  font-size: 12px;
+  font-weight: 400;
   color: #3c4043;
-  padding: 14px 24px;
+  height: 48px;
+  line-height: 48px;
+  padding: 0 24px;
   border-bottom: 1px solid #f1f3f4;
   vertical-align: middle;
+  box-sizing: border-box;
+  font-family: Roboto, Arial, sans-serif !important;
 }
 
 .transactions-table tr:last-child td {
-  border-bottom: 1px solid #f1f3f4;
+  border-bottom: none;
 }
 
 .blue-payment-link {
@@ -2607,4 +2649,136 @@ input,
 /* Hide inner AdSense page topbar in Ad Manager mode to eliminate extra 3rd row */
 .app-scaled-wrapper:has(.adm-header-bar) .adsense-topbar {
   display: none !important;
+}
+
+/* Ad Manager Gaia Profile Picker Popover (1:1 Matching User Screenshot) */
+.adm-profile-popover-dialog {
+  position: absolute;
+  top: 42px;
+  right: -10px;
+  z-index: 1426;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(60, 64, 67, 0.28), 0 0 4px rgba(60, 64, 67, 0.12);
+  overflow: hidden;
+  width: 290px;
+  text-align: center;
+  animation: fadeInPopover 0.15s ease-out;
+}
+
+.material-gaia-picker-popup .material-popup-content {
+  padding: 24px 0 0 0;
+}
+
+.selected-profile-section {
+  padding: 0 24px;
+}
+
+.selected-profile-section .profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.profile-photo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.profile-blue-avatar-circle {
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.profile-details .name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #202124;
+  letter-spacing: 0.1px;
+}
+
+.profile-details .email {
+  font-size: 13px;
+  color: #5f6368;
+  margin-top: 3px;
+}
+
+.profile-details .actions {
+  margin-top: 6px;
+  font-size: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.profile-details .actions .link {
+  color: #1a73e8;
+  text-decoration: none;
+}
+
+.profile-details .actions .link:hover {
+  text-decoration: underline;
+}
+
+.add-account-wrap {
+  margin-top: 24px;
+  margin-bottom: 20px;
+}
+
+.add-account-btn {
+  background: transparent;
+  border: none;
+  color: #1a73e8;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+.add-account-btn:hover {
+  background-color: rgba(26, 115, 232, 0.04);
+}
+
+.popup-footer {
+  border-top: 1px solid #dadce0;
+  background-color: #ffffff;
+  padding: 16px 20px 20px 20px;
+}
+
+.gaia-picker-footer-btns {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.profile-btn-signout {
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  padding: 7px 24px;
+  color: #1a73e8;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.profile-btn-signout:hover {
+  background-color: #f8f9fa;
+  border-color: #bdc1c6;
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useBrowser } from "../context/BrowserContext";
+import { UserProfilePopover } from "./UserProfilePopover";
 import {
   EarningsConfigData,
   TransactionItem,
@@ -16,7 +17,8 @@ export const TransactionsServicePage: React.FC<{
   onNavigateToPolicy?: () => void;
   onNavigateBackToPayments?: () => void;
 }> = ({ onNavigateBackToPayments }) => {
-  const { currentEntry, formatCurrency, setIsSettingsModalOpen, currencySymbol, productMode } = useBrowser();
+  const { currentEntry, formatCurrency, currencySymbol } = useBrowser();
+  const [isProfilePopoverOpen, setIsProfilePopoverOpen] = useState<boolean>(false);
 
   // Financial Config Persistence
   const [earningsConfig, setEarningsConfig] = useState<EarningsConfigData>(() => {
@@ -44,56 +46,10 @@ export const TransactionsServicePage: React.FC<{
     }
   }, [earningsConfig]);
 
-  // Dynamic Expansion States
-  const [expandedBlocks, setExpandedBlocks] = useState<Record<string, boolean>>(() => {
-    const target = currentEntry.targetMonth || currentEntry.url || "";
-    const res: Record<string, boolean> = {};
-    for (let i = 1; i <= 24; i++) {
-      res[`row${i}`] = true;
-    }
-    if (target === "row1" || target.includes("#row1") || target.includes("#aug")) {
-      res.row1 = true;
-      res.row2 = false;
-      res.row3 = false;
-    } else if (target === "row2" || target.includes("#row2") || target.includes("#jul")) {
-      res.row1 = false;
-      res.row2 = true;
-      res.row3 = false;
-    } else if (target === "row3" || target.includes("#row3") || target.includes("#jun")) {
-      res.row1 = false;
-      res.row2 = false;
-      res.row3 = true;
-    }
-    return res;
-  });
-
-  useEffect(() => {
-    const target = currentEntry.targetMonth || currentEntry.url || "";
-    const res: Record<string, boolean> = {};
-    for (let i = 1; i <= 24; i++) {
-      res[`row${i}`] = true;
-    }
-    if (target === "row1" || target.includes("#row1") || target.includes("#aug")) {
-      res.row1 = true;
-      res.row2 = false;
-      res.row3 = false;
-    } else if (target === "row2" || target.includes("#row2") || target.includes("#jul")) {
-      res.row1 = false;
-      res.row2 = true;
-      res.row3 = false;
-    } else if (target === "row3" || target.includes("#row3") || target.includes("#jun")) {
-      res.row1 = false;
-      res.row2 = false;
-      res.row3 = true;
-    }
-    setExpandedBlocks(res);
-  }, [currentEntry.targetMonth, currentEntry.url]);
-
   // Automatic Mathematical Balance Calculation for N Months
   const balances = useMemo(() => {
     let monthsData = earningsConfig.monthsData;
 
-    // Fallback if monthsData is empty or undefined
     if (!monthsData || monthsData.length === 0) {
       monthsData = [
         { id: "mb-1", items: earningsConfig.month1Items || DEFAULT_EARNINGS_CONFIG.month1Items || [] },
@@ -115,18 +71,17 @@ export const TransactionsServicePage: React.FC<{
       items: TransactionItem[];
     }[] = new Array(N);
 
-    // Compute from earliest month (index N-1) to latest month (index 0)
     for (let i = N - 1; i >= 0; i--) {
       const items = monthsData[i].items || [];
       const sum = items.reduce((acc, item) => acc + (Number(item.amount) || 0), 0);
       const start = currentStart;
       const end = Number((start + sum).toFixed(2));
-      const dateHeader = computeMonthDateInfo(earningsConfig.customBaseDate, i);
+      const mInfo = computeMonthDateInfo(earningsConfig.customBaseDate, i);
 
       computedBlocks[i] = {
         id: monthsData[i].id || `mb-${i}`,
         monthIndex: i,
-        dateHeader,
+        dateHeader: mInfo,
         startBalance: start,
         endBalance: end,
         items,
@@ -141,13 +96,31 @@ export const TransactionsServicePage: React.FC<{
     };
   }, [earningsConfig]);
 
-  // Determine Currency Code in header (e.g. EUR, USD, GBP, HKD)
+  const [expandedBlocks, setExpandedBlocks] = useState<Record<string, boolean>>({
+    row1: true,
+    row2: true,
+    row3: true,
+  });
+
+  useEffect(() => {
+    if (currentEntry.hash) {
+      const hash = currentEntry.hash.replace("#", "");
+      if (hash === "row1" || hash === "row2" || hash === "row3") {
+        setExpandedBlocks({
+          row1: hash === "row1",
+          row2: hash === "row2",
+          row3: hash === "row3",
+        });
+      } else if (hash === "all") {
+        setExpandedBlocks({ row1: true, row2: true, row3: true });
+      }
+    }
+  }, [currentEntry.hash]);
+
   const displayCurrencyCode = useMemo(() => {
     if (earningsConfig.currencyCode) return earningsConfig.currencyCode;
     if (currencySymbol === "€") return "EUR";
-    if (currencySymbol === "$") return "USD";
     if (currencySymbol === "£") return "GBP";
-    if (currencySymbol === "HK$") return "HKD";
     if (currencySymbol === "¥") return "CNY";
     return "USD";
   }, [earningsConfig.currencyCode, currencySymbol]);
@@ -159,7 +132,7 @@ export const TransactionsServicePage: React.FC<{
     }));
   };
 
-  const renderTableRows = (items: TransactionItem[]) => {
+  const renderTableRows = (items: TransactionItem[], dateHeader?: string) => {
     if (!items || items.length === 0) {
       return (
         <tr>
@@ -183,10 +156,11 @@ export const TransactionsServicePage: React.FC<{
       const isNegative = item.amount < 0;
       const formatted = formatCurrency(Math.abs(item.amount));
       const isPaymentLink = item.description.toLowerCase().includes("automatic payment");
+      const displayDate = item.date || dateHeader || "";
 
       return (
         <tr key={item.id || index}>
-          <td className="col-date">{item.date}</td>
+          <td className="col-date">{displayDate}</td>
           <td className="col-desc">
             {isPaymentLink ? (
               <a href="#payment-detail" className="blue-payment-link" onClick={(e) => e.preventDefault()}>
@@ -208,101 +182,108 @@ export const TransactionsServicePage: React.FC<{
     <div
       className="payments-page-container"
       onDoubleClick={() => setIsConfigModalOpen(true)}
-      title="Double-click to edit parameters and recalculate balances"
       style={{ userSelect: "none" }}
     >
-      {/* Top Header Bar (Only in AdSense Mode) */}
-      {productMode === "adsense" && (
-        <div className="adsense-topbar">
-          <h1 className="adsense-topbar-title">Payments info</h1>
-          <div className="adsense-topbar-right">
-            <button className="topbar-icon-btn" title="Help">
-              <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ fontSize: "20px", color: "#5F6368" }}>
-                help_outline
-              </i>
-            </button>
-            <button className="topbar-icon-btn" title="Notifications">
-              <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ fontSize: "20px", color: "#5F6368" }}>
-                notifications_none
-              </i>
-            </button>
-            <div
-              className="topbar-avatar"
-              title="Google Account & Global Settings"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsSettingsModalOpen(true);
-              }}
-              style={{ cursor: "pointer" }}
-            >
-              <svg width="28" height="28" viewBox="0 0 32 32">
-                <circle cx="16" cy="16" r="16" fill="#1A73E8" />
-                <path d="M16 18c-3.5 0-10 1.75-10 5.25V26h20v-2.75C26 19.75 19.5 18 16 18z" fill="#FFF" />
-                <circle cx="16" cy="11" r="4.5" fill="#FFF" />
-              </svg>
-            </div>
+      {/* Top Header Bar */}
+      <div className="adsense-topbar">
+        <h1 className="adsense-topbar-title">Payments info</h1>
+        <div className="adsense-topbar-right" style={{ position: "relative" }}>
+          <button className="topbar-icon-btn" title="Help">
+            <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ fontSize: "20px", color: "#5F6368" }}>
+              help_outline
+            </i>
+          </button>
+          <button className="topbar-icon-btn" title="Notifications">
+            <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ fontSize: "20px", color: "#5F6368" }}>
+              notifications_none
+            </i>
+          </button>
+          <div
+            className="topbar-avatar"
+            title="Google Account"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsProfilePopoverOpen(!isProfilePopoverOpen);
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            <svg width="28" height="28" viewBox="0 0 32 32">
+              <circle cx="16" cy="16" r="16" fill="#1A73E8" />
+              <path d="M16 18c-3.5 0-10 1.75-10 5.25V26h20v-2.75C26 19.75 19.5 18 16 18z" fill="#FFF" />
+              <circle cx="16" cy="11" r="4.5" fill="#FFF" />
+            </svg>
           </div>
+          <UserProfilePopover
+            isOpen={isProfilePopoverOpen}
+            onClose={() => setIsProfilePopoverOpen(false)}
+          />
         </div>
-      )}
+      </div>
 
       {/* Main Content Viewport */}
       <div className="payments-page-content">
-        {/* Main Body */}
         <div className="payments-main-body">
-          {/* Payments Account Header */}
-          <div className="payments-account-header">
-            {productMode === "adsense" && (
-              <>
-                <span className="payments-account-sublabel">PAYMENTS ACCOUNT</span>
-                <span className="payments-account-title">AdSense ({earningsConfig.countryName || "United Kingdom"})</span>
-              </>
-            )}
-            <div className="breadcrumb-title-row">
-              <span
-                className="breadcrumb-link"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onNavigateBackToPayments?.();
-                }}
-              >
-                Payments
-              </span>
-              <span className="breadcrumb-separator">&gt;</span>
-              <h2 className="breadcrumb-current">Transactions</h2>
-            </div>
+          {/* Breadcrumb Navigation Line */}
+          <div className="transactions-breadcrumb-bar">
+            <a
+              href="#payments"
+              className="breadcrumb-link"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigateBackToPayments && onNavigateBackToPayments();
+              }}
+            >
+              Payments
+            </a>
+            <span className="breadcrumb-separator">›</span>
+            <span className="breadcrumb-current">Transactions</span>
           </div>
 
-          {/* Filter Controls Row */}
+          {/* Filter Controls Row (Right Aligned Select Dropdowns) */}
           <div className="transactions-filter-row">
             <div className="transactions-filter-controls" onClick={(e) => e.stopPropagation()}>
               <div className="trans-select-wrap">
-                <select defaultValue="detailed">
-                  <option value="detailed">Detailed transaction view</option>
-                  <option value="summary">Summary view</option>
-                </select>
-                <span className="select-arrow">▾</span>
+                <div className="select-box-wrap">
+                  <select defaultValue="detailed">
+                    <option value="detailed">Detailed transaction view</option>
+                    <option value="summary">Summary view</option>
+                  </select>
+                  <span className="select-arrow">▾</span>
+                </div>
               </div>
 
               <div className="trans-select-wrap">
-                <select defaultValue="all">
-                  <option value="all">All transactions</option>
-                  <option value="earnings">Earnings</option>
-                  <option value="payments">Payments</option>
-                </select>
-                <span className="select-arrow">▾</span>
+                <div className="select-box-wrap">
+                  <select defaultValue="all">
+                    <option value="all">All transactions</option>
+                    <option value="earnings">Earnings</option>
+                    <option value="payments">Payments</option>
+                  </select>
+                  <span className="select-arrow">▾</span>
+                </div>
               </div>
 
               <div className="trans-select-wrap calendar-select">
-                <i className="material-icon-i material-icons-extended" style={{ fontSize: "16px", color: "#5f6368", marginRight: "4px" }}>
-                  calendar_today
-                </i>
-                <select defaultValue="all">
-                  <option value="all">All history</option>
-                  <option value="3months">Last 3 months</option>
-                  <option value="6months">Last 6 months</option>
-                  <option value="year">This year</option>
-                </select>
-                <span className="select-arrow">▾</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="#5f6368"
+                  style={{ marginRight: "10px", flexShrink: 0 }}
+                >
+                  <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z" />
+                  <path d="M0 0h24v24H0z" fill="none" />
+                </svg>
+                <div className="select-box-wrap">
+                  <select defaultValue="all">
+                    <option value="all">All history</option>
+                    <option value="3months">Last 3 months</option>
+                    <option value="6months">Last 6 months</option>
+                    <option value="year">This year</option>
+                  </select>
+                  <span className="select-arrow">▾</span>
+                </div>
               </div>
             </div>
           </div>
@@ -357,7 +338,7 @@ export const TransactionsServicePage: React.FC<{
                               <th className="col-amount align-right">Amount ({displayCurrencyCode})</th>
                             </tr>
                           </thead>
-                          <tbody>{renderTableRows(block.items)}</tbody>
+                          <tbody>{renderTableRows(block.items, block.dateHeader)}</tbody>
                         </table>
                       </div>
 

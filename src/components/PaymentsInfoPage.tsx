@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useBrowser } from "../context/BrowserContext";
+import { UserProfilePopover } from "./UserProfilePopover";
 import {
   EarningsConfigModal,
   EarningsConfigData,
   DEFAULT_EARNINGS_CONFIG,
 } from "./EarningsConfigModal";
+import { computeMonthDateInfo } from "./TransactionsConfigModal";
+import paymentInstrumentImg from "../assets/payment_instrument.png";
 
 const EARNINGS_STORAGE_KEY = "adsense_earnings_config";
 
@@ -12,7 +15,8 @@ export const PaymentsInfoPage: React.FC<{
   onNavigateToPolicy?: () => void;
   onNavigateToTransactions?: (hash?: string) => void;
 }> = ({ onNavigateToTransactions }) => {
-  const { formatCurrency, setIsSettingsModalOpen, productMode } = useBrowser();
+  const { formatCurrency, productMode } = useBrowser();
+  const [isProfilePopoverOpen, setIsProfilePopoverOpen] = useState<boolean>(false);
 
   const [earningsConfig, setEarningsConfig] = useState<EarningsConfigData>(() => {
     try {
@@ -40,31 +44,58 @@ export const PaymentsInfoPage: React.FC<{
   }, [earningsConfig]);
 
   const dateRanges = useMemo(() => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const day = now.getDate();
+    const customBase = earningsConfig.customBaseDate;
+    const r1 = computeMonthDateInfo(customBase, 0);
+    const r2 = computeMonthDateInfo(customBase, 1);
+    const r3 = computeMonthDateInfo(customBase, 2);
 
-    // Row 1: Current month (e.g. Sep 1 – 20, 2026 or Aug 1 – 9, 2026)
-    const m1 = now.toLocaleDateString("en-US", { month: "short" });
-    const row1Text = `${m1} 1\u2009\u2013\u2009${day}, ${year}`;
+    return {
+      row1Text: r1,
+      row2Text: r2,
+      row3Text: r3,
+    };
+  }, [earningsConfig.customBaseDate]);
 
-    // Row 2: 1 month ago (e.g. Aug 1 – 31, 2026 or Jul 1 – 31, 2026)
-    const d2 = new Date(year, month - 1, 1);
-    const m2 = d2.toLocaleDateString("en-US", { month: "short" });
-    const y2 = d2.getFullYear();
-    const lastDay2 = new Date(year, month, 0).getDate();
-    const row2Text = `${m2} 1\u2009\u2013\u2009${lastDay2}, ${y2}`;
+  // Dynamically compute the 3 monthly balances to match TransactionsServicePage 1:1
+  const computedMonthlyBalances = useMemo(() => {
+    const rawStart = earningsConfig.initialStartingBalance;
+    const startVal = rawStart !== undefined && rawStart !== null && !isNaN(Number(rawStart))
+      ? Number(rawStart)
+      : 0.37;
 
-    // Row 3: 2 months ago (e.g. Jul 1 – 31, 2026 or Jun 1 – 30, 2026)
-    const d3 = new Date(year, month - 2, 1);
-    const m3 = d3.toLocaleDateString("en-US", { month: "short" });
-    const y3 = d3.getFullYear();
-    const lastDay3 = new Date(year, month - 1, 0).getDate();
-    const row3Text = `${m3} 1\u2009\u2013\u2009${lastDay3}, ${y3}`;
+    const blocksData: { items: any[] }[] = [];
+    for (let i = 0; i < 3; i++) {
+      const configuredBlock = (earningsConfig.monthsData || [])[i];
+      let items = configuredBlock ? configuredBlock.items : [];
 
-    return { row1Text, row2Text, row3Text };
-  }, []);
+      if (!configuredBlock) {
+        if (i === 0) items = earningsConfig.month1Items || [];
+        else if (i === 1) items = earningsConfig.month2Items || [];
+        else if (i === 2) items = earningsConfig.month3Items || [];
+      }
+
+      blocksData.push({ items });
+    }
+
+    let runningBalance = startVal;
+    const endBalances: number[] = [];
+
+    for (let i = 2; i >= 0; i--) {
+      const items = blocksData[i].items || [];
+      const sum = items.reduce((acc, item) => acc + (Number(item.amount) || 0), 0);
+      runningBalance = Number((runningBalance + sum).toFixed(2));
+      endBalances[i] = runningBalance;
+    }
+
+    return endBalances;
+  }, [
+    earningsConfig.customBaseDate,
+    earningsConfig.initialStartingBalance,
+    earningsConfig.monthsData,
+    earningsConfig.month1Items,
+    earningsConfig.month2Items,
+    earningsConfig.month3Items,
+  ]);
 
   const progressPercent =
     earningsConfig.threshold > 0
@@ -77,7 +108,7 @@ export const PaymentsInfoPage: React.FC<{
       {productMode === "adsense" && (
         <div className="adsense-topbar">
           <h1 className="adsense-topbar-title">Payments info</h1>
-          <div className="adsense-topbar-right">
+          <div className="adsense-topbar-right" style={{ position: "relative" }}>
             <button className="topbar-icon-btn" title="Help">
               <i className="material-icon-i material-icons-extended" role="img" aria-hidden="true" style={{ fontSize: "20px", color: "#5F6368" }}>
                 help_outline
@@ -90,8 +121,8 @@ export const PaymentsInfoPage: React.FC<{
             </button>
             <div
               className="topbar-avatar"
-              title="Google Account & Global Settings"
-              onClick={() => setIsSettingsModalOpen(true)}
+              title="Google Account"
+              onClick={() => setIsProfilePopoverOpen(!isProfilePopoverOpen)}
               style={{ cursor: "pointer" }}
             >
               <svg width="28" height="28" viewBox="0 0 32 32">
@@ -100,6 +131,10 @@ export const PaymentsInfoPage: React.FC<{
                 <circle cx="16" cy="11" r="4.5" fill="#FFF" />
               </svg>
             </div>
+            <UserProfilePopover
+              isOpen={isProfilePopoverOpen}
+              onClose={() => setIsProfilePopoverOpen(false)}
+            />
           </div>
         </div>
       )}
@@ -123,7 +158,6 @@ export const PaymentsInfoPage: React.FC<{
           <div
             className="earnings-card"
             onDoubleClick={() => setIsConfigModalOpen(true)}
-            title="Double-click to configure parameters"
             style={{ cursor: "pointer" }}
           >
             <div className="earnings-card-top">
@@ -144,7 +178,9 @@ export const PaymentsInfoPage: React.FC<{
 
               <div className="earnings-card-footer-text">
                 <span>You've reached {progressPercent}% of your payment threshold</span>
-                <span>Payment threshold: {formatCurrency(earningsConfig.threshold)}</span>
+                <span style={{ fontFamily: "Roboto, Arial, sans-serif" }}>
+                  Payment threshold: {formatCurrency(earningsConfig.threshold)}
+                </span>
               </div>
             </div>
 
@@ -159,13 +195,14 @@ export const PaymentsInfoPage: React.FC<{
                 paddingTop: "10px",
                 color: "#5f6368",
                 fontSize: "12.5px",
+                fontFamily: "Roboto, Arial, sans-serif",
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="#5f6368" style={{ flexShrink: 0 }}>
                 <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z" />
                 <path d="M0 0h24v24H0z" fill="none" />
               </svg>
-              <span>
+              <span style={{ fontFamily: "Roboto, Arial, sans-serif" }}>
                 Your last payment was issued on {earningsConfig.lastPaymentDate} for{" "}
                 {formatCurrency(earningsConfig.lastPaymentAmount)}.
               </span>
@@ -178,7 +215,6 @@ export const PaymentsInfoPage: React.FC<{
             <div
               className="payments-card"
               onDoubleClick={() => setIsConfigModalOpen(true)}
-              title="Double-click to edit parameters"
               style={{ cursor: "pointer" }}
             >
               <div className="payments-card-body">
@@ -195,7 +231,9 @@ export const PaymentsInfoPage: React.FC<{
                     >
                       {dateRanges.row1Text}
                     </a>
-                    <span className="transaction-amount">{formatCurrency(earningsConfig.augAmount ?? 0.42)}</span>
+                    <span className="transaction-amount">
+                      {formatCurrency(computedMonthlyBalances[0] !== undefined ? computedMonthlyBalances[0] : (earningsConfig.augAmount ?? 0.42))}
+                    </span>
                   </div>
                   <div className="transaction-item">
                     <a
@@ -208,7 +246,9 @@ export const PaymentsInfoPage: React.FC<{
                     >
                       {dateRanges.row2Text}
                     </a>
-                    <span className="transaction-amount">{formatCurrency(earningsConfig.julAmount ?? 0.42)}</span>
+                    <span className="transaction-amount">
+                      {formatCurrency(computedMonthlyBalances[1] !== undefined ? computedMonthlyBalances[1] : (earningsConfig.julAmount ?? 0.42))}
+                    </span>
                   </div>
                   <div className="transaction-item">
                     <a
@@ -221,7 +261,9 @@ export const PaymentsInfoPage: React.FC<{
                     >
                       {dateRanges.row3Text}
                     </a>
-                    <span className="transaction-amount">{formatCurrency(earningsConfig.junAmount ?? 392.47)}</span>
+                    <span className="transaction-amount">
+                      {formatCurrency(computedMonthlyBalances[2] !== undefined ? computedMonthlyBalances[2] : (earningsConfig.junAmount ?? 392.47))}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -239,39 +281,24 @@ export const PaymentsInfoPage: React.FC<{
             <div
               className="payments-card"
               onDoubleClick={() => setIsConfigModalOpen(true)}
-              title="Double-click to edit parameters"
               style={{ cursor: "pointer" }}
             >
               <div className="payments-card-body">
                 <h3 className="payments-card-title">How you get paid</h3>
                 <div className="how-paid-flex-row" style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "12px", marginBottom: "8px" }}>
-                  <div
-                    className="blue-bank-icon-box"
-                    style={{
-                      width: "88px",
-                      height: "58px",
-                      backgroundColor: "#d3e3fd",
-                      borderRadius: "4px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <svg width="34" height="34" viewBox="0 0 24 24" fill="#041e49">
-                      <path d="M4 10h2v7H4zm5 0h2v7H9zm6 0h2v7h-2zm5 0h2v7h-2zM2 22h20v-3H2v3zm10-20L2 6v2h20V6l-10-4z" />
-                      <circle cx="18" cy="15" r="3.2" fill="#041e49" stroke="#d3e3fd" strokeWidth="0.8" />
-                      <text x="18" y="16.8" fontSize="3.8" fill="#d3e3fd" textAnchor="middle" fontWeight="bold">
-                        $
-                      </text>
-                    </svg>
-                  </div>
+                  <img
+                    src={paymentInstrumentImg}
+                    alt="Payment Instrument"
+                    aria-hidden="true"
+                    className="b3-image b3id-image-with-data b3-instrument-details-image"
+                    style={{ width: "88px", height: "58px", objectFit: "contain", flexShrink: 0 }}
+                  />
                   <div className="how-paid-info-text">
                     <div style={{ fontSize: "11px", color: "#3c4043", fontWeight: 500, letterSpacing: "0.2px" }}>
                       {earningsConfig.bankMasked || "DE••\u2009••••\u2009••••\u2009••••\u2009••07\u200949"}
                     </div>
-                    <div style={{ fontSize: "10.5px", color: "#5f6368", textTransform: "uppercase", marginTop: "3px", letterSpacing: "0.2px" }}>
-                      {earningsConfig.payeeName || "EMMANUEL DELLBRÜGGER"}
+                    <div style={{ fontSize: "10.5px", color: "#5f6368", marginTop: "3px", letterSpacing: "0.2px" }}>
+                      {earningsConfig.payeeName || "Emmanuel Dellbrügger"}
                     </div>
                   </div>
                 </div>
@@ -287,17 +314,16 @@ export const PaymentsInfoPage: React.FC<{
             <div
               className="payments-card"
               onDoubleClick={() => setIsConfigModalOpen(true)}
-              title="Double-click to edit parameters"
               style={{ cursor: "pointer" }}
             >
               <div className="payments-card-body">
                 <h3 className="payments-card-title">Settings</h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-                  <div style={{ fontSize: "11px", color: "#5f6368" }}>
+                  <div style={{ fontSize: "11px", color: "#3c4043" }}>
                     AdSense {earningsConfig.pubId || "pub-8666469182451238"}
                   </div>
-                  <div style={{ fontSize: "10.5px", color: "#202124", fontWeight: 500 }}>
-                    {earningsConfig.payeeName || "EMMANUEL DELLBRÜGGER"}
+                  <div style={{ fontSize: "10.5px", color: "#3c4043" }}>
+                    {earningsConfig.payeeName || "Emmanuel Dellbrügger"}
                   </div>
                   <div>
                     <a href="#user" style={{ fontSize: "11px", color: "#1a73e8", textDecoration: "none" }}>
@@ -326,3 +352,4 @@ export const PaymentsInfoPage: React.FC<{
     </div>
   );
 };
+
