@@ -5,19 +5,16 @@ import {
   MetricKey,
   RawReportRecord,
   AggregatedReportRow,
+  MetricColumnDef,
+  ALL_METRIC_COLUMNS,
   loadReportRecords,
   queryAndAggregateReport,
 } from "../services/reportsDataEngine";
 import { useBrowser } from "../context/BrowserContext";
 
-import { UserProfilePopover } from "./UserProfilePopover";
-
 interface ReportsPageProps {
   initialDimension?: ReportDimension;
 }
-
-const ADSENSE_LOGO_SVG_BASE64 =
-  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjE0IiBoZWlnaHQ9IjM1IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+PGcgZmlsbD0iIzVGNjM2OCI+PHBhdGggZD0iTTIxMi4wNDQgMTkuNDZjLS4wNDctLjY0My0uMzQyLTEuMjU2LS44ODYtMS44NC0uNTQ1LS41ODEtMS4zNTMtLjg3My0yLjQyNy0uODczLS43ODIgMC0xLjQ1OS4yNDUtMi4wMzUuNzM2LS41NzUuNDktLjk3IDEuMTUtMS4xODQgMS45NzhoNi41MzJ6bS0zLjAzNiA3LjM2Yy0xLjcwMiAwLTMuMDg2LS41NjYtNC4xNS0xLjcwMS0xLjA2OC0xLjEzNS0xLjYtMi41NjgtMS42LTQuMzAxIDAtMS42NC41MTctMy4wNTEgMS41NTItNC4yMzIgMS4wMzUtMS4xODEgMi4zNTgtMS43NzEgMy45NjctMS43NzEgMS42NzEgMCAzLjAxLjU0NCA0LjAxNCAxLjYzMyAxLjAwNCAxLjA4OSAxLjUwNyAyLjU0NSAxLjUwNyA0LjM3bC0uMDI0LjM5aC04LjljLjA2MSAxLjEzNi40NDEgMi4wMzMgMS4xMzggMi42OTIuNjk4LjY2IDEuNTE0Ljk4OSAyLjQ1Ljk4OSAxLjUxOCAwIDIuNTQ1LS42NDQgMy4wODItMS45MzJsMS44ODYuNzgyYy0uMzY4Ljg3NC0uOTc0IDEuNjA3LTEuODE4IDIuMTk3LS44NDIuNTg5LTEuODc4Ljg4NS0zLjEwNC44ODV6TTE5Ny43MyAyNi44MjFjLTEuMjU3IDAtMi4yOTUtLjMwNy0zLjExNS0uOTJhNS40MzcgNS40MzcgMCAwIDEtMS44MDYtMi4zbDEuODg2LS43ODJjLjU5OCAxLjQxMSAxLjYxOCAyLjExNiAzLjA1OSAyLjExNi42NiAwIDEuMi0uMTQ1IDEuNjIyLS40MzcuNDItLjI5MS42MzItLjY3NS42MzItMS4xNTEgMC0uNzM1LS41MTMtMS4yMzMtMS41NDEtMS40OTRsLTIuMjc3LS41NTNjLS43MjEtLjE4My0xLjQwMy0uNTMyLTIuMDQ3LTEuMDQ1LS42NDMtLjUxNC0uOTY2LTEuMjA4LS45NjYtMi4wODIgMC0uOTk3LjQ0LTEuODA2IDEuMzIzLTIuNDI2Ljg4LS42MjEgMS45MjctLjkzMiAzLjEzOS0uOTMyLjk5NiAwIDEuODg2LjIyNyAyLjY2OC42NzhhMy44MjQgMy44MjQgMCAwIDEgMS42NzkgMS45NDRsLTEuODQuNzU5Yy0uNDE0LS45OTctMS4yNzItMS40OTUtMi41NzYtMS40OTUtLjYzIDAtMS4xNTcuMTMxLTEuNTg3LjM5MS0uNDMuMjYxLS42NDQuNjE0LS42NDQgMS4wNTggMCAuNjQ0LjQ5OCAxLjA4MSAxLjQ5NiAxLjMxMWwyLjIzLjUyOWMxLjA1OS4yNDUgMS44NC42NjcgMi4zNDYgMS4yNjUuNTA3LjU5OC43NTkgMS4yNzMuNzU5IDIuMDI0IDAgMS4wMTItLjQxNCAxLjg1NS0xLjI0MiAyLjUzLS44MjguNjc0LTEuODk0IDEuMDEyLTMuMTk3IDEuMDEyTTE4My4zMSAxNS4xODN2MS41NjNoLjA5MmMuMzA2LS41MzYuNzktLjk5MiAxLjQ0OS0xLjM2OGE0LjIwMiA0LjIwMiAwIDAgMSAyLjExNi0uNTYzYzEuMzk2IDAgMi40Ni40MyAzLjE5NyAxLjI4OC43MzYuODU4IDEuMTA0IDIuMDEgMS4xMDQgMy40NXY2LjloLTIuMTE2di02LjU3OWMwLTIuMDg1LS45MjgtMy4xMjgtMi43ODItMy4xMjgtLjg3NCAwLTEuNTg3LjM1LTIuMTQgMS4wNDctLjU1Mi42OTgtLjgyOCAxLjUwNi0uODI4IDIuNDI2djYuMjM0aC0yLjExNXYtMTEuMjdoMi4wMjN6TTE3Ny4yNjEgMTkuNDZjLS4wNDYtLjY0My0uMzQyLTEuMjU2LS44ODYtMS44NC0uNTQ0LS41ODEtMS4zNTMtLjg3My0yLjQyNi0uODczLS43ODIgMC0xLjQ2LjI0NS0yLjAzNi43MzYtLjU3NS40OS0uOTY5IDEuMTUtMS4xODQgMS45NzhoNi41MzJ6bS0zLjAzNiA3LjM2Yy0xLjcwMiAwLTMuMDg2LS41NjYtNC4xNTEtMS43MDEtMS4wNjYtMS4xMzUtMS41OTktMi41NjgtMS41OTktNC4zMDEgMC0xLjY0LjUxNy0zLjA1MSAxLjU1My00LjIzMiAxLjAzNS0xLjE4MSAyLjM1Ny0xLjc3MSAzLjk2Ny0xLjc3MSAxLjY3MSAwIDMuMDA5LjU0NCA0LjAxNCAxLjYzMyAxLjAwNCAxLjA4OSAxLjUwNiAyLjU0NSAxLjUwNiA0LjM3bC0uMDIzLjM5aC04LjkwMWMuMDYyIDEuMTM2LjQ0MSAyLjAzMyAxLjEzOSAyLjY5Mi42OTcuNjYgMS41MTMuOTg5IDIuNDQ5Ljk4OSAxLjUxOSAwIDIuNTQ1LS42NDQgMy4wODItMS45MzJsMS44ODYuNzgyYy0uMzY3Ljg3NC0uOTc0IDEuNjA3LTEuODE3IDIuMTk3LS44NDMuNTg5LTEuODc5Ljg4NS0zLjEwNS44ODV6TTE2MS40ODggMjYuODIxYy0xLjE5NSAwLTIuMzY1LS4zOTItMy41MDctMS4xNzMtMS4xNDItLjc4Mi0xLjg5LTEuODc4LTIuMjQzLTMuMjg5bDEuOTMzLS43ODJhNC40MDMgNC40MDMgMCAwIDAgMS40MTQgMi4yODhjLjcxMi42MjEgMS41MTMuOTMyIDIuNDAyLjkzMi45MjEgMCAxLjcwNi0uMjQyIDIuMzU4LS43MjUuNjUyLS40ODIuOTc4LTEuMTM4Ljk3OC0xLjk2NiAwLS45Mi0uMzI2LTEuNjI5LS45NzgtMi4xMjgtLjY1Mi0uNDk4LTEuNjgzLS45NjItMy4wOTMtMS4zOTEtMS40NTctLjQ2LTIuNTYyLTEuMDU0LTMuMzEzLTEuNzgzLS43NS0uNzI4LTEuMTI2LTEuNjU5LTEuMTI2LTIuNzk1IDAtMS4xOC40NjgtMi4yMDggMS40MDQtMy4wODIuOTM0LS44NzQgMi4xNTMtMS4zMSAzLjY1Ni0xLjMxIDEuMzk1IDAgMi41My4zNDkgMy40MDQgMS4wNDcuODc0LjY5NyAxLjQ0IDEuNDYgMS43MDIgMi4yODhsLTEuOTMyLjgwNWMtLjEzNy0uNTIxLS40OC0xLjAwNC0xLjAyMy0xLjQ0OS0uNTQ1LS40NDUtMS4yNDYtLjY2Ny0yLjEwNC0uNjY3LS44MTQgMC0xLjUwNy4yMjYtMi4wODIuNjc4LS41NzUuNDUzLS44NjMgMS4wMTctLjg2MyAxLjY5IDAgLjYxNS4yNjUgMS4xMzEuNzk0IDEuNTUzLjUyOS40MjIgMS4zMDcuODAyIDIuMzM0IDEuMTM5LjgxMy4yNjEgMS40OS41MTQgMi4wMzYuNzU5YTkuNTE0IDkuNTE0IDAgMCAxIDEuNjU2Ljk3N2MuNTU5LjQwNi45OC45MTIgMS4yNjUgMS41MTkuMjgzLjYwNS40MjUgMS4zMDYuNDI1IDIuMTA0IDAgLjc5Ny0uMTY0IDEuNTEtLjQ5NCAyLjEzOWE0LjAxOSA0LjAxOSAwIDAgMS0xLjMxMSAxLjQ5NSA2LjU4OCA2LjU4OCAwIDAgMS0zLjY5MiAxLjEyN00xNDguMzc2IDI0Ljg4OGMuOTk2IDAgMS44NDMtLjM2NyAyLjU0MS0xLjEwNC42OTctLjczNiAxLjA0Ny0xLjcyNCAxLjA0Ny0yLjk2NiAwLTEuMjQyLS4zNS0yLjIzMi0xLjA0Ny0yLjk2Ny0uNjk4LS43MzYtMS41NDUtMS4xMDUtMi41NC0xLjEwNS0uOTgyIDAtMS44MjYuMzcyLTIuNTMgMS4xMTYtLjcwNy43NDQtMS4wNiAxLjczLTEuMDYgMi45NTZzLjM1MyAyLjIxMiAxLjA2IDIuOTU1Yy43MDQuNzQ0IDEuNTQ4IDEuMTE1IDIuNTMgMS4xMTVtLS4zNDcgMS45MzNjLTEuNDU3IDAtMi43MTQtLjU3Ni0zLjc3LTEuNzI2LTEuMDYtMS4xNDktMS41ODgtMi41NzUtMS41ODgtNC4yNzdzLjUyOC0zLjEyOCAxLjU4Ny00LjI3OWMxLjA1Ny0xLjE1IDIuMzE0LTEuNzI0IDMuNzcxLTEuNzI0Ljg2IDAgMS42My4xODMgMi4zMTIuNTUyLjY4Mi4zNjggMS4xOTIuODI4IDEuNTMgMS4zOGguMDkybC0uMDkyLTEuNTY0VjkuOTg1aDIuMTE1djE2LjQ2N2gtMi4wMjN2LTEuNTY0aC0uMDkyYy0uMzM4LjU1My0uODQ4IDEuMDEzLTEuNTMgMS4zODEtLjY4My4zNjctMS40NTMuNTUyLTIuMzEyLjU1Mk0xMzEuOTc3IDIwLjAxMmg1LjQ3NWwtMi42OTItNy40MjloLS4wOTJsLTIuNjkxIDcuNDN6bS00LjY3IDYuNDRsNi4yMS0xNi40NjdoMi4zOTRsNi4yMSAxNi40NjdoLTIuMzQ2bC0xLjU4OC00LjQ2aC02LjkyM2wtMS42MSA0LjQ2aC0yLjM0NnoiLz48L2c+PGcgZmlsbD0iIzVGNjM2OCI+PHBhdGggZD0iTTExMi4xOSAyMC42MzdsNS4zNjQtMi4yMjhjLS4yOTYtLjc1LTEuMTgxLTEuMjcyLTIuMjI3LTEuMjcyLTEuMzQxIDAtMy4yMDQgMS4xODItMy4xMzcgMy41bTYuMjk2IDIuMTU5bDIuMDQ1IDEuMzYzYy0uNjU4Ljk3OC0yLjI1IDIuNjYtNSAyLjY2LTMuNDA4IDAtNS44Ny0yLjYzNy01Ljg3LTYgMC0zLjU3IDIuNDg0LTYuMDAxIDUuNTc1LTYuMDAxIDMuMTE0IDAgNC42MzcgMi40NzggNS4xMzYgMy44MTlsLjI3My42ODItOC4wMjMgMy4zMThjLjYxNCAxLjIwNSAxLjU2OCAxLjgxOCAyLjkwOSAxLjgxOCAxLjM0IDAgMi4yNzMtLjY2IDIuOTU1LTEuNjZNMTA1LjQ4NCAyNi40NTVoMi42MzZWOC44MThoLTIuNjM2ek0xMDEuMTgzIDIwLjg0MWMwLTIuMTEzLTEuNDEtMy42NTktMy4yMDUtMy42NTktMS44MTcgMC0zLjM0MSAxLjU0Ni0zLjM0MSAzLjY1OSAwIDIuMDkxIDEuNTI0IDMuNjE0IDMuMzQgMy42MTQgMS43OTYgMCAzLjIwNi0xLjUyMyAzLjIwNi0zLjYxNHptMi4zMTctNS42NTl2MTAuNzczYzAgNC40MzItMi42MTMgNi4yNTEtNS43MDQgNi4yNTEtMi45MSAwLTQuNjYtMS45NTUtNS4zMTgtMy41NDZsMi4yOTUtLjk1NWMuNDEuOTc3IDEuNDEgMi4xMzYgMy4wMjMgMi4xMzYgMS45NzcgMCAzLjIwNS0xLjIyNyAzLjIwNS0zLjUyMnYtLjg2NGgtLjA5MWMtLjU5MS43MjctMS43MjggMS4zNjQtMy4xNiAxLjM2NC0zIDAtNS43NS0yLjYxNC01Ljc1LTUuOTc4IDAtMy4zODYgMi43NS02LjAyMyA1Ljc1LTYuMDIzIDEuNDMyIDAgMi41NjkuNjM2IDMuMTYgMS4zNDFoLjA5di0uOTc3aDIuNXpNNzQuNzMgMjAuODE5YzAtMi4xNi0xLjU0LTMuNjM3LTMuMzI1LTMuNjM3LTEuNzg1IDAtMy4zMjUgMS40NzgtMy4zMjUgMy42MzcgMCAyLjEzNiAxLjU0IDMuNjM2IDMuMzI1IDMuNjM2IDEuNzg1IDAgMy4zMjUtMS41IDMuMzI1LTMuNjM2bTIuNTg4IDBjMCAzLjQ1NC0yLjY1NSA2LTUuOTEzIDYtMy4yNTggMC01LjkxMy0yLjU0Ni01LjkxMy02IDAtMy40NzggMi42NTUtNiA1LjkxMy02IDMuMjU4IDAgNS45MTMgMi41MjEgNS45MTMgNk04Ny45ODcgMjAuODE5YzAtMi4xNi0xLjU0LTMuNjM3LTMuMzI1LTMuNjM3LTEuNzg1IDAtMy4zMjUgMS40NzgtMy4zMjUgMy42MzcgMCAyLjEzNiAxLjU0IDMuNjM2IDMuMzI1IDMuNjM2IDEuNzg1IDAgMy4zMjUtMS41IDMuMzI1LTMuNjM2bTIuNTg5IDBjMCAzLjQ1NC0yLjY1NiA2LTUuOTE0IDYtMy4yNTggMC01LjkxMy0yLjU0Ni01LjkxMy02IDAtMy40NzggMi42NTUtNiA1LjkxMy02IDMuMjU4IDAgNS45MTQgMi41MjEgNS45MTQgNk01NS4zNiAyNi44MTljLTUuMTM1IDAtOS40NTQtNC4xODItOS40NTQtOS4zMTggMC01LjEzNyA0LjMxOS05LjMyIDkuNDU1LTkuMzIgMi44NDIgMCA0Ljg2NCAxLjExNSA2LjM4NyAyLjU3bC0xLjc5NiAxLjc5NWMtMS4wOTEtMS4wMjMtMi41NjgtMS44MTgtNC41OTEtMS44MTgtMy43NSAwLTYuNjgzIDMuMDIzLTYuNjgzIDYuNzczIDAgMy43NSAyLjkzMyA2Ljc3MiA2LjY4MyA2Ljc3MiAyLjQzMiAwIDMuODE4LS45NzcgNC43MDUtMS44NjQuNzI3LS43MjYgMS4yMDUtMS43NzIgMS4zODYtMy4yMDRINTUuMzZWMTYuNjZoOC41NjhjLjA5Mi40NTQuMTM3IDEgLjEzNyAxLjU5IDAgMS45MS0uNTIzIDQuMjc0LTIuMjA0IDUuOTU2LTEuNjM3IDEuNzA0LTMuNzI4IDIuNjEzLTYuNTAxIDIuNjEzIi8+PC9nPjxwYXRoIGQ9Ik0yOS4xNjcgMy45MTNINS43OTVhMi4xOTggMi4xOTggMCAwIDAtMi4xOSAyLjE5di4xODRjMC0xLjIwNS45ODUtMi4xOTEgMi4xOS0yLjE5MWgyMy4zNzJjMS4yMDUgMCAyLjE5MS45ODYgMi4xOTEgMi4xOXYtLjE4MmEyLjE5OCAyLjE5OCAwIDAgMC0yLjE5LTIuMTkxIiBmaWxsPSIjRkZGIi8+PHBhdGggZD0iTTIxLjY3NyA5LjA2M2MxLjQwOC0yLjQxLjU3Mi01LjQ5LTEuODY3LTYuODgyLTIuNDQtMS4zOS01LjU1OS0uNTY2LTYuOTY3IDEuODQ0YTUuNDkgNS40OSAwIDAgMC0uMTc1LjMzbC00Ljc2IDguMTQzYTYuMDA0IDYuMDA0IDAgMCAwLS4yOTIuNWwtNC45NDMgOC41MyA4LjgzMyA0Ljk1MSA0LjkxOC04LjQ1OGE0Ljg2NyA0Ljg2NyAwIDAgMCAuMjkyLS41bDQuNzYtOC4xNDRjLjA2OS0uMTAyLjEzOC0uMjA2LjIwMS0uMzE0IiBmaWxsPSIjRkJCQzA0Ii8+PHBhdGggZD0iTTExLjU0NyAyNi40NTNjLTEuNCAyLjQ0OS00LjU1OCAzLjM1LTYuOTgzIDEuOTM3LTIuNDI2LTEuNDE0LTMuMjg3LTQuNDgtMS44ODYtNi45MjggMS40MDEtMi40NDggNC41MzEtMy4zNTMgNi45NTctMS45NCAyLjQyNiAxLjQxNCAzLjMxMiA0LjQ4MyAxLjkxMiA2LjkzIiBmaWxsPSIjMzRBODUzIi8+PHBhdGggZD0iTTMwLjYwOCAxMC42NzVhNS4wNSA1LjA1IDAgMCAwLTYuODg5IDEuODRsLTUuMDQzIDguNzE0YTUuMDI0IDUuMDI0IDAgMCAwIDEuODQ2IDYuODcyIDUuMDUgNS4wNSAwIDAgMCA2Ljg5LTEuODQxbDUuMDQyLTguNzEzYTUuMDI1IDUuMDI1IDAgMCAwLTEuODQ2LTYuODcyIiBmaWxsPSIjNDI4NUY0Ii8+PC9nPjwvc3ZnPgo=";
 
 const SettingsGearIcon = () => (
   <i
@@ -42,16 +39,42 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
   const [activeDimension, setActiveDimension] = useState<ReportDimension>(initialDimension);
   const [timeRange, setTimeRange] = useState<TimeRangeKey>("last_7_days");
   const [activeMetric, setActiveMetric] = useState<MetricKey>("earnings");
-  const [isProfilePopoverOpen, setIsProfilePopoverOpen] = useState(false);
   const [customRange, setCustomRange] = useState<{ start: string; end: string }>({
     start: "2026-08-01",
     end: "2026-08-05",
   });
   const [isCustomDropdownOpen, setIsCustomDropdownOpen] = useState(false);
 
+  // Dynamic Metrics Selection State
+  const getInitialSelectedMetrics = (dim: ReportDimension): MetricKey[] => {
+    try {
+      const saved = localStorage.getItem(`adsense_metric_cols_${dim}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return ALL_METRIC_COLUMNS.filter((m) => m.defaultVisible(dim)).map((m) => m.id);
+  };
+
+  const [selectedMetricIds, setSelectedMetricIds] = useState<MetricKey[]>(() =>
+    getInitialSelectedMetrics(initialDimension)
+  );
+  const [isMetricModalOpen, setIsMetricModalOpen] = useState(false);
+  const [tempSelectedMetricIds, setTempSelectedMetricIds] = useState<MetricKey[]>(selectedMetricIds);
+
   const [rawRecords, setRawRecords] = useState<RawReportRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [hiddenRowKeys, setHiddenRowKeys] = useState<Set<string>>(new Set());
+
+  // Update selected metrics when dimension changes
+  useEffect(() => {
+    const nextMetrics = getInitialSelectedMetrics(activeDimension);
+    setSelectedMetricIds(nextMetrics);
+    if (!nextMetrics.includes(activeMetric)) {
+      setActiveMetric("earnings");
+    }
+  }, [activeDimension]);
 
   const getActivePubId = (): string => {
     try {
@@ -109,11 +132,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     else if (timeRange === "this_month") drParam = "thisMonth";
     else if (timeRange === "custom") drParam = `custom&drs=${customRange.start}&dre=${customRange.end}`;
 
-    const mParam =
-      activeDimension === "ad_units"
-        ? "earnings%2CmonetizableImpressions%2CmonetizableImpressionsRpm%2CactiveViewViewability%2Cclicks"
-        : "earnings%2CpageViews%2CpageViewsRpm%2CmonetizableImpressions%2CmonetizableImpressionsRpm%2CactiveViewViewability%2Cclicks";
-
+    const mParam = selectedMetricIds.join("%2C");
     const dynamicUrl = `https://adsense.google.com/adsense/u/0/${pubId}/reporting/?rt=q&ag=${ag}&dr=${drParam}&gm=earnings&m=${mParam}&oc=${oc}&oo=${oo}&ct=${ct}`;
     const dynamicTitle = `${titleName} – Reports – Google AdSense`;
 
@@ -121,7 +140,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
       url: dynamicUrl,
       title: dynamicTitle,
     });
-  }, [activeDimension, timeRange, customRange]);
+  }, [activeDimension, timeRange, customRange, selectedMetricIds]);
 
   // Load records from Excel or defaults whenever activeDimension changes
   const fetchRecords = async () => {
@@ -152,6 +171,11 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     return rows.filter((r: AggregatedReportRow) => r.name.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [rows, searchQuery]);
 
+  // Active Metric Columns to Render in Table
+  const activeColumns = useMemo<MetricColumnDef[]>(() => {
+    return ALL_METRIC_COLUMNS.filter((m) => selectedMetricIds.includes(m.id));
+  }, [selectedMetricIds]);
+
   // Currency & Number Formatting Helpers
   const formatMoney = (val: number) => {
     const sym = currencySymbol || "$";
@@ -164,6 +188,14 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
 
   const formatPercent = (val: number) => {
     return `${val.toFixed(2)}%`;
+  };
+
+  const formatCell = (col: MetricColumnDef, val: number, isAvg = false) => {
+    if (isAvg && col.isAvgDashed) return "—";
+    if (col.format === "money") return formatMoney(val);
+    if (col.format === "int") return formatInt(val);
+    if (col.format === "percent") return formatPercent(val);
+    return val.toFixed(2);
   };
 
   const toggleRowVisibility = (key: string) => {
@@ -189,25 +221,10 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     { id: "verified_sites", name: "Verified sites", subtitle: "Estimated earnings by Veri...", isReal: false },
   ];
 
-  // Available metrics
-  const isAdUnits = activeDimension === "ad_units";
-  const metricsList: { key: MetricKey; label: string }[] = isAdUnits
-    ? [
-        { key: "earnings", label: "Estimated earnings" },
-        { key: "impressions", label: "Impressions" },
-        { key: "impressionRpm", label: "Impression RPM" },
-        { key: "activeViewViewable", label: "Active View Viewable" },
-        { key: "clicks", label: "Clicks" },
-      ]
-    : [
-        { key: "earnings", label: "Estimated earnings" },
-        { key: "pageViews", label: "Page views" },
-        { key: "pageRpm", label: "Page RPM" },
-        { key: "impressions", label: "Impressions" },
-        { key: "impressionRpm", label: "Impression RPM" },
-        { key: "activeViewViewable", label: "Active View Viewable" },
-        { key: "clicks", label: "Clicks" },
-      ];
+  // Active chips metrics
+  const activeChipsMetrics = useMemo(() => {
+    return ALL_METRIC_COLUMNS.filter((m) => selectedMetricIds.includes(m.id));
+  }, [selectedMetricIds]);
 
   // Dimension Header Title
   const dimensionTitle =
@@ -230,17 +247,11 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
 
   // Chart Max Scale Calculation
   const chartItems = useMemo(() => {
+    const activeDef = ALL_METRIC_COLUMNS.find((m) => m.id === activeMetric);
     return filteredRows
       .filter((r: AggregatedReportRow) => !hiddenRowKeys.has(r.key))
       .map((r: AggregatedReportRow) => {
-        let val = r.earnings;
-        if (activeMetric === "pageViews") val = r.pageViews;
-        else if (activeMetric === "pageRpm") val = r.pageRpm;
-        else if (activeMetric === "impressions") val = r.impressions;
-        else if (activeMetric === "impressionRpm") val = r.impressionRpm;
-        else if (activeMetric === "activeViewViewable") val = r.activeViewViewable;
-        else if (activeMetric === "clicks") val = r.clicks;
-
+        const val = activeDef ? activeDef.getValue(r) : r.earnings;
         return {
           key: r.key,
           name: r.name,
@@ -250,64 +261,50 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
   }, [filteredRows, activeMetric, hiddenRowKeys]);
 
   const maxChartVal = useMemo(() => {
-    if (chartItems.length === 0) return 100;
-    const m = Math.max(...chartItems.map((c: { value: number }) => c.value));
-    if (m <= 0) return 100;
-    // Round up nicely
-    const power = Math.pow(10, Math.floor(Math.log10(m)));
-    return Math.ceil((m * 1.15) / power) * power;
+    if (!chartItems || chartItems.length === 0) return 100;
+    const m = Math.max(...chartItems.map((c) => c.value));
+    return m > 0 ? m * 1.05 : 100;
   }, [chartItems]);
+
+  const openMetricModal = () => {
+    setTempSelectedMetricIds([...selectedMetricIds]);
+    setIsMetricModalOpen(true);
+  };
+
+  const handleApplyMetrics = () => {
+    if (tempSelectedMetricIds.length === 0) {
+      alert("Please select at least one metric column.");
+      return;
+    }
+    setSelectedMetricIds(tempSelectedMetricIds);
+    try {
+      localStorage.setItem(`adsense_metric_cols_${activeDimension}`, JSON.stringify(tempSelectedMetricIds));
+    } catch (e) {}
+    if (!tempSelectedMetricIds.includes(activeMetric)) {
+      setActiveMetric(tempSelectedMetricIds[0]);
+    }
+    setIsMetricModalOpen(false);
+  };
+
+  const handleResetMetrics = () => {
+    const defaults = ALL_METRIC_COLUMNS.filter((m) => m.defaultVisible(activeDimension)).map((m) => m.id);
+    setTempSelectedMetricIds(defaults);
+  };
+
+  const toggleTempMetric = (id: MetricKey) => {
+    if (tempSelectedMetricIds.includes(id)) {
+      if (tempSelectedMetricIds.length <= 1) {
+        alert("At least one metric column must remain visible.");
+        return;
+      }
+      setTempSelectedMetricIds(tempSelectedMetricIds.filter((item) => item !== id));
+    } else {
+      setTempSelectedMetricIds([...tempSelectedMetricIds, id]);
+    }
+  };
 
   return (
     <div className="reports-root-layout">
-      {/* 1:1 Top Header Bar (Google AdSense Logo | Reports Title, Help, Notifications, Profile Avatar) */}
-      <div className="adsense-topbar" style={{ padding: "0 24px", height: "48px", borderBottom: "1px solid #e0e0e0", backgroundColor: "#ffffff", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div
-            style={{
-              background: `url('${ADSENSE_LOGO_SVG_BASE64}') no-repeat left center/contain`,
-              width: "170px",
-              height: "28px",
-              cursor: "pointer",
-            }}
-            title="Google AdSense"
-          />
-          <div style={{ height: "24px", width: "1px", backgroundColor: "#dadce0", margin: "0 20px" }} />
-          <h1 className="adsense-topbar-title" style={{ fontSize: "18px", color: "#202124", fontWeight: 400, fontFamily: "Google Sans, Roboto, Arial, sans-serif", margin: 0 }}>
-            Reports
-          </h1>
-        </div>
-        <div className="adsense-topbar-right">
-          <button className="topbar-icon-btn" title="Help">
-            <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px", color: "#5F6368" }}>
-              help_outline
-            </i>
-          </button>
-          <button className="topbar-icon-btn" title="Notifications">
-            <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px", color: "#5F6368" }}>
-              notifications_none
-            </i>
-          </button>
-          <div
-            className="topbar-avatar"
-            title="Google Account"
-            style={{ cursor: "pointer", position: "relative" }}
-            onClick={() => setIsProfilePopoverOpen(!isProfilePopoverOpen)}
-          >
-            <svg width="28" height="28" viewBox="0 0 32 32">
-              <circle cx="16" cy="16" r="16" fill="#1A73E8" />
-              <path d="M16 18c-3.5 0-10 1.75-10 5.25V26h20v-2.75C26 19.75 19.5 18 16 18z" fill="#FFF" />
-              <circle cx="16" cy="11" r="4.5" fill="#FFF" />
-            </svg>
-
-            <UserProfilePopover
-              isOpen={isProfilePopoverOpen}
-              onClose={() => setIsProfilePopoverOpen(false)}
-            />
-          </div>
-        </div>
-      </div>
-
       {/* Top Time Range Filter Bar */}
       <div className="reports-top-filter-bar">
         <div className="reports-time-pills">
@@ -378,31 +375,45 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                 <button
                   type="button"
                   className="btn-apply-custom-date"
-                  onClick={() => setIsCustomDropdownOpen(false)}
+                  onClick={() => {
+                    setTimeRange("custom");
+                    setIsCustomDropdownOpen(false);
+                  }}
                 >
-                  Apply Filter (应用)
+                  Apply
                 </button>
               </div>
             )}
           </div>
 
-          <span className="reports-add-comparison">+ add comparison</span>
+          <span
+            className="reports-add-comparison"
+            onClick={openMetricModal}
+            title="Manage metrics"
+          >
+            + Add comparison
+          </span>
         </div>
 
         <div className="reports-top-right-tools">
-          <button type="button" className="reports-gear-btn" title="Settings">
+          <button
+            type="button"
+            className="reports-gear-btn"
+            title="Manage metrics"
+            onClick={openMetricModal}
+          >
             <SettingsGearIcon />
           </button>
         </div>
       </div>
 
-      {/* Main Body with Sidebar + Content */}
+      {/* Reports Body Layout */}
       <div className="reports-body-container">
         {/* Left Sidebar */}
         <div className="reports-sidebar">
           <div className="reports-search-box">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="#5f6368">
-              <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#70757a">
+              <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
             </svg>
             <input
               type="text"
@@ -410,7 +421,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <span className="reports-search-plus" title="Add Report">+</span>
+            <span className="reports-search-plus" title="Add report">+</span>
           </div>
 
           <div className="reports-sidebar-list">
@@ -425,18 +436,17 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                       setActiveDimension(item.id as ReportDimension);
                     }
                   }}
-                  title={item.name}
                 >
                   <div className="sidebar-item-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill={isActive ? "#1a73e8" : "#5f6368"}>
-                      <path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z" />
+                      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
                     </svg>
                   </div>
                   <div className="sidebar-item-texts">
                     <div className="sidebar-item-title">{item.name}</div>
                     <div className="sidebar-item-desc">{item.subtitle}</div>
                   </div>
-                  <div className="sidebar-item-more">⋮</div>
+                  <span className="sidebar-item-more">⋮</span>
                 </div>
               );
             })}
@@ -444,7 +454,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
         </div>
 
         {/* Right Content Area */}
-        <div className="reports-content-area" onDoubleClick={fetchRecords} title="Double-click to reload Excel data">
+        <div className="reports-content-area" onDoubleClick={fetchRecords}>
           {/* Header Bar */}
           <div className="reports-content-header">
             <div className="reports-header-left">
@@ -471,35 +481,51 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                   : "Ad unit"}{" "}
                 ▼
               </div>
-              <span className="breakdown-add-link">+ Add</span>
+              <span
+                className="breakdown-add-link"
+                onClick={openMetricModal}
+                title="Manage metrics"
+              >
+                + Add
+              </span>
             </div>
 
             <div className="breakdown-search-filter">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="#5f6368">
                 <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" />
               </svg>
-              <input type="text" placeholder="Search or filter your data" />
+              <input
+                type="text"
+                placeholder="Search or filter your data"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
 
           {/* Metric Chips Bar */}
           <div className="reports-metrics-bar">
             <div className="metrics-chips-list">
-              {metricsList.map((m) => {
-                const isSelected = activeMetric === m.key;
+              {activeChipsMetrics.map((m) => {
+                const isSelected = activeMetric === m.id;
                 return (
                   <button
-                    key={m.key}
+                    key={m.id}
                     type="button"
                     className={`metric-chip ${isSelected ? "selected" : ""}`}
-                    onClick={() => setActiveMetric(m.key)}
+                    onClick={() => setActiveMetric(m.id)}
                   >
                     {isSelected && <span className="metric-chip-check">✓</span>}
                     {m.label}
                   </button>
                 );
               })}
-              <button type="button" className="metric-chip-pencil" title="Edit metrics">
+              <button
+                type="button"
+                className="metric-chip-pencil"
+                title="Edit metrics"
+                onClick={openMetricModal}
+              >
                 ✎
               </button>
             </div>
@@ -513,19 +539,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
           <div className="reports-chart-card">
             <div className="chart-header-row">
               <span className="chart-title">
-                {activeMetric === "earnings"
-                  ? "Estimated earnings"
-                  : activeMetric === "pageViews"
-                  ? "Page views"
-                  : activeMetric === "pageRpm"
-                  ? "Page RPM"
-                  : activeMetric === "impressions"
-                  ? "Impressions"
-                  : activeMetric === "impressionRpm"
-                  ? "Impression RPM"
-                  : activeMetric === "activeViewViewable"
-                  ? "Active View Viewable"
-                  : "Clicks"}
+                {ALL_METRIC_COLUMNS.find((m) => m.id === activeMetric)?.label || "Estimated earnings"}
               </span>
               {activeDimension === "by_day" && <span className="chart-blue-dot" />}
             </div>
@@ -550,18 +564,19 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                   <polyline
                     fill="none"
                     stroke="#1a73e8"
-                    strokeWidth="2.5"
-                    points="70,138 200,192 330,195 460,195 590,195 720,195 850,195"
+                    strokeWidth="2"
+                    points="60,190 180,60 300,190 420,190 540,190 660,190 780,190 860,190"
                   />
-                  <circle cx="70" cy="138" r="4" fill="#1a73e8" />
-                  <circle cx="200" cy="192" r="3" fill="#1a73e8" />
+
+                  {/* Highlight Data Point Dot */}
+                  <circle cx="180" cy="60" r="4.5" fill="#1a73e8" />
+                  <circle cx="180" cy="60" r="7.5" fill="none" stroke="#1a73e8" strokeWidth="1.5" opacity="0.4" />
                 </svg>
 
-                {/* X Axis Dates */}
+                {/* Bottom X-Axis Dates */}
                 <div className="line-chart-x-axis">
-                  <span className="x-axis-icon">☰</span>
                   <span>Aug 15</span>
-                  <span>Aug 16</span>
+                  <span className="x-active-date">Aug 16</span>
                   <span>Aug 17</span>
                   <span>Aug 18</span>
                   <span>Aug 19</span>
@@ -570,11 +585,11 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                 </div>
               </div>
             ) : (
-              /* Horizontal Bar Chart for Sites / Countries / Ad Units */
+              /* Bar Chart for Sites / Countries / Ad Units */
               <div className="reports-bar-chart-wrap">
                 <div className="bar-chart-rows-list">
-                  {chartItems.slice(0, 10).map((item: { key: string; name: string; value: number }) => {
-                    const barPercent = Math.max(1, Math.min(100, (item.value / maxChartVal) * 100));
+                  {chartItems.slice(0, 10).map((item) => {
+                    const barPercent = Math.min(100, (item.value / maxChartVal) * 100);
                     return (
                       <div key={item.key} className="bar-chart-row">
                         <div className="bar-chart-label" title={item.name}>
@@ -606,18 +621,25 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
           {/* Data Table Card */}
           <div className="reports-table-card">
             <table className="reports-data-table">
-              <thead>
+              <thead
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  openMetricModal();
+                }}
+                style={{ cursor: "pointer", userSelect: "none" }}
+                title="双击表头定制衡量指标 / Double-click header to customize columns"
+              >
                 <tr>
                   <th className="th-col-dim">{dimensionColName}</th>
-                  <th className="th-col-metric align-right">
-                    {activeDimension === "sites" ? "↓ Estimated earnings *" : "↓ Estimated earnings"}
-                  </th>
-                  {!isAdUnits && <th className="th-col-metric align-right">Page views</th>}
-                  {!isAdUnits && <th className="th-col-metric align-right">Page RPM</th>}
-                  <th className="th-col-metric align-right">Impressions</th>
-                  <th className="th-col-metric align-right">Impression RPM</th>
-                  <th className="th-col-metric align-right">Active View Viewable</th>
-                  <th className="th-col-metric align-right">Clicks</th>
+                  {activeColumns.map((col) => (
+                    <th key={col.id} className="th-col-metric align-right">
+                      {col.id === "earnings" && activeDimension === "sites"
+                        ? "↓ Estimated earnings *"
+                        : col.id === "earnings"
+                        ? "↓ Estimated earnings"
+                        : col.label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -631,13 +653,14 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                     </span>
                     <span className="row-dim-name bold">{totalRow.name}</span>
                   </td>
-                  <td className="td-col-metric align-right bold amount-font">{formatMoney(totalRow.earnings)}</td>
-                  {!isAdUnits && <td className="td-col-metric align-right bold">{formatInt(totalRow.pageViews)}</td>}
-                  {!isAdUnits && <td className="td-col-metric align-right bold">{formatMoney(totalRow.pageRpm)}</td>}
-                  <td className="td-col-metric align-right bold">{formatInt(totalRow.impressions)}</td>
-                  <td className="td-col-metric align-right bold">{formatMoney(totalRow.impressionRpm)}</td>
-                  <td className="td-col-metric align-right bold">{formatPercent(totalRow.activeViewViewable)}</td>
-                  <td className="td-col-metric align-right bold">{formatInt(totalRow.clicks)}</td>
+                  {activeColumns.map((col) => (
+                    <td
+                      key={col.id}
+                      className={`td-col-metric align-right bold ${col.id === "earnings" ? "amount-font" : ""}`}
+                    >
+                      {formatCell(col, col.getValue(totalRow))}
+                    </td>
+                  ))}
                 </tr>
 
                 {/* Average Row */}
@@ -646,32 +669,29 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                     <span className="eye-toggle-btn invisible">👁</span>
                     <span className="row-dim-name italic">{avgRow.name}</span>
                   </td>
-                  <td className="td-col-metric align-right italic amount-font">{formatMoney(avgRow.earnings)}</td>
-                  {!isAdUnits && <td className="td-col-metric align-right italic">{formatInt(avgRow.pageViews)}</td>}
-                  {!isAdUnits && <td className="td-col-metric align-right italic">—</td>}
-                  <td className="td-col-metric align-right italic">{formatInt(avgRow.impressions)}</td>
-                  <td className="td-col-metric align-right italic">—</td>
-                  <td className="td-col-metric align-right italic">—</td>
-                  <td className="td-col-metric align-right italic">{formatInt(avgRow.clicks)}</td>
+                  {activeColumns.map((col) => (
+                    <td
+                      key={col.id}
+                      className={`td-col-metric align-right italic ${col.id === "earnings" ? "amount-font" : ""}`}
+                    >
+                      {formatCell(col, col.getValue(avgRow), true)}
+                    </td>
+                  ))}
                 </tr>
 
                 {/* Empty State Prompt */}
                 {filteredRows.length === 0 && (
                   <tr>
                     <td
-                      colSpan={isAdUnits ? 6 : 8}
+                      colSpan={activeColumns.length + 1}
                       style={{
                         textAlign: "center",
-                        padding: "48px 16px",
-                        color: "#5f6368",
+                        padding: "32px 16px",
+                        color: "#70757a",
                         fontSize: "13px",
-                        backgroundColor: "#fafafa",
                       }}
                     >
-                      <div style={{ fontWeight: 500, color: "#202124", marginBottom: "6px" }}>
-                        未在软件运行目录下检测到【{activeDimension === "ad_units" ? "按广告单元.xlsx" : activeDimension === "countries" ? "按国家.xlsx" : "按站点.xlsx"}】
-                      </div>
-                      <div>请将对应的 Excel 文件放置于软件同一运行目录下，双击页面即可实时加载数据。</div>
+                      No data to display
                     </td>
                   </tr>
                 )}
@@ -694,28 +714,34 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                         </button>
                         <span className="row-dim-name">{row.name}</span>
                       </td>
-                      <td className="td-col-metric align-right amount-font">{formatMoney(row.earnings)}</td>
-                      {!isAdUnits && <td className="td-col-metric align-right">{formatInt(row.pageViews)}</td>}
-                      {!isAdUnits && <td className="td-col-metric align-right">{formatMoney(row.pageRpm)}</td>}
-                      <td className="td-col-metric align-right">{formatInt(row.impressions)}</td>
-                      <td className="td-col-metric align-right">{formatMoney(row.impressionRpm)}</td>
-                      <td className="td-col-metric align-right">{formatPercent(row.activeViewViewable)}</td>
-                      <td className="td-col-metric align-right">{formatInt(row.clicks)}</td>
+                      {activeColumns.map((col) => (
+                        <td
+                          key={col.id}
+                          className={`td-col-metric align-right ${col.id === "earnings" ? "amount-font" : ""}`}
+                        >
+                          {formatCell(col, col.getValue(row))}
+                        </td>
+                      ))}
                     </tr>
                   );
                 })}
               </tbody>
             </table>
 
-            {/* Table Footer with Pagination & Disclaimer */}
+            {/* Table Footer */}
             <div className="reports-table-footer">
               <div className="footer-pagination-wrap">
-                <span className="pagination-label">Show rows:</span>
-                <select defaultValue="50" className="pagination-select">
+                <span>Rows per page:</span>
+                <select className="pagination-select" defaultValue="10">
+                  <option value="10">10</option>
+                  <option value="25">25</option>
                   <option value="50">50</option>
-                  <option value="100">100</option>
                 </select>
-                <span className="pagination-count">1 - {filteredRows.length} of {filteredRows.length}</span>
+
+                <span className="pagination-info">
+                  1 – {Math.min(10, filteredRows.length)} of {filteredRows.length}
+                </span>
+
                 <div className="pagination-arrows">
                   <button className="page-arrow disabled" disabled>⇤</button>
                   <button className="page-arrow disabled" disabled>‹</button>
@@ -731,6 +757,336 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
           </div>
         </div>
       </div>
+
+      {/* Metrics Breakdown Customization Modal (Bilingual 中英文双语支持) */}
+      {isMetricModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(32, 33, 36, 0.6)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onClick={() => setIsMetricModalOpen(false)}
+        >
+          <div
+            style={{
+              width: "600px",
+              maxWidth: "92vw",
+              maxHeight: "85vh",
+              backgroundColor: "#ffffff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              fontFamily: "Roboto, Arial, sans-serif",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "16px 24px",
+                borderBottom: "1px solid #dadce0",
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 500, color: "#202124" }}>
+                Customize Metrics / 定制衡量指标
+              </h3>
+              <button
+                type="button"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  fontSize: "18px",
+                  color: "#5f6368",
+                  cursor: "pointer",
+                  padding: "4px",
+                }}
+                onClick={() => setIsMetricModalOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div
+              style={{
+                padding: "20px 24px",
+                overflowY: "auto",
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                gap: "18px",
+              }}
+            >
+              {/* Category: Estimated earnings */}
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    color: "#5f6368",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    borderBottom: "1px solid #f1f3f4",
+                    paddingBottom: "4px",
+                    marginBottom: "10px",
+                  }}
+                >
+                  Estimated earnings / 预估收入与RPM
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px 16px" }}>
+                  {ALL_METRIC_COLUMNS.filter((m) => m.category === "earnings").map((m) => {
+                    const isChecked = tempSelectedMetricIds.includes(m.id);
+                    return (
+                      <label
+                        key={m.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          fontSize: "13px",
+                          color: "#202124",
+                          cursor: "pointer",
+                          padding: "2px 0",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleTempMetric(m.id)}
+                          style={{ width: "16px", height: "16px", accentColor: "#1a73e8", cursor: "pointer", flexShrink: 0 }}
+                        />
+                        <span style={{ lineHeight: 1.3 }}>
+                          <strong>{m.label}</strong>
+                          <span style={{ color: "#70757a", fontSize: "12px", display: "block" }}>{m.labelZh}</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Category: Page views & Impressions */}
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    color: "#5f6368",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    borderBottom: "1px solid #f1f3f4",
+                    paddingBottom: "4px",
+                    marginBottom: "10px",
+                  }}
+                >
+                  Page views & Impressions / 浏览量与展示量
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px 16px" }}>
+                  {ALL_METRIC_COLUMNS.filter((m) => m.category === "views").map((m) => {
+                    const isChecked = tempSelectedMetricIds.includes(m.id);
+                    return (
+                      <label
+                        key={m.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          fontSize: "13px",
+                          color: "#202124",
+                          cursor: "pointer",
+                          padding: "2px 0",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleTempMetric(m.id)}
+                          style={{ width: "16px", height: "16px", accentColor: "#1a73e8", cursor: "pointer", flexShrink: 0 }}
+                        />
+                        <span style={{ lineHeight: 1.3 }}>
+                          <strong>{m.label}</strong>
+                          <span style={{ color: "#70757a", fontSize: "12px", display: "block" }}>{m.labelZh}</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Category: Clicks & CTR */}
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    color: "#5f6368",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    borderBottom: "1px solid #f1f3f4",
+                    paddingBottom: "4px",
+                    marginBottom: "10px",
+                  }}
+                >
+                  Clicks & CTR / 点击与点击率
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px 16px" }}>
+                  {ALL_METRIC_COLUMNS.filter((m) => m.category === "clicks").map((m) => {
+                    const isChecked = tempSelectedMetricIds.includes(m.id);
+                    return (
+                      <label
+                        key={m.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          fontSize: "13px",
+                          color: "#202124",
+                          cursor: "pointer",
+                          padding: "2px 0",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleTempMetric(m.id)}
+                          style={{ width: "16px", height: "16px", accentColor: "#1a73e8", cursor: "pointer", flexShrink: 0 }}
+                        />
+                        <span style={{ lineHeight: 1.3 }}>
+                          <strong>{m.label}</strong>
+                          <span style={{ color: "#70757a", fontSize: "12px", display: "block" }}>{m.labelZh}</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Category: Requests & Coverage */}
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    color: "#5f6368",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    borderBottom: "1px solid #f1f3f4",
+                    paddingBottom: "4px",
+                    marginBottom: "10px",
+                  }}
+                >
+                  Requests & Coverage / 请求数与覆盖率
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px 16px" }}>
+                  {ALL_METRIC_COLUMNS.filter((m) => m.category === "requests").map((m) => {
+                    const isChecked = tempSelectedMetricIds.includes(m.id);
+                    return (
+                      <label
+                        key={m.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          fontSize: "13px",
+                          color: "#202124",
+                          cursor: "pointer",
+                          padding: "2px 0",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleTempMetric(m.id)}
+                          style={{ width: "16px", height: "16px", accentColor: "#1a73e8", cursor: "pointer", flexShrink: 0 }}
+                        />
+                        <span style={{ lineHeight: 1.3 }}>
+                          <strong>{m.label}</strong>
+                          <span style={{ color: "#70757a", fontSize: "12px", display: "block" }}>{m.labelZh}</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 24px",
+                borderTop: "1px solid #dadce0",
+                backgroundColor: "#fafafa",
+              }}
+            >
+              <button
+                type="button"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#1a73e8",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  padding: "6px 10px",
+                }}
+                onClick={handleResetMetrics}
+              >
+                Reset to default / 恢复默认
+              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <button
+                  type="button"
+                  style={{
+                    background: "transparent",
+                    border: "1px solid #dadce0",
+                    color: "#3c4043",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    padding: "7px 16px",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setIsMetricModalOpen(false)}
+                >
+                  Cancel / 取消
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    backgroundColor: "#1a73e8",
+                    border: "none",
+                    color: "#ffffff",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    padding: "8px 20px",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                  onClick={handleApplyMetrics}
+                >
+                  Apply / 应用
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Official 1:1 Floating feedback button */}
       <div
