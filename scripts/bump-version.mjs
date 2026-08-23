@@ -31,11 +31,20 @@ console.log(`\n🚀 [Version Bump] Auto-incrementing version: ${currentVersion} 
 pkg.version = nextVersion;
 fs.writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
 
-// 4. Update src-tauri/tauri.conf.json
+// 4. Update src-tauri/tauri.conf.json (version & productName matching branch)
+let currentBranch = 'main';
+try {
+  currentBranch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: rootDir, encoding: 'utf8' }).trim();
+} catch (e) {}
+
+const isAdManager = currentBranch === 'ad-manager' || currentBranch.includes('admanager');
+const productName = isAdManager ? 'admanager' : 'adsense';
+
 const tauriConfPath = path.join(rootDir, 'src-tauri', 'tauri.conf.json');
 if (fs.existsSync(tauriConfPath)) {
   const tauriConf = JSON.parse(fs.readFileSync(tauriConfPath, 'utf8'));
   tauriConf.version = nextVersion;
+  tauriConf.productName = productName;
   fs.writeFileSync(tauriConfPath, JSON.stringify(tauriConf, null, 2) + '\n', 'utf8');
 }
 

@@ -1,4 +1,5 @@
 import * as XLSX from "xlsx";
+import { invoke } from "@tauri-apps/api/core";
 
 export type ReportDimension = "by_day" | "sites" | "countries" | "ad_units";
 export type TimeRangeKey = "today" | "last_7_days" | "this_month" | "custom";
@@ -290,7 +291,7 @@ export function parseExcelRecords(buffer: ArrayBuffer): RawReportRecord[] {
   }
 }
 
-// Universal Loader for Excel files with fallback to built-in datasets
+// Universal Loader for Excel files strictly from software execution directory
 export async function loadReportRecords(dimension: ReportDimension): Promise<RawReportRecord[]> {
   const fileNameMap: Record<ReportDimension, string> = {
     sites: "按站点.xlsx",
@@ -299,14 +300,23 @@ export async function loadReportRecords(dimension: ReportDimension): Promise<Raw
     by_day: "按站点.xlsx",
   };
 
-  const defaultDataMap: Record<ReportDimension, RawReportRecord[]> = {
-    sites: DEFAULT_SITES_RECORDS,
-    countries: DEFAULT_COUNTRIES_RECORDS,
-    ad_units: DEFAULT_AD_UNITS_RECORDS,
-    by_day: DEFAULT_SITES_RECORDS,
-  };
-
   const fileName = fileNameMap[dimension];
+
+  // 1. Try Tauri backend (reads directly from current working dir or .exe dir)
+  try {
+    const fileBytes = await invoke<number[] | Uint8Array>("read_local_file", { fileName });
+    if (fileBytes && (fileBytes as any).length > 0) {
+      const uint8 = new Uint8Array(fileBytes);
+      const records = parseExcelRecords(uint8.buffer);
+      if (records && records.length > 0) {
+        return records;
+      }
+    }
+  } catch (err) {
+    // File not found in local runtime directory
+  }
+
+  // 2. Try HTTP fetch for browser dev mode
   try {
     const res = await fetch(`/${fileName}?t=${Date.now()}`);
     if (res.ok) {
@@ -317,8 +327,9 @@ export async function loadReportRecords(dimension: ReportDimension): Promise<Raw
       }
     }
   } catch (err) {
-    console.warn(`[Reports] Could not load ${fileName} via fetch, falling back to default records.`, err);
+    // Ignore fetch error
   }
 
-  return defaultDataMap[dimension];
+  // If no local file found in running directory, return empty records
+  return [];
 }

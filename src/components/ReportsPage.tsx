@@ -655,6 +655,27 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                   <td className="td-col-metric align-right italic">{formatInt(avgRow.clicks)}</td>
                 </tr>
 
+                {/* Empty State Prompt */}
+                {filteredRows.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={isAdUnits ? 6 : 8}
+                      style={{
+                        textAlign: "center",
+                        padding: "48px 16px",
+                        color: "#5f6368",
+                        fontSize: "13px",
+                        backgroundColor: "#fafafa",
+                      }}
+                    >
+                      <div style={{ fontWeight: 500, color: "#202124", marginBottom: "6px" }}>
+                        未在软件运行目录下检测到【{activeDimension === "ad_units" ? "按广告单元.xlsx" : activeDimension === "countries" ? "按国家.xlsx" : "按站点.xlsx"}】
+                      </div>
+                      <div>请将对应的 Excel 文件放置于软件同一运行目录下，双击页面即可实时加载数据。</div>
+                    </td>
+                  </tr>
+                )}
+
                 {/* Data Rows */}
                 {filteredRows.map((row: AggregatedReportRow) => {
                   const isHidden = hiddenRowKeys.has(row.key);

@@ -13,6 +13,33 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+#[tauri::command]
+fn read_local_file(file_name: String) -> Result<Vec<u8>, String> {
+    // 1. Try current working directory (where command is run)
+    if let Ok(current_dir) = std::env::current_dir() {
+        let file_path = current_dir.join(&file_name);
+        if file_path.exists() && file_path.is_file() {
+            if let Ok(bytes) = std::fs::read(&file_path) {
+                return Ok(bytes);
+            }
+        }
+    }
+
+    // 2. Try current exe directory (where compiled .exe is placed)
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            let exe_file_path = exe_dir.join(&file_name);
+            if exe_file_path.exists() && exe_file_path.is_file() {
+                if let Ok(bytes) = std::fs::read(&exe_file_path) {
+                    return Ok(bytes);
+                }
+            }
+        }
+    }
+
+    Err(format!("File not found in runtime directory: {}", file_name))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // 🛡️ 调用具备反反编译能力的 LicenseGuard 授权守护模块！
@@ -28,7 +55,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![greet, read_local_file])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

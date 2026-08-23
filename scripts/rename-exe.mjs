@@ -22,38 +22,39 @@ try {
 
 const isAdManager = currentBranch === 'ad-manager' || currentBranch.includes('admanager');
 const exePrefix = isAdManager ? 'admanager' : 'adsense';
-const targetName = `${exePrefix}-${version}.exe`;
+const targetExeName = `${exePrefix}-${version}.exe`;
 
-const releaseDir = path.join(rootDir, 'src-tauri', 'target', 'release');
-const nsisDir = path.join(releaseDir, 'bundle', 'nsis');
+console.log(`\n📦 [Build Post-Process] Branch: [${currentBranch}] ➔ Target File: [${targetExeName}]`);
 
-console.log(`\n📦 [Build Post-Process] Branch: [${currentBranch}] ➔ Target Name: [${targetName}]`);
+const targetDir = path.join(rootDir, 'src-tauri', 'target');
 
-// 1. Rename standalone release EXE if present
-const possibleExeNames = ['google-adsense.exe', 'google-ad-manager.exe', 'adsense.exe', 'admanager.exe', 'google_adsense.exe', 'google_adsense_lib.exe'];
+function findAndRenameExes(dir) {
+  if (!fs.existsSync(dir)) return;
 
-for (const name of possibleExeNames) {
-  const standardExe = path.join(releaseDir, name);
-  const targetExe = path.join(releaseDir, targetName);
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
 
-  if (fs.existsSync(standardExe)) {
-    fs.renameSync(standardExe, targetExe);
-    console.log(`✨ Renamed: ${standardExe} ➔ ${targetExe}`);
-    break;
-  }
-}
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
 
-// 2. Rename NSIS bundle EXE if present
-if (fs.existsSync(nsisDir)) {
-  const files = fs.readdirSync(nsisDir);
-  for (const file of files) {
-    if (file.endsWith('.exe') && !file.startsWith(targetName)) {
-      const oldPath = path.join(nsisDir, file);
-      const newPath = path.join(nsisDir, targetName);
-      fs.renameSync(oldPath, newPath);
-      console.log(`✨ Renamed bundle installer: ${oldPath} ➔ ${newPath}`);
+    if (entry.isDirectory()) {
+      // Don't recurse into .fingerprint, incremental, build, deps, etc.
+      if (['.fingerprint', 'incremental', 'build', 'deps', 'examples'].includes(entry.name)) {
+        continue;
+      }
+      findAndRenameExes(fullPath);
+    } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.exe')) {
+      if (entry.name !== targetExeName) {
+        const destPath = path.join(dir, targetExeName);
+        try {
+          fs.renameSync(fullPath, destPath);
+          console.log(`✨ Renamed: ${fullPath} ➔ ${destPath}`);
+        } catch (err) {
+          console.warn(`⚠️ Failed to rename ${fullPath}:`, err.message);
+        }
+      }
     }
   }
 }
 
-console.log(`✅ [Build Post-Process] Finished binary renaming for ${targetName}\n`);
+findAndRenameExes(targetDir);
+console.log(`✅ [Build Post-Process] Finished binary renaming for ${targetExeName}\n`);
