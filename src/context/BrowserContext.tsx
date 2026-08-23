@@ -39,6 +39,7 @@ interface BrowserContextType {
   goForward: () => void;
   refresh: () => void;
   navigateTo: (entry: HistoryEntry) => void;
+  updateCurrentEntry: (entry: Partial<HistoryEntry>) => void;
   addTab: () => void;
   closeTab: (id: string, e: React.MouseEvent) => void;
   setIsSettingsModalOpen: (open: boolean) => void;
@@ -161,6 +162,22 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
         })
       );
     }
+  };
+
+  const updateCurrentEntry = (entry: Partial<HistoryEntry>) => {
+    setTabs((prev) =>
+      prev.map((tab) => {
+        if (tab.id !== activeTabId) return tab;
+        const cur = tab.history[tab.historyIndex];
+        const updated = { ...cur, ...entry };
+        const newHist = [...tab.history];
+        newHist[tab.historyIndex] = updated;
+        return {
+          ...tab,
+          history: newHist,
+        };
+      })
+    );
   };
 
   const goBack = () => {
@@ -290,6 +307,7 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
         goForward,
         refresh,
         navigateTo,
+        updateCurrentEntry,
         addTab,
         closeTab,
         setIsSettingsModalOpen,

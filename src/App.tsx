@@ -5,6 +5,7 @@ import { Sidebar } from "./components/Sidebar";
 import { SitesPage } from "./components/SitesPage";
 import { PaymentsInfoPage } from "./components/PaymentsInfoPage";
 import { TransactionsServicePage } from "./components/TransactionsServicePage";
+import { ReportsPage } from "./components/ReportsPage";
 import "./ChromeTheme.css";
 
 const PageViewport: React.FC = () => {
@@ -154,6 +155,14 @@ const PageViewport: React.FC = () => {
             })
           }
         />
+      </div>
+    );
+  }
+
+  if (pageId === "reports" || pageId === "earnings") {
+    return (
+      <div className="viewport-content" key={refreshKey} style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <ReportsPage initialDimension="sites" />
       </div>
     );
   }

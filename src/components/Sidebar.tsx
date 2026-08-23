@@ -143,6 +143,15 @@ export const Sidebar: React.FC = () => {
 
   const activePageId = currentEntry.pageId;
 
+  // Auto-collapse sidebar ONLY when on Reports page, and expand when on others
+  React.useEffect(() => {
+    if (activePageId === "reports" || activePageId === "earnings") {
+      setIsCollapsed(true);
+    } else {
+      setIsCollapsed(false);
+    }
+  }, [activePageId]);
+
   const getActivePubId = (): string => {
     try {
       const saved = localStorage.getItem("adsense_earnings_config");
@@ -251,7 +260,7 @@ export const Sidebar: React.FC = () => {
 
           <div
             className={`sidebar-item ${activePageId === "earnings" || activePageId === "reports" ? "active" : ""}`}
-            onClick={() => handleNav("reports", "Reports", "reports/overview")}
+            onClick={() => handleNav("reports", "Sites – Reports", "reporting/?rt=q&ag=site&dr=last7days&gm=earnings&m=earnings%2CpageViews%2CpageViewsRpm%2CmonetizableImpressions%2CmonetizableImpressionsRpm%2CactiveViewViewability%2Cclicks&oc=earnings&oo=descending&ct=b")}
           >
             <div className="sidebar-item-content">
               <span className="sidebar-icon"><ReportsIcon /></span>
