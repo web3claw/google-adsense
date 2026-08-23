@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "adsense-0.1.3",
-  "mainBinaryName": "adsense-0.1.3",
-  "version": "0.1.3",
+  "productName": "adsense-014",
+  "mainBinaryName": "adsense-014",
+  "version": "0.1.4",
   "identifier": "com.web3claw.google-adsense",
   "build": {
     "beforeDevCommand": "npm run dev",

@@ -39,7 +39,8 @@ try {
 
 const isAdManager = currentBranch === 'ad-manager' || currentBranch.includes('admanager');
 const prefix = isAdManager ? 'admanager' : 'adsense';
-const fullName = `${prefix}-${nextVersion}`;
+const versionDigits = nextVersion.replace(/\./g, '');
+const fullName = `${prefix}-${versionDigits}`;
 
 const tauriConfPath = path.join(rootDir, 'src-tauri', 'tauri.conf.json');
 if (fs.existsSync(tauriConfPath)) {
