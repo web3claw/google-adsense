@@ -38,13 +38,15 @@ try {
 } catch (e) {}
 
 const isAdManager = currentBranch === 'ad-manager' || currentBranch.includes('admanager');
-const productName = isAdManager ? 'admanager' : 'adsense';
+const prefix = isAdManager ? 'admanager' : 'adsense';
+const fullName = `${prefix}-${nextVersion}`;
 
 const tauriConfPath = path.join(rootDir, 'src-tauri', 'tauri.conf.json');
 if (fs.existsSync(tauriConfPath)) {
   const tauriConf = JSON.parse(fs.readFileSync(tauriConfPath, 'utf8'));
   tauriConf.version = nextVersion;
-  tauriConf.productName = productName;
+  tauriConf.productName = fullName;
+  tauriConf.mainBinaryName = fullName;
   fs.writeFileSync(tauriConfPath, JSON.stringify(tauriConf, null, 2) + '\n', 'utf8');
 }
 
@@ -53,6 +55,7 @@ const cargoTomlPath = path.join(rootDir, 'src-tauri', 'Cargo.toml');
 if (fs.existsSync(cargoTomlPath)) {
   let cargoToml = fs.readFileSync(cargoTomlPath, 'utf8');
   cargoToml = cargoToml.replace(/^version\s*=\s*"[^"]+"/m, `version = "${nextVersion}"`);
+  cargoToml = cargoToml.replace(/\[\[bin\]\]\s+name\s*=\s*"[^"]+"/m, `[[bin]]\nname = "${fullName}"`);
   fs.writeFileSync(cargoTomlPath, cargoToml, 'utf8');
 }
 

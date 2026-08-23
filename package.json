@@ -1,7 +1,7 @@
 {
   "name": "google-adsense",
   "private": true,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "bump": "node scripts/bump-version.mjs",
-    "build:exe": "tauri build && node scripts/rename-exe.mjs"
+    "build:exe": "tauri build"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
