@@ -62,6 +62,33 @@ const formatCustomDateRangeLabel = (startStr: string, endStr: string): string =>
   return `${sMonth} ${sD}, ${sY} – ${eMonth} ${eD}, ${eY}`;
 };
 
+export const METRIC_SERIES_COLORS: Record<string, string> = {
+  earnings: "rgb(26, 115, 232)",
+  pageViews: "rgb(217, 48, 37)",
+  pageRpm: "rgb(249, 171, 0)",
+  impressions: "rgb(30, 142, 62)",
+  impressionRpm: "rgb(161, 66, 244)",
+  activeViewViewable: "rgb(18, 181, 203)",
+  clicks: "rgb(232, 113, 10)",
+  cpc: "rgb(147, 52, 230)",
+  pageCtr: "rgb(250, 123, 23)",
+  adRequests: "rgb(24, 128, 56)",
+  matchedRequests: "rgb(18, 153, 144)",
+};
+
+export const CHART_PALETTE = [
+  "rgb(26, 115, 232)",
+  "rgb(217, 48, 37)",
+  "rgb(249, 171, 0)",
+  "rgb(30, 142, 62)",
+  "rgb(161, 66, 244)",
+  "rgb(18, 181, 203)",
+  "rgb(232, 113, 10)",
+  "rgb(233, 30, 99)",
+  "rgb(0, 150, 136)",
+  "rgb(63, 81, 181)",
+];
+
 export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "sites" }) => {
   const { currencySymbol, networkDelay, updateCurrentEntry } = useBrowser();
 
@@ -93,14 +120,22 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch (e) {}
-    return ALL_METRIC_COLUMNS.filter((m) => m.defaultVisible(dim)).map((m) => m.id);
+    return ["earnings", "pageViews", "pageRpm", "impressions", "impressionRpm", "activeViewViewable", "clicks"];
   };
 
   const [selectedMetricIds, setSelectedMetricIds] = useState<MetricKey[]>(() =>
     getInitialSelectedMetrics(initialDimension)
   );
+
+  // Active/checked metric chips for chart & legend (multi-select)
+  const [activeChartMetricIds, setActiveChartMetricIds] = useState<MetricKey[]>(() =>
+    getInitialSelectedMetrics(initialDimension)
+  );
+
   const [isMetricModalOpen, setIsMetricModalOpen] = useState(false);
   const [tempSelectedMetricIds, setTempSelectedMetricIds] = useState<MetricKey[]>(selectedMetricIds);
+  const [metricSearchText, setMetricSearchText] = useState("");
+  const [draggedMetricIndex, setDraggedMetricIndex] = useState<number | null>(null);
 
   const [rawRecords, setRawRecords] = useState<RawReportRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -115,14 +150,31 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     setPage(0);
   }, [activeDimension, timeRange, searchQuery, customRange]);
 
-  // Update selected metrics when dimension changes
+  // Update selected metrics and active chart metrics when dimension changes
   useEffect(() => {
     const nextMetrics = getInitialSelectedMetrics(activeDimension);
     setSelectedMetricIds(nextMetrics);
+    setActiveChartMetricIds(nextMetrics);
     if (!nextMetrics.includes(activeMetric)) {
       setActiveMetric("earnings");
     }
   }, [activeDimension]);
+
+  // Sync activeChartMetricIds when selectedMetricIds changes
+  useEffect(() => {
+    setActiveChartMetricIds((prev) => {
+      const filtered = prev.filter((id) => selectedMetricIds.includes(id));
+      return filtered.length > 0 ? filtered : [...selectedMetricIds];
+    });
+  }, [selectedMetricIds]);
+
+  const toggleChartMetric = (id: MetricKey) => {
+    if (activeChartMetricIds.includes(id)) {
+      setActiveChartMetricIds(activeChartMetricIds.filter((item) => item !== id));
+    } else {
+      setActiveChartMetricIds([...activeChartMetricIds, id]);
+    }
+  };
 
   const getActivePubId = (): string => {
     try {
@@ -177,7 +229,9 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     let drParam = "last7days";
     if (timeRange === "today") drParam = "today";
     else if (timeRange === "last_7_days") drParam = "last7days";
+    else if (timeRange === "last_30_days") drParam = "last30days";
     else if (timeRange === "this_month") drParam = "thisMonth";
+    else if (timeRange === "last_month") drParam = "lastMonth";
     else if (timeRange === "custom") drParam = `custom&drs=${customRange.start}&dre=${customRange.end}`;
 
     const mParam = selectedMetricIds.join("%2C");
@@ -229,9 +283,11 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     return filteredRows.slice(page * pageSize, (page + 1) * pageSize);
   }, [filteredRows, page, pageSize]);
 
-  // Active Metric Columns to Render in Table
+  // Active Metric Columns to Render in Table (Preserving exact selected and reordered order)
   const activeColumns = useMemo<MetricColumnDef[]>(() => {
-    return ALL_METRIC_COLUMNS.filter((m) => selectedMetricIds.includes(m.id));
+    return selectedMetricIds
+      .map((id) => ALL_METRIC_COLUMNS.find((m) => m.id === id))
+      .filter(Boolean) as MetricColumnDef[];
   }, [selectedMetricIds]);
 
   // Currency & Number Formatting Helpers
@@ -288,9 +344,11 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     { id: "verified_sites", name: "Verified sites", subtitle: "Estimated earnings by Veri...", isReal: false },
   ];
 
-  // Active chips metrics
+  // Active chips metrics (Preserving exact selected and reordered order)
   const activeChipsMetrics = useMemo(() => {
-    return ALL_METRIC_COLUMNS.filter((m) => selectedMetricIds.includes(m.id));
+    return selectedMetricIds
+      .map((id) => ALL_METRIC_COLUMNS.find((m) => m.id === id))
+      .filter(Boolean) as MetricColumnDef[];
   }, [selectedMetricIds]);
 
   // Dimension Header Title
@@ -356,83 +414,146 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
 
   const yAxisTicks = useMemo(() => {
     return [
-      { y: 35, val: lineMaxScale, label: formatCell(activeMetricDef, lineMaxScale) },
-      { y: 75, val: lineMaxScale * 0.75, label: formatCell(activeMetricDef, lineMaxScale * 0.75) },
-      { y: 115, val: lineMaxScale * 0.5, label: formatCell(activeMetricDef, lineMaxScale * 0.5) },
-      { y: 155, val: lineMaxScale * 0.25, label: formatCell(activeMetricDef, lineMaxScale * 0.25) },
-      { y: 195, val: 0, label: formatCell(activeMetricDef, 0) },
+      { y: 25, val: lineMaxScale, label: formatCell(activeMetricDef, lineMaxScale) },
+      { y: 67, val: lineMaxScale * 0.75, label: formatCell(activeMetricDef, lineMaxScale * 0.75) },
+      { y: 109, val: lineMaxScale * 0.5, label: formatCell(activeMetricDef, lineMaxScale * 0.5) },
+      { y: 151, val: lineMaxScale * 0.25, label: formatCell(activeMetricDef, lineMaxScale * 0.25) },
     ];
   }, [lineMaxScale, activeMetricDef]);
+
+  const getMetricSeriesData = (metricKey: MetricKey) => {
+    const colDef = ALL_METRIC_COLUMNS.find((col) => col.id === metricKey) || ALL_METRIC_COLUMNS[0];
+    const vals = sortedDailyRows.map((r) => colDef.getValue(r));
+    const maxVal = vals.reduce((max, v) => (v > max ? v : max), 0);
+    const scaleMax = maxVal === 0 ? 1 : maxVal * 1.15;
+
+    const count = sortedDailyRows.length;
+    const left = 60;
+    const width = 820;
+    const bottom = 196;
+    const height = 160;
+
+    const points = sortedDailyRows.map((r, i) => {
+      const x = count === 1 ? left + width / 2 : left + (i / (count - 1)) * width;
+      const val = colDef.getValue(r);
+      const y = bottom - (Math.min(val, scaleMax) / scaleMax) * height;
+      return { x, y, val, dateKey: r.key };
+    });
+
+    const pointsStr = points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+    return { points, pointsStr, maxVal, scaleMax, colDef };
+  };
 
   const svgLinePoints = useMemo(() => {
     if (sortedDailyRows.length === 0) return [];
     const count = sortedDailyRows.length;
-    const left = 65;
-    const width = 805;
-    const bottom = 195;
+    const left = 60;
+    const width = 820;
+    const bottom = 196;
     const height = 160;
 
     return sortedDailyRows.map((r, i) => {
       const x = count === 1 ? left + width / 2 : left + (i / (count - 1)) * width;
       const val = activeMetricDef.getValue(r);
       const y = bottom - (Math.min(val, lineMaxScale) / lineMaxScale) * height;
+      const d = new Date(r.key + "T00:00:00");
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const dateLabel = isNaN(d.getTime())
+        ? r.name.replace(/^[A-Za-z]+,\s*/, "").replace(/,\s*\d{4}$/, "")
+        : `${months[d.getMonth()]} ${d.getDate()}`;
+
       return {
         x,
         y,
         row: r,
         val,
         dateKey: r.key,
-        dateLabel: r.name.replace(/^[A-Za-z]+,\s*/, "").replace(/,\s*\d{4}$/, ""),
+        dateLabel,
       };
     });
   }, [sortedDailyRows, activeMetricDef, lineMaxScale]);
 
-  const polylinePointsStr = useMemo(() => {
-    if (svgLinePoints.length === 0) return "65,195 870,195";
-    return svgLinePoints.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-  }, [svgLinePoints]);
-
   const peakPoint = useMemo(() => {
-    if (svgLinePoints.length === 0) return null;
-    let best = svgLinePoints[0];
-    for (const p of svgLinePoints) {
+    if (activeChartMetricIds.length === 0 || sortedDailyRows.length === 0) return null;
+    const primaryId = activeChartMetricIds[0];
+    const series = getMetricSeriesData(primaryId);
+    if (!series.points || series.points.length === 0) return null;
+    let best = series.points[0];
+    for (const p of series.points) {
       if (p.val > best.val) best = p;
     }
-    return best;
-  }, [svgLinePoints]);
+    return { ...best, color: METRIC_SERIES_COLORS[primaryId] || CHART_PALETTE[0] };
+  }, [activeChartMetricIds, sortedDailyRows]);
 
   const xAxisDateTicks = useMemo(() => {
-    if (sortedDailyRows.length === 0) return [];
-    const count = sortedDailyRows.length;
+    if (svgLinePoints.length === 0) return [];
+    const count = svgLinePoints.length;
     if (count <= 7) {
-      return sortedDailyRows.map((r) => ({
-        dateKey: r.key,
-        label: r.name.replace(/^[A-Za-z]+,\s*/, "").replace(/,\s*\d{4}$/, ""),
-      }));
+      return svgLinePoints;
     }
-    const step = (count - 1) / 6;
-    const result: { dateKey: string; label: string }[] = [];
-    for (let i = 0; i < 7; i++) {
-      const idx = Math.min(count - 1, Math.round(i * step));
-      const row = sortedDailyRows[idx];
-      if (row && !result.some((item) => item.dateKey === row.key)) {
-        result.push({
-          dateKey: row.key,
-          label: row.name.replace(/^[A-Za-z]+,\s*/, "").replace(/,\s*\d{4}$/, ""),
-        });
+    // For monthly ranges (28-31 days): show every odd day (Day 1, 3, 5, 7, ..., 31)
+    const result: typeof svgLinePoints = [];
+    svgLinePoints.forEach((p, index) => {
+      const parts = p.dateKey.split("-");
+      const dayNum = parseInt(parts[2], 10);
+      if (count >= 28) {
+        if (dayNum % 2 === 1 || index === count - 1) {
+          result.push(p);
+        }
+      } else {
+        if (index % 2 === 0 || index === count - 1) {
+          result.push(p);
+        }
       }
-    }
+    });
     return result;
-  }, [sortedDailyRows]);
+  }, [svgLinePoints]);
 
   const openMetricModal = () => {
     setTempSelectedMetricIds([...selectedMetricIds]);
+    setMetricSearchText("");
     setIsMetricModalOpen(true);
+  };
+
+  const toggleTempMetric = (id: MetricKey) => {
+    if (tempSelectedMetricIds.includes(id)) {
+      setTempSelectedMetricIds(tempSelectedMetricIds.filter((item) => item !== id));
+    } else {
+      setTempSelectedMetricIds([...tempSelectedMetricIds, id]);
+    }
+  };
+
+  const removeTempMetric = (id: MetricKey) => {
+    setTempSelectedMetricIds(tempSelectedMetricIds.filter((item) => item !== id));
+  };
+
+  const handleClearAllMetrics = () => {
+    setTempSelectedMetricIds([]);
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedMetricIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedMetricIndex === null || draggedMetricIndex === index) return;
+    const newItems = [...tempSelectedMetricIds];
+    const draggedItem = newItems[draggedMetricIndex];
+    newItems.splice(draggedMetricIndex, 1);
+    newItems.splice(index, 0, draggedItem);
+    setDraggedMetricIndex(index);
+    setTempSelectedMetricIds(newItems);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedMetricIndex(null);
   };
 
   const handleApplyMetrics = () => {
     if (tempSelectedMetricIds.length === 0) {
-      alert("Please select at least one metric column.");
+      alert("Please select at least one metric.");
       return;
     }
     setSelectedMetricIds(tempSelectedMetricIds);
@@ -445,22 +566,26 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     setIsMetricModalOpen(false);
   };
 
-  const handleResetMetrics = () => {
-    const defaults = ALL_METRIC_COLUMNS.filter((m) => m.defaultVisible(activeDimension)).map((m) => m.id);
-    setTempSelectedMetricIds(defaults);
-  };
+  // Filtered metrics for left list in modal
+  const recommendedList = useMemo(() => {
+    return ALL_METRIC_COLUMNS.filter(
+      (m) =>
+        m.group === "RECOMMENDED" &&
+        (!metricSearchText.trim() ||
+          m.label.toLowerCase().includes(metricSearchText.toLowerCase()) ||
+          m.labelZh.includes(metricSearchText))
+    );
+  }, [metricSearchText]);
 
-  const toggleTempMetric = (id: MetricKey) => {
-    if (tempSelectedMetricIds.includes(id)) {
-      if (tempSelectedMetricIds.length <= 1) {
-        alert("At least one metric column must remain visible.");
-        return;
-      }
-      setTempSelectedMetricIds(tempSelectedMetricIds.filter((item) => item !== id));
-    } else {
-      setTempSelectedMetricIds([...tempSelectedMetricIds, id]);
-    }
-  };
+  const advancedList = useMemo(() => {
+    return ALL_METRIC_COLUMNS.filter(
+      (m) =>
+        m.group === "ADVANCED" &&
+        (!metricSearchText.trim() ||
+          m.label.toLowerCase().includes(metricSearchText.toLowerCase()) ||
+          m.labelZh.includes(metricSearchText))
+    );
+  }, [metricSearchText]);
 
   return (
     <div className="reports-root-layout">
@@ -561,6 +686,13 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
           </button>
           <button
             type="button"
+            className={`reports-time-pill ${timeRange === "last_30_days" ? "active" : ""}`}
+            onClick={() => setTimeRange("last_30_days")}
+          >
+            {timeRange === "last_30_days" && <span className="pill-check">✓</span>} Last 30 days
+          </button>
+          <button
+            type="button"
             className={`reports-time-pill ${timeRange === "this_month" ? "active" : ""}`}
             onClick={() => setTimeRange("this_month")}
           >
@@ -568,10 +700,10 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
           </button>
           <button
             type="button"
-            className="reports-time-pill disabled"
-            disabled
+            className={`reports-time-pill ${timeRange === "last_month" ? "active" : ""}`}
+            onClick={() => setTimeRange("last_month")}
           >
-            Last month
+            {timeRange === "last_month" && <span className="pill-check">✓</span>} Last month
           </button>
 
           {/* Custom Date Range Pill */}
@@ -734,9 +866,14 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
             </div>
 
             <div className="breakdown-search-filter">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="#5f6368">
-                <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" />
-              </svg>
+              <i
+                className="material-icon-i material-icons-extended filter-icon"
+                role="img"
+                aria-hidden="true"
+                style={{ fontSize: "20px", color: "#5f6368", display: "inline-flex", verticalAlign: "middle" }}
+              >
+                filter_alt
+              </i>
               <input
                 type="text"
                 placeholder="Search or filter your data"
@@ -750,13 +887,13 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
           <div className="reports-metrics-bar">
             <div className="metrics-chips-list">
               {activeChipsMetrics.map((m) => {
-                const isSelected = activeMetric === m.id;
+                const isSelected = activeChartMetricIds.includes(m.id);
                 return (
                   <button
                     key={m.id}
                     type="button"
                     className={`metric-chip ${isSelected ? "selected" : ""}`}
-                    onClick={() => setActiveMetric(m.id)}
+                    onClick={() => toggleChartMetric(m.id)}
                   >
                     {isSelected && <span className="metric-chip-check">✓</span>}
                     {m.label}
@@ -765,123 +902,213 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
               })}
               <button
                 type="button"
-                className="metric-chip-pencil"
+                className="mdc-icon-button edit-metrics metric-chip-pencil"
                 title="Edit metrics"
                 onClick={openMetricModal}
               >
-                ✎
+                <i
+                  aria-hidden="true"
+                  className="mdc-button__icon google-material-icons material-icon-i material-icons-extended"
+                  style={{ fontSize: "18px", color: "#5f6368", lineHeight: 1 }}
+                >
+                  edit
+                </i>
               </button>
             </div>
 
-            <div className="metrics-chart-toggle" title="Toggle Chart View">
-              📈
+            <div className="metrics-chart-toggle">
+              <button
+                type="button"
+                className="chart-menu-btn trigger-button"
+                aria-label="Chart options"
+                title="Chart options"
+              >
+                <i
+                  className="material-icon-i material-icons-extended"
+                  role="img"
+                  aria-hidden="true"
+                  style={{ fontSize: "20px", color: "#5f6368", lineHeight: 1 }}
+                >
+                  multiline_chart
+                </i>
+              </button>
             </div>
           </div>
 
-          {/* Visual Chart Card */}
-          <div className="reports-chart-card">
-            <div className="chart-header-row">
-              <span className="chart-title">
-                {ALL_METRIC_COLUMNS.find((m) => m.id === activeMetric)?.label || "Estimated earnings"}
-              </span>
-              {activeDimension === "by_day" && <span className="chart-blue-dot" />}
-            </div>
-
-            {/* Line Chart for Entire account by day */}
-            {activeDimension === "by_day" ? (
-              <div className="reports-line-chart-wrap">
-                <svg className="reports-svg-line-chart" viewBox="0 0 900 240" preserveAspectRatio="none">
-                  {/* Dynamic Grid Lines & Y Axis Labels */}
-                  {yAxisTicks.map((tick) => (
-                    <g key={tick.y}>
-                      <line x1="60" y1={tick.y} x2="880" y2={tick.y} stroke="#f1f3f4" strokeWidth="1" />
-                      <text
-                        x="52"
-                        y={tick.y + 4}
-                        textAnchor="end"
-                        fill="#70757a"
-                        fontSize="11"
-                        fontFamily="Roboto, Arial, sans-serif"
-                      >
-                        {tick.label}
-                      </text>
-                    </g>
-                  ))}
-
-                  {/* Real Polyline Driven by Data */}
-                  <polyline
-                    fill="none"
-                    stroke="#1a73e8"
-                    strokeWidth="2"
-                    points={polylinePointsStr}
-                  />
-
-                  {/* Peak / Highlight Data Point Dot */}
-                  {peakPoint && (
-                    <g>
-                      <circle cx={peakPoint.x} cy={peakPoint.y} r="4.5" fill="#1a73e8" />
-                      <circle cx={peakPoint.x} cy={peakPoint.y} r="7.5" fill="none" stroke="#1a73e8" strokeWidth="1.5" opacity="0.4" />
-                    </g>
-                  )}
+          {/* Visual Chart Card (1:1 Google AdSense Timeline Structure) */}
+          <div className={`chart reports-chart-card ${activeChartMetricIds.length === 0 ? "empty" : ""}`}>
+            {activeChartMetricIds.length === 0 ? (
+              <div className="reports-chart-empty-state">
+                <svg width="140" height="85" viewBox="0 0 140 85" fill="none" className="empty-desert-svg">
+                  {/* Moon / Sun */}
+                  <circle cx="68" cy="26" r="13" fill="#e3dbe8" />
+                  {/* Distant Cloud */}
+                  <path d="M70 30h12c2.8 0 5-2.2 5-5s-2.2-5-5-5c-.4 0-.7.05-1.1.13C77 18 75 16 72 16c-3 0-5.5 2.5-5.5 5.5 0 .3.03.5.07.8-1.1-.5-2.4-.5-3.5 0" fill="#edeef0" />
+                  {/* Dunes / Hills */}
+                  <path d="M35 64l16-16h32l16 16H35z" fill="#f1f3f4" />
+                  <path d="M46 64l9-11h18l9 11H46z" fill="#e8eaed" />
+                  <path d="M55 64l5-6h7l5 6H55z" fill="#dadce0" />
+                  {/* Cactus in background */}
+                  <g stroke="#9aa0a6" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="70" y1="18" x2="70" y2="48" />
+                    <path d="M64 26v6h6" fill="none" />
+                    <path d="M76 30v6h-6" fill="none" />
+                  </g>
+                  {/* Rolling Tumbleweed */}
+                  <g transform="translate(90, 48)">
+                    <circle cx="9" cy="9" r="8" stroke="#9aa0a6" strokeWidth="0.9" strokeDasharray="3 2" />
+                    <path d="M9 1v16M1 9h16M3.3 3.3l11.4 11.4M14.7 3.3L3.3 14.7" stroke="#9aa0a6" strokeWidth="0.9" />
+                    <circle cx="9" cy="9" r="4" stroke="#9aa0a6" strokeWidth="0.8" />
+                    {/* Motion lines */}
+                    <line x1="-12" y1="4.5" x2="-3" y2="4.5" stroke="#dadce0" strokeWidth="1.2" strokeLinecap="round" />
+                    <line x1="-8" y1="11" x2="-2" y2="11" stroke="#dadce0" strokeWidth="1.2" strokeLinecap="round" />
+                  </g>
                 </svg>
-
-                {/* Bottom X-Axis Dates */}
-                <div className="line-chart-x-axis">
-                  {xAxisDateTicks.map((tick) => (
-                    <span
-                      key={tick.dateKey}
-                      className={peakPoint && peakPoint.dateKey === tick.dateKey ? "x-active-date" : ""}
-                    >
-                      {tick.label}
-                    </span>
-                  ))}
+                <div className="empty-state-text">
+                  Pick a metric and use the eye in the table to show the chart
                 </div>
               </div>
             ) : (
-              /* Bar Chart for Sites / Countries / Ad Units */
-              <div className="reports-bar-chart-wrap">
-                <div className="bar-chart-rows-list">
-                  {chartItems.slice(0, 10).map((item) => {
-                    const barPercent = Math.min(100, (item.value / maxChartVal) * 100);
-                    return (
-                      <div key={item.key} className="bar-chart-row">
-                        <div className="bar-chart-label" title={item.name}>
-                          {item.name}
+              <div className="report-timeline">
+                {/* Report Legend - Strictly renders all checked metrics with matching dots */}
+                <div className="report-legend" role="heading" aria-level={3}>
+                  {activeChipsMetrics
+                    .filter((m) => activeChartMetricIds.includes(m.id))
+                    .map((m, idx) => {
+                      const color = METRIC_SERIES_COLORS[m.id] || CHART_PALETTE[idx % CHART_PALETTE.length];
+                      return (
+                        <div key={m.id} className="legend-entry">
+                          <div className="category">{m.label}</div>
+                          <div className="badges">
+                            <div className="badge-and-series">
+                              <div className="badge" style={{ background: color }} />
+                            </div>
+                          </div>
                         </div>
-                        <div className="bar-chart-track">
-                          <div className="bar-chart-fill" style={{ width: `${barPercent}%` }} />
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                 </div>
 
-                {/* Bottom X-Axis Ticks */}
-                <div className="bar-chart-x-ticks">
-                  <span>$0.00</span>
-                  <span>${(maxChartVal * 0.15).toFixed(2)}</span>
-                  <span>${(maxChartVal * 0.3).toFixed(2)}</span>
-                  <span>${(maxChartVal * 0.45).toFixed(2)}</span>
-                  <span>${(maxChartVal * 0.6).toFixed(2)}</span>
-                  <span>${(maxChartVal * 0.75).toFixed(2)}</span>
-                  <span>${(maxChartVal * 0.9).toFixed(2)}</span>
-                  <span>${maxChartVal.toFixed(2)}</span>
-                </div>
+                {/* Line Chart for Entire account by day */}
+                {activeDimension === "by_day" ? (
+                  <div className="aplos-time-series-chart">
+                    <div className="aplos-chart" style={{ width: "100%", height: "216px", position: "relative" }}>
+                      <svg className="reports-svg-line-chart" viewBox="0 0 900 216" preserveAspectRatio="none" style={{ width: "100%", height: "216px" }}>
+                        {/* Dynamic Grid Lines & Y Axis Labels (Strictly placed below each line, shifted to left margin) */}
+                        {yAxisTicks.map((tick) => (
+                          <g key={tick.y}>
+                            <line x1="0" y1={tick.y} x2="900" y2={tick.y} stroke="#f1f3f4" strokeWidth="1.2" />
+                            <text
+                              x="10"
+                              y={tick.y + 14}
+                              textAnchor="start"
+                              fill="#70757a"
+                              fontSize="11"
+                              fontFamily="Roboto, Arial, sans-serif"
+                            >
+                              {tick.label}
+                            </text>
+                          </g>
+                        ))}
+
+                        {/* Date Row Background & Neutral Border */}
+                        <rect x="0" y="196" width="900" height="20" fill="#f8f9fa" />
+                        <line x1="0" y1="196" x2="900" y2="196" stroke="#dadce0" strokeWidth="1" />
+
+                        {/* Left-aligned 4 short horizontal lines icon inside the slim date row */}
+                        <g transform="translate(10, 201)">
+                          <line x1="0" y1="0" x2="12" y2="0" stroke="#3c4043" strokeWidth="1.3" strokeLinecap="round" />
+                          <line x1="0" y1="2.8" x2="12" y2="2.8" stroke="#3c4043" strokeWidth="1.3" strokeLinecap="round" />
+                          <line x1="0" y1="5.6" x2="12" y2="5.6" stroke="#3c4043" strokeWidth="1.3" strokeLinecap="round" />
+                          <line x1="0" y1="8.4" x2="8" y2="8.4" stroke="#3c4043" strokeWidth="1.3" strokeLinecap="round" />
+                        </g>
+
+                        {/* Real Polylines for each checked metric */}
+                        {activeChipsMetrics
+                          .filter((m) => activeChartMetricIds.includes(m.id))
+                          .map((m, idx) => {
+                            const color = METRIC_SERIES_COLORS[m.id] || CHART_PALETTE[idx % CHART_PALETTE.length];
+                            const series = getMetricSeriesData(m.id);
+                            return (
+                              <polyline
+                                key={m.id}
+                                fill="none"
+                                stroke={color}
+                                strokeWidth="2"
+                                points={series.pointsStr}
+                              />
+                            );
+                          })}
+
+                        {/* Peak / Highlight Data Point Dot */}
+                        {peakPoint && peakPoint.val > 0 && (
+                          <g>
+                            <circle cx={peakPoint.x} cy={peakPoint.y} r="4.5" fill={peakPoint.color} />
+                            <circle cx={peakPoint.x} cy={peakPoint.y} r="7.5" fill="none" stroke={peakPoint.color} strokeWidth="1.5" opacity="0.4" />
+                          </g>
+                        )}
+
+                        {/* X-Axis Date Labels in grey footer bar (smaller font) */}
+                        {xAxisDateTicks.map((tick) => (
+                          <text
+                            key={tick.dateKey}
+                            x={tick.x}
+                            y="210"
+                            textAnchor="middle"
+                            fill="#5f6368"
+                            fontSize="9.5"
+                            fontFamily="Roboto, Arial, sans-serif"
+                          >
+                            {tick.dateLabel}
+                          </text>
+                        ))}
+                      </svg>
+                    </div>
+                  </div>
+                ) : (
+                  /* Bar Chart for Sites / Countries / Ad Units */
+                  <div className="reports-bar-chart-wrap">
+                    <div className="bar-chart-rows-list">
+                      {chartItems.slice(0, 10).map((item) => {
+                        const barPercent = Math.min(100, (item.value / maxChartVal) * 100);
+                        return (
+                          <div key={item.key} className="bar-chart-row">
+                            <div className="bar-chart-label" title={item.name}>
+                              {item.name}
+                            </div>
+                            <div className="bar-chart-track">
+                              <div className="bar-chart-fill" style={{ width: `${barPercent}%` }} />
+                            </div>
+                            <div className="bar-chart-val">
+                              {formatCell(activeMetricDef, item.value)}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Bottom X-Axis Ticks */}
+                    <div className="bar-chart-x-ticks">
+                      <span>$0.00</span>
+                      <span>${(maxChartVal * 0.15).toFixed(2)}</span>
+                      <span>${(maxChartVal * 0.3).toFixed(2)}</span>
+                      <span>${(maxChartVal * 0.45).toFixed(2)}</span>
+                      <span>${(maxChartVal * 0.6).toFixed(2)}</span>
+                      <span>${(maxChartVal * 0.75).toFixed(2)}</span>
+                      <span>${(maxChartVal * 0.9).toFixed(2)}</span>
+                      <span>${maxChartVal.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
+            <div className="corner-radius" />
           </div>
 
           {/* Data Table Card */}
           <div className="reports-table-card">
             <table className="reports-data-table">
-              <thead
-                onDoubleClick={(e) => {
-                  e.stopPropagation();
-                  openMetricModal();
-                }}
-                style={{ cursor: "pointer", userSelect: "none" }}
-                title="双击表头定制衡量指标 / Double-click header to customize columns"
-              >
+              <thead>
                 <tr>
                   <th className="th-col-dim">{dimensionColName}</th>
                   {activeColumns.map((col) => (
@@ -899,14 +1126,21 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                 {/* Total 'All' Row */}
                 <tr className="tr-total-row">
                   <td className="td-col-dim">
-                    {activeDimension !== "by_day" && (
-                      <span className="eye-toggle-btn disabled" title="Total row">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#70757a">
-                          <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
-                        </svg>
-                      </span>
-                    )}
-                    <span className="row-dim-name bold">{totalRow.name}</span>
+                    <div className="td-dim-cell-content">
+                      {activeDimension !== "by_day" && (
+                        <span className="eye-toggle-btn disabled" title="Total row">
+                          <i
+                            className="material-icon-i material-icons-extended"
+                            role="img"
+                            aria-hidden="true"
+                            style={{ color: "rgb(128, 134, 139)", fontSize: "18px", lineHeight: 1 }}
+                          >
+                            visibility_off
+                          </i>
+                        </span>
+                      )}
+                      <span className="row-dim-name bold">{totalRow.name}</span>
+                    </div>
                   </td>
                   {activeColumns.map((col) => (
                     <td
@@ -921,8 +1155,12 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                 {/* Average Row */}
                 <tr className="tr-avg-row">
                   <td className="td-col-dim">
-                    {activeDimension !== "by_day" && <span className="eye-toggle-btn invisible">👁</span>}
-                    <span className="row-dim-name italic">{avgRow.name}</span>
+                    <div className="td-dim-cell-content">
+                      {activeDimension !== "by_day" && (
+                        <span className="eye-toggle-btn invisible" style={{ display: "inline-flex", width: "18px", height: "18px" }} />
+                      )}
+                      <span className="row-dim-name italic">{avgRow.name}</span>
+                    </div>
                   </td>
                   {activeColumns.map((col) => (
                     <td
@@ -957,19 +1195,30 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                   return (
                     <tr key={row.key} className={`tr-data-row ${isHidden ? "dimmed" : ""}`}>
                       <td className="td-col-dim">
-                        {activeDimension !== "by_day" && (
-                          <button
-                            type="button"
-                            className="eye-toggle-btn"
-                            onClick={() => toggleRowVisibility(row.key)}
-                            title="Toggle chart visibility"
-                          >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill={isHidden ? "#bdc1c6" : "#5f6368"}>
-                              <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                            </svg>
-                          </button>
-                        )}
-                        <span className="row-dim-name">{row.name}</span>
+                        <div className="td-dim-cell-content">
+                          {activeDimension !== "by_day" && (
+                            <button
+                              type="button"
+                              className="eye-toggle-btn"
+                              onClick={() => toggleRowVisibility(row.key)}
+                              title="Toggle chart visibility"
+                            >
+                              <i
+                                className="material-icon-i material-icons-extended"
+                                role="img"
+                                aria-hidden="true"
+                                style={{
+                                  color: isHidden ? "rgb(189, 193, 198)" : "rgb(95, 99, 104)",
+                                  fontSize: "18px",
+                                  lineHeight: 1,
+                                }}
+                              >
+                                {isHidden ? "visibility_off" : "visibility"}
+                              </i>
+                            </button>
+                          )}
+                          <span className="row-dim-name">{row.name}</span>
+                        </div>
                       </td>
                       {activeColumns.map((col) => (
                         <td
@@ -1057,265 +1306,147 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
         </div>
       </div>
 
-      {/* Metrics Breakdown Customization Modal (Bilingual 中英文双语支持) */}
+      {/* Pick your metrics Modal (1:1 Google AdSense) */}
       {isMetricModalOpen && (
         <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(32, 33, 36, 0.6)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="pick-metrics-modal-overlay"
           onClick={() => setIsMetricModalOpen(false)}
         >
           <div
-            style={{
-              width: "600px",
-              maxWidth: "92vw",
-              maxHeight: "85vh",
-              backgroundColor: "#ffffff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-              fontFamily: "Roboto, Arial, sans-serif",
-            }}
+            className="pick-metrics-dialog"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "16px 24px",
-                borderBottom: "1px solid #dadce0",
-              }}
-            >
-              <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 500, color: "#202124" }}>
-                Customize Metrics / 定制衡量指标
-              </h3>
-              <button
-                type="button"
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  fontSize: "18px",
-                  color: "#5f6368",
-                  cursor: "pointer",
-                  padding: "4px",
-                }}
-                onClick={() => setIsMetricModalOpen(false)}
-              >
-                ✕
-              </button>
+            <div className="pick-metrics-header">
+              <h3 className="pick-metrics-title">Pick your metrics</h3>
             </div>
 
             {/* Body */}
-            <div
-              style={{
-                padding: "20px 24px",
-                overflowY: "auto",
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                gap: "18px",
-              }}
-            >
-              {/* Category: Estimated earnings */}
-              <div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: "#5f6368",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                    borderBottom: "1px solid #f1f3f4",
-                    paddingBottom: "4px",
-                    marginBottom: "10px",
-                  }}
-                >
-                  Estimated earnings / 预估收入与RPM
+            <div className="pick-metrics-body">
+              {/* Left Column (RECOMMENDED & ADVANCED) */}
+              <div className="pick-metrics-left">
+                <div className="pick-metrics-search-row">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#5f6368" style={{ flexShrink: 0 }}>
+                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                  </svg>
+                  <input
+                    type="text"
+                    className="pick-metrics-search-input"
+                    placeholder="Search metrics"
+                    value={metricSearchText}
+                    onChange={(e) => setMetricSearchText(e.target.value)}
+                  />
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px 16px" }}>
-                  {ALL_METRIC_COLUMNS.filter((m) => m.category === "earnings").map((m) => {
-                    const isChecked = tempSelectedMetricIds.includes(m.id);
-                    return (
-                      <label
-                        key={m.id}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          fontSize: "13px",
-                          color: "#202124",
-                          cursor: "pointer",
-                          padding: "2px 0",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => toggleTempMetric(m.id)}
-                          style={{ width: "16px", height: "16px", accentColor: "#1a73e8", cursor: "pointer", flexShrink: 0 }}
-                        />
-                        <span style={{ lineHeight: 1.3 }}>
-                          <strong>{m.label}</strong>
-                          <span style={{ color: "#70757a", fontSize: "12px", display: "block" }}>{m.labelZh}</span>
-                        </span>
-                      </label>
-                    );
-                  })}
+
+                <div className="pick-metrics-left-list">
+                  {/* RECOMMENDED */}
+                  {recommendedList.length > 0 && (
+                    <>
+                      <div className="pick-metrics-group-title">RECOMMENDED</div>
+                      {recommendedList.map((m) => {
+                        const isChecked = tempSelectedMetricIds.includes(m.id);
+                        return (
+                          <div
+                            key={m.id}
+                            className="pick-metrics-item-row"
+                            onClick={() => toggleTempMetric(m.id)}
+                          >
+                            <input
+                              type="checkbox"
+                              className="pick-metrics-checkbox"
+                              checked={isChecked}
+                              onChange={() => {}}
+                            />
+                            <div className="pick-metrics-item-label">
+                              <span>{m.label}</span>
+                              <span
+                                className="pick-metrics-info-icon"
+                                title={m.description}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                ⓘ
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </>
+                  )}
+
+                  {/* ADVANCED */}
+                  {advancedList.length > 0 && (
+                    <>
+                      <div className="pick-metrics-group-title">ADVANCED</div>
+                      {advancedList.map((m) => {
+                        const isChecked = tempSelectedMetricIds.includes(m.id);
+                        return (
+                          <div
+                            key={m.id}
+                            className="pick-metrics-item-row"
+                            onClick={() => toggleTempMetric(m.id)}
+                          >
+                            <input
+                              type="checkbox"
+                              className="pick-metrics-checkbox"
+                              checked={isChecked}
+                              onChange={() => {}}
+                            />
+                            <div className="pick-metrics-item-label">
+                              <span>{m.label}</span>
+                              <span
+                                className="pick-metrics-info-icon"
+                                title={m.description}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                ⓘ
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </>
+                  )}
                 </div>
               </div>
 
-              {/* Category: Page views & Impressions */}
-              <div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: "#5f6368",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                    borderBottom: "1px solid #f1f3f4",
-                    paddingBottom: "4px",
-                    marginBottom: "10px",
-                  }}
-                >
-                  Page views & Impressions / 浏览量与展示量
+              {/* Right Column (Ordered Selected Metrics) */}
+              <div className="pick-metrics-right">
+                <div className="pick-metrics-right-header">
+                  <span>{tempSelectedMetricIds.length} selected</span>
+                  <span className="pick-metrics-clear-all" onClick={handleClearAllMetrics}>
+                    Clear all
+                  </span>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px 16px" }}>
-                  {ALL_METRIC_COLUMNS.filter((m) => m.category === "views").map((m) => {
-                    const isChecked = tempSelectedMetricIds.includes(m.id);
-                    return (
-                      <label
-                        key={m.id}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          fontSize: "13px",
-                          color: "#202124",
-                          cursor: "pointer",
-                          padding: "2px 0",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => toggleTempMetric(m.id)}
-                          style={{ width: "16px", height: "16px", accentColor: "#1a73e8", cursor: "pointer", flexShrink: 0 }}
-                        />
-                        <span style={{ lineHeight: 1.3 }}>
-                          <strong>{m.label}</strong>
-                          <span style={{ color: "#70757a", fontSize: "12px", display: "block" }}>{m.labelZh}</span>
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
 
-              {/* Category: Clicks & CTR */}
-              <div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: "#5f6368",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                    borderBottom: "1px solid #f1f3f4",
-                    paddingBottom: "4px",
-                    marginBottom: "10px",
-                  }}
-                >
-                  Clicks & CTR / 点击与点击率
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px 16px" }}>
-                  {ALL_METRIC_COLUMNS.filter((m) => m.category === "clicks").map((m) => {
-                    const isChecked = tempSelectedMetricIds.includes(m.id);
+                <div className="pick-metrics-right-list">
+                  {tempSelectedMetricIds.map((id, index) => {
+                    const metricDef = ALL_METRIC_COLUMNS.find((m) => m.id === id);
+                    if (!metricDef) return null;
                     return (
-                      <label
-                        key={m.id}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          fontSize: "13px",
-                          color: "#202124",
-                          cursor: "pointer",
-                          padding: "2px 0",
-                        }}
+                      <div
+                        key={id}
+                        className="pick-metrics-selected-item"
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, index)}
+                        onDragOver={(e) => handleDragOver(e, index)}
+                        onDragEnd={handleDragEnd}
                       >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => toggleTempMetric(m.id)}
-                          style={{ width: "16px", height: "16px", accentColor: "#1a73e8", cursor: "pointer", flexShrink: 0 }}
-                        />
-                        <span style={{ lineHeight: 1.3 }}>
-                          <strong>{m.label}</strong>
-                          <span style={{ color: "#70757a", fontSize: "12px", display: "block" }}>{m.labelZh}</span>
+                        <span className="pick-metrics-drag-handle" title="Drag to reorder">
+                          ⠿
                         </span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Category: Requests & Coverage */}
-              <div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: "#5f6368",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                    borderBottom: "1px solid #f1f3f4",
-                    paddingBottom: "4px",
-                    marginBottom: "10px",
-                  }}
-                >
-                  Requests & Coverage / 请求数与覆盖率
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px 16px" }}>
-                  {ALL_METRIC_COLUMNS.filter((m) => m.category === "requests").map((m) => {
-                    const isChecked = tempSelectedMetricIds.includes(m.id);
-                    return (
-                      <label
-                        key={m.id}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          fontSize: "13px",
-                          color: "#202124",
-                          cursor: "pointer",
-                          padding: "2px 0",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => toggleTempMetric(m.id)}
-                          style={{ width: "16px", height: "16px", accentColor: "#1a73e8", cursor: "pointer", flexShrink: 0 }}
-                        />
-                        <span style={{ lineHeight: 1.3 }}>
-                          <strong>{m.label}</strong>
-                          <span style={{ color: "#70757a", fontSize: "12px", display: "block" }}>{m.labelZh}</span>
-                        </span>
-                      </label>
+                        <span className="pick-metrics-selected-label">{metricDef.label}</span>
+                        <button
+                          type="button"
+                          className="pick-metrics-remove-btn"
+                          title="Remove"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeTempMetric(id);
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -1323,65 +1454,21 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
             </div>
 
             {/* Footer */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "14px 24px",
-                borderTop: "1px solid #dadce0",
-                backgroundColor: "#fafafa",
-              }}
-            >
+            <div className="pick-metrics-footer">
               <button
                 type="button"
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  color: "#1a73e8",
-                  fontSize: "13px",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  padding: "6px 10px",
-                }}
-                onClick={handleResetMetrics}
+                className="pick-metrics-btn-cancel"
+                onClick={() => setIsMetricModalOpen(false)}
               >
-                Reset to default / 恢复默认
+                Cancel
               </button>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <button
-                  type="button"
-                  style={{
-                    background: "transparent",
-                    border: "1px solid #dadce0",
-                    color: "#3c4043",
-                    fontSize: "13px",
-                    fontWeight: 500,
-                    padding: "7px 16px",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => setIsMetricModalOpen(false)}
-                >
-                  Cancel / 取消
-                </button>
-                <button
-                  type="button"
-                  style={{
-                    backgroundColor: "#1a73e8",
-                    border: "none",
-                    color: "#ffffff",
-                    fontSize: "13px",
-                    fontWeight: 500,
-                    padding: "8px 20px",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                  }}
-                  onClick={handleApplyMetrics}
-                >
-                  Apply / 应用
-                </button>
-              </div>
+              <button
+                type="button"
+                className="pick-metrics-btn-apply"
+                onClick={handleApplyMetrics}
+              >
+                Apply
+              </button>
             </div>
           </div>
         </div>

@@ -2,21 +2,34 @@ import * as XLSX from "xlsx";
 import { invoke } from "@tauri-apps/api/core";
 
 export type ReportDimension = "by_day" | "sites" | "countries" | "ad_units";
-export type TimeRangeKey = "today" | "last_7_days" | "this_month" | "custom";
+export type TimeRangeKey = "today" | "last_7_days" | "last_30_days" | "this_month" | "last_month" | "custom";
 export type MetricKey =
   | "earnings"
   | "pageViews"
   | "pageRpm"
   | "impressions"
   | "impressionRpm"
+  | "ctr"
   | "activeViewViewable"
+  | "avgViewableTime"
+  | "activeViewMeasurable"
+  | "totalImpressions"
   | "clicks"
-  | "pageCtr"
-  | "impressionCtr"
   | "cpc"
+  | "pageCtr"
   | "adRequests"
+  | "adRequestCtr"
+  | "adRequestRpm"
+  | "coverage"
   | "matchedRequests"
-  | "coverage";
+  | "matchedAdCtr"
+  | "matchedAdRpm"
+  | "adsPerImpression"
+  | "adCtr"
+  | "adImpressions"
+  | "adRpm"
+  | "funnelClicks"
+  | "impressionCtr";
 
 export interface RawReportRecord {
   date: string; // YYYY-MM-DD
@@ -61,6 +74,8 @@ export interface MetricColumnDef {
   id: MetricKey;
   label: string;
   labelZh: string;
+  group: "RECOMMENDED" | "ADVANCED";
+  description: string;
   category: "earnings" | "views" | "clicks" | "requests";
   format: "money" | "int" | "percent" | "decimal";
   isAvgDashed?: boolean;
@@ -69,10 +84,13 @@ export interface MetricColumnDef {
 }
 
 export const ALL_METRIC_COLUMNS: MetricColumnDef[] = [
+  // RECOMMENDED
   {
     id: "earnings",
     label: "Estimated earnings",
     labelZh: "预估收入",
+    group: "RECOMMENDED",
+    description: "Earnings accrued during the selected time period.",
     category: "earnings",
     format: "money",
     getValue: (r) => r.earnings,
@@ -82,25 +100,31 @@ export const ALL_METRIC_COLUMNS: MetricColumnDef[] = [
     id: "pageViews",
     label: "Page views",
     labelZh: "网页浏览量 (PV)",
+    group: "RECOMMENDED",
+    description: "A page view is counted whenever a user views a page displaying Google ads.",
     category: "views",
     format: "int",
     getValue: (r) => r.pageViews,
-    defaultVisible: (dim) => dim !== "ad_units",
+    defaultVisible: () => true,
   },
   {
     id: "pageRpm",
     label: "Page RPM",
-    labelZh: "网页 RPM (每千次浏览收入)",
+    labelZh: "网页 RPM",
+    group: "RECOMMENDED",
+    description: "Page revenue per thousand impressions (RPM) is calculated by dividing your estimated earnings by the number of page views you received, then multiplying by 1000.",
     category: "earnings",
     format: "money",
     isAvgDashed: true,
     getValue: (r) => r.pageRpm,
-    defaultVisible: (dim) => dim !== "ad_units",
+    defaultVisible: () => true,
   },
   {
     id: "impressions",
     label: "Impressions",
     labelZh: "展示次数",
+    group: "RECOMMENDED",
+    description: "An impression is counted each time an individual ad begins to load on a user's screen.",
     category: "views",
     format: "int",
     getValue: (r) => r.impressions,
@@ -109,7 +133,9 @@ export const ALL_METRIC_COLUMNS: MetricColumnDef[] = [
   {
     id: "impressionRpm",
     label: "Impression RPM",
-    labelZh: "展示 RPM (每千次展示收入)",
+    labelZh: "展示 RPM",
+    group: "RECOMMENDED",
+    description: "Impression revenue per thousand impressions (RPM) is calculated by dividing your estimated earnings by the number of impressions you received, then multiplying by 1000.",
     category: "earnings",
     format: "money",
     isAvgDashed: true,
@@ -117,9 +143,23 @@ export const ALL_METRIC_COLUMNS: MetricColumnDef[] = [
     defaultVisible: () => true,
   },
   {
+    id: "ctr",
+    label: "CTR",
+    labelZh: "点击率 (CTR)",
+    group: "RECOMMENDED",
+    description: "Clickthrough rate is the number of ad clicks divided by the number of impressions.",
+    category: "clicks",
+    format: "percent",
+    isAvgDashed: true,
+    getValue: (r) => r.impressionCtr || (r.impressions > 0 ? (r.clicks / r.impressions) * 100 : 0),
+    defaultVisible: () => false,
+  },
+  {
     id: "activeViewViewable",
     label: "Active View Viewable",
     labelZh: "Active View 可见率",
+    group: "RECOMMENDED",
+    description: "The percentage of impressions that were viewable out of all measurable impressions.",
     category: "views",
     format: "percent",
     isAvgDashed: true,
@@ -127,38 +167,59 @@ export const ALL_METRIC_COLUMNS: MetricColumnDef[] = [
     defaultVisible: () => true,
   },
   {
+    id: "avgViewableTime",
+    label: "Average Viewable Time",
+    labelZh: "平均可见时间",
+    group: "RECOMMENDED",
+    description: "The average amount of time (in seconds) that an ad was viewable on screen.",
+    category: "views",
+    format: "decimal",
+    isAvgDashed: true,
+    getValue: (r) => (r.impressions > 0 ? 12.4 : 0),
+    defaultVisible: () => false,
+  },
+  {
+    id: "activeViewMeasurable",
+    label: "Active View Measurable",
+    labelZh: "Active View 可衡量率",
+    group: "RECOMMENDED",
+    description: "The percentage of impressions that were measurable with Active View out of all impressions.",
+    category: "views",
+    format: "percent",
+    isAvgDashed: true,
+    getValue: (r) => (r.impressions > 0 ? 99.8 : 0),
+    defaultVisible: () => false,
+  },
+
+  // ADVANCED
+  {
+    id: "totalImpressions",
+    label: "Total impressions",
+    labelZh: "总展示次数",
+    group: "ADVANCED",
+    description: "The total count of all impressions served.",
+    category: "views",
+    format: "int",
+    getValue: (r) => r.impressions,
+    defaultVisible: () => false,
+  },
+  {
     id: "clicks",
     label: "Clicks",
     labelZh: "点击次数",
+    group: "ADVANCED",
+    description: "The number of times users clicked on your ads.",
     category: "clicks",
     format: "int",
     getValue: (r) => r.clicks,
     defaultVisible: () => true,
   },
   {
-    id: "pageCtr",
-    label: "Page CTR",
-    labelZh: "网页点击率 (Page CTR)",
-    category: "clicks",
-    format: "percent",
-    isAvgDashed: true,
-    getValue: (r) => r.pageCtr,
-    defaultVisible: () => false,
-  },
-  {
-    id: "impressionCtr",
-    label: "Impression CTR",
-    labelZh: "展示点击率 (Impression CTR)",
-    category: "clicks",
-    format: "percent",
-    isAvgDashed: true,
-    getValue: (r) => r.impressionCtr,
-    defaultVisible: () => false,
-  },
-  {
     id: "cpc",
-    label: "Cost Per Click (CPC)",
+    label: "CPC",
     labelZh: "每次点击费用 (CPC)",
+    group: "ADVANCED",
+    description: "Cost-per-click is the amount you earn each time a user clicks on your ad.",
     category: "earnings",
     format: "money",
     isAvgDashed: true,
@@ -166,31 +227,155 @@ export const ALL_METRIC_COLUMNS: MetricColumnDef[] = [
     defaultVisible: () => false,
   },
   {
+    id: "pageCtr",
+    label: "Page CTR",
+    labelZh: "网页点击率 (Page CTR)",
+    group: "ADVANCED",
+    description: "Page clickthrough rate is the number of ad clicks divided by the number of page views.",
+    category: "clicks",
+    format: "percent",
+    isAvgDashed: true,
+    getValue: (r) => r.pageCtr,
+    defaultVisible: () => false,
+  },
+  {
     id: "adRequests",
     label: "Ad requests",
     labelZh: "广告请求数",
+    group: "ADVANCED",
+    description: "An ad request is counted whenever a request for ads is sent from your site.",
     category: "requests",
     format: "int",
     getValue: (r) => r.adRequests,
     defaultVisible: () => false,
   },
   {
-    id: "matchedRequests",
-    label: "Matched requests",
-    labelZh: "匹配请求数",
-    category: "requests",
-    format: "int",
-    getValue: (r) => r.matchedRequests,
+    id: "adRequestCtr",
+    label: "Ad request CTR",
+    labelZh: "广告请求点击率",
+    group: "ADVANCED",
+    description: "The number of ad clicks divided by the number of ad requests.",
+    category: "clicks",
+    format: "percent",
+    isAvgDashed: true,
+    getValue: (r) => (r.adRequests > 0 ? (r.clicks / r.adRequests) * 100 : 0),
+    defaultVisible: () => false,
+  },
+  {
+    id: "adRequestRpm",
+    label: "Ad request RPM",
+    labelZh: "广告请求 RPM",
+    group: "ADVANCED",
+    description: "Ad request RPM is calculated by dividing your estimated earnings by the number of ad requests you received, then multiplying by 1000.",
+    category: "earnings",
+    format: "money",
+    isAvgDashed: true,
+    getValue: (r) => (r.adRequests > 0 ? (r.earnings / r.adRequests) * 1000 : 0),
     defaultVisible: () => false,
   },
   {
     id: "coverage",
     label: "Coverage",
     labelZh: "覆盖率 (Coverage)",
+    group: "ADVANCED",
+    description: "The percentage of ad requests that returned at least one ad.",
     category: "requests",
     format: "percent",
     isAvgDashed: true,
     getValue: (r) => r.coverage,
+    defaultVisible: () => false,
+  },
+  {
+    id: "matchedRequests",
+    label: "Matched ad requests",
+    labelZh: "匹配的广告请求数",
+    group: "ADVANCED",
+    description: "An ad request that resulted in at least one ad being returned.",
+    category: "requests",
+    format: "int",
+    getValue: (r) => r.matchedRequests,
+    defaultVisible: () => false,
+  },
+  {
+    id: "matchedAdCtr",
+    label: "Matched ad CTR",
+    labelZh: "匹配广告点击率",
+    group: "ADVANCED",
+    description: "The number of ad clicks divided by the number of matched ad requests.",
+    category: "clicks",
+    format: "percent",
+    isAvgDashed: true,
+    getValue: (r) => (r.matchedRequests > 0 ? (r.clicks / r.matchedRequests) * 100 : 0),
+    defaultVisible: () => false,
+  },
+  {
+    id: "matchedAdRpm",
+    label: "Matched ad RPM",
+    labelZh: "匹配广告 RPM",
+    group: "ADVANCED",
+    description: "Estimated earnings divided by matched ad requests, multiplied by 1000.",
+    category: "earnings",
+    format: "money",
+    isAvgDashed: true,
+    getValue: (r) => (r.matchedRequests > 0 ? (r.earnings / r.matchedRequests) * 1000 : 0),
+    defaultVisible: () => false,
+  },
+  {
+    id: "adsPerImpression",
+    label: "Ads per impression",
+    labelZh: "每次展示的广告数",
+    group: "ADVANCED",
+    description: "The average number of ads shown per impression.",
+    category: "views",
+    format: "decimal",
+    isAvgDashed: true,
+    getValue: () => 1.0,
+    defaultVisible: () => false,
+  },
+  {
+    id: "adCtr",
+    label: "Ad CTR",
+    labelZh: "广告点击率 (Ad CTR)",
+    group: "ADVANCED",
+    description: "The clickthrough rate of individual ads.",
+    category: "clicks",
+    format: "percent",
+    isAvgDashed: true,
+    getValue: (r) => r.impressionCtr,
+    defaultVisible: () => false,
+  },
+  {
+    id: "adImpressions",
+    label: "Ad impressions",
+    labelZh: "广告展示次数",
+    group: "ADVANCED",
+    description: "The total number of individual ad impressions.",
+    category: "views",
+    format: "int",
+    getValue: (r) => r.impressions,
+    defaultVisible: () => false,
+  },
+  {
+    id: "adRpm",
+    label: "Ad RPM",
+    labelZh: "广告 RPM",
+    group: "ADVANCED",
+    description: "The revenue per thousand individual ad impressions.",
+    category: "earnings",
+    format: "money",
+    isAvgDashed: true,
+    getValue: (r) => r.impressionRpm,
+    defaultVisible: () => false,
+  },
+  {
+    id: "funnelClicks",
+    label: "Funnel clicks",
+    labelZh: "漏斗点击次数",
+    group: "ADVANCED",
+    description: "The number of clicks recorded along the funnel.",
+    category: "clicks",
+    format: "int",
+    getValue: (r) => r.clicks,
     defaultVisible: () => false,
   },
 ];
@@ -211,6 +396,54 @@ export interface ChartLinePoint {
 
 // Built-in high fidelity fallback records derived directly from real account capture
 export const DEFAULT_SITES_RECORDS: RawReportRecord[] = [
+  // July 2026 (Last month)
+  { date: "2026-07-01", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-02", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-03", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-04", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-05", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-06", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-07", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-08", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-09", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-10", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-11", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-12", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-13", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-14", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-15", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-16", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-17", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-18", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-19", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-20", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-21", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-22", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-23", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-24", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-25", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-26", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-27", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-28", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-29", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-30", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-07-31", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+
+  // August 2026 (This month)
+  { date: "2026-08-01", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-02", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-03", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-04", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-05", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-06", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-07", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-08", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-09", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-10", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-11", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-12", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-13", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-14", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
   { date: "2026-08-15", dimensionName: "fun.sihec.com", earnings: 405.65, pageViews: 16738, impressions: 22306, clicks: 1088, activeViewPercent: 97.43, adRequests: 25120, matchedRequests: 24890 },
   { date: "2026-08-16", dimensionName: "fun.sihec.com", earnings: 2.80, pageViews: 2852, impressions: 71, clicks: 10, activeViewPercent: 85.92, adRequests: 3200, matchedRequests: 3100 },
   { date: "2026-08-17", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
@@ -218,6 +451,16 @@ export const DEFAULT_SITES_RECORDS: RawReportRecord[] = [
   { date: "2026-08-19", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 5, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 5, matchedRequests: 5 },
   { date: "2026-08-20", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
   { date: "2026-08-21", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-22", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-23", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-24", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-25", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-26", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-27", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-28", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-29", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-30", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
+  { date: "2026-08-31", dimensionName: "fun.sihec.com", earnings: 0.00, pageViews: 0, impressions: 0, clicks: 0, activeViewPercent: 0, adRequests: 0, matchedRequests: 0 },
 ];
 
 export const DEFAULT_COUNTRIES_RECORDS: RawReportRecord[] = [
@@ -260,18 +503,34 @@ export function filterRecordsByTimeRange(
 ): RawReportRecord[] {
   if (!records || records.length === 0) return [];
 
-  // Determine date bounds
+  // Determine latest date in records or default to today's date in 2026
+  const latestDate = records.reduce((max, r) => (r.date > max ? r.date : max), "2026-08-24");
+  const [yearStr, monthStr] = latestDate.split("-");
+  const year = parseInt(yearStr, 10);
+  const month = parseInt(monthStr, 10);
+
   if (timeRange === "today") {
-    const latestDate = records.reduce((max, r) => (r.date > max ? r.date : max), records[0].date);
     return records.filter((r) => r.date === latestDate);
   } else if (timeRange === "last_7_days") {
     const sortedDates = Array.from(new Set(records.map((r) => r.date))).sort();
     const targetDates = sortedDates.slice(-7);
     return records.filter((r) => targetDates.includes(r.date));
+  } else if (timeRange === "last_30_days") {
+    const sortedDates = Array.from(new Set(records.map((r) => r.date))).sort();
+    const targetDates = sortedDates.slice(-30);
+    return records.filter((r) => targetDates.includes(r.date));
   } else if (timeRange === "this_month") {
-    const latestDate = records.reduce((max, r) => (r.date > max ? r.date : max), records[0].date);
-    const monthPrefix = latestDate.substring(0, 7);
+    const monthPrefix = `${year}-${String(month).padStart(2, "0")}`;
     return records.filter((r) => r.date.startsWith(monthPrefix));
+  } else if (timeRange === "last_month") {
+    let lastMonthYear = year;
+    let lastMonth = month - 1;
+    if (lastMonth < 1) {
+      lastMonth = 12;
+      lastMonthYear -= 1;
+    }
+    const lastMonthPrefix = `${lastMonthYear}-${String(lastMonth).padStart(2, "0")}`;
+    return records.filter((r) => r.date.startsWith(lastMonthPrefix));
   } else if (timeRange === "custom") {
     return records.filter((r) => r.date >= customStart && r.date <= customEnd);
   }
@@ -328,6 +587,73 @@ export function queryAndAggregateReport(
       cur.adRequests += r.adRequests ?? r.impressions;
       cur.matchedRequests += r.matchedRequests ?? r.impressions;
       grouped.set(key, cur);
+    }
+
+    // Ensure all days in month start from day 1 for this_month, last_month, and last_30_days
+    const latestDate = rawRecords.length > 0
+      ? rawRecords.reduce((max, r) => (r.date > max ? r.date : max), "2026-08-24")
+      : "2026-08-24";
+    let targetYear = parseInt(latestDate.split("-")[0], 10);
+    let targetMonth = parseInt(latestDate.split("-")[1], 10);
+
+    if (timeRange === "last_30_days") {
+      const latestDateObj = new Date(latestDate + "T00:00:00");
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(latestDateObj);
+        d.setDate(d.getDate() - i);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const dt = String(d.getDate()).padStart(2, "0");
+        const dtStr = `${y}-${m}-${dt}`;
+        if (!grouped.has(dtStr)) {
+          grouped.set(dtStr, {
+            earnings: 0,
+            pageViews: 0,
+            impressions: 0,
+            clicks: 0,
+            activeViewsWeighted: 0,
+            adRequests: 0,
+            matchedRequests: 0,
+          });
+        }
+      }
+    } else if (timeRange === "this_month") {
+      const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dt = `${targetYear}-${String(targetMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        if (!grouped.has(dt)) {
+          grouped.set(dt, {
+            earnings: 0,
+            pageViews: 0,
+            impressions: 0,
+            clicks: 0,
+            activeViewsWeighted: 0,
+            adRequests: 0,
+            matchedRequests: 0,
+          });
+        }
+      }
+    } else if (timeRange === "last_month") {
+      targetMonth -= 1;
+      if (targetMonth < 1) {
+        targetMonth = 12;
+        targetYear -= 1;
+      }
+      const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dt = `${targetYear}-${String(targetMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        if (!grouped.has(dt)) {
+          grouped.set(dt, {
+            earnings: 0,
+            pageViews: 0,
+            impressions: 0,
+            clicks: 0,
+            activeViewsWeighted: 0,
+            adRequests: 0,
+            matchedRequests: 0,
+          });
+        }
+      }
     }
   } else {
     // Group by Dimension Name (Site / Country / Ad Unit)
