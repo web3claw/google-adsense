@@ -879,7 +879,16 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
           {/* Header Bar */}
           <div className="reports-content-header">
             <div className="reports-header-left">
-              <span className="reports-drag-icon">⋮⋮</span>
+              <span className="reports-drag-icon">
+                <i
+                  className="material-icon-i material-icons-extended"
+                  role="img"
+                  aria-hidden="true"
+                  style={{ fontSize: "20px", color: "#5f6368", verticalAlign: "middle" }}
+                >
+                  drag_indicator
+                </i>
+              </span>
               <h2 className={`reports-header-title ${isUnsavedActive ? "unsaved-title" : ""}`}>
                 {isUnsavedActive ? "Unsaved report" : dimensionTitle}
               </h2>
@@ -907,36 +916,24 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
             <div className="breakdown-tag-wrap">
               <span className="breakdown-label">Breakdowns:</span>
               <div className="breakdown-pill-wrap" style={{ position: "relative" }}>
-                <div
-                  className="breakdown-pill"
+                <button
+                  type="button"
+                  className="breakdown-pill-btn"
                   onClick={() => setIsBreakdownDropdownOpen(!isBreakdownDropdownOpen)}
-                  style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
                 >
-                  {activeDimension === "by_day"
-                    ? "Date"
-                    : activeDimension === "sites"
-                    ? "Site"
-                    : activeDimension === "countries"
-                    ? "Country"
-                    : "Ad unit"}{" "}
-                  ▼
-                </div>
+                  <span>
+                    {activeDimension === "by_day"
+                      ? "Date"
+                      : activeDimension === "sites"
+                      ? "Site"
+                      : activeDimension === "countries"
+                      ? "Country"
+                      : "Ad unit"}
+                  </span>
+                  <span className="breakdown-pill-arrow">▾</span>
+                </button>
                 {isBreakdownDropdownOpen && (
-                  <div
-                    className="breakdown-dropdown-menu"
-                    style={{
-                      position: "absolute",
-                      top: "calc(100% + 4px)",
-                      left: 0,
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #dadce0",
-                      borderRadius: "4px",
-                      boxShadow: "0 2px 6px rgba(60,64,67,0.15)",
-                      zIndex: 100,
-                      minWidth: "120px",
-                      padding: "4px 0",
-                    }}
-                  >
+                  <div className="breakdown-dropdown-menu">
                     {[
                       { id: "by_day", label: "Date" },
                       { id: "sites", label: "Site" },
@@ -945,13 +942,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                     ].map((b) => (
                       <div
                         key={b.id}
-                        style={{
-                          padding: "8px 16px",
-                          fontSize: "13px",
-                          color: "#202124",
-                          cursor: "pointer",
-                          backgroundColor: activeDimension === b.id ? "#f1f3f4" : "transparent",
-                        }}
+                        className={`breakdown-dropdown-item ${activeDimension === b.id ? "selected" : ""}`}
                         onClick={() => {
                           setActiveDimension(b.id as ReportDimension);
                           setIsBreakdownDropdownOpen(false);
@@ -965,13 +956,14 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                   </div>
                 )}
               </div>
-              <span
-                className="breakdown-add-link"
+              <button
+                type="button"
+                className="breakdown-add-btn"
                 onClick={openMetricModal}
                 title="Manage metrics"
               >
-                + Add
-              </span>
+                <span className="breakdown-add-plus">+</span> Add
+              </button>
             </div>
 
             <div className="breakdown-search-filter">
@@ -1188,24 +1180,21 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                             <div className="bar-chart-track">
                               <div className="bar-chart-fill" style={{ width: `${barPercent}%` }} />
                             </div>
-                            <div className="bar-chart-val">
-                              {formatCell(activeMetricDef, item.value)}
-                            </div>
                           </div>
                         );
                       })}
                     </div>
 
                     {/* Bottom X-Axis Ticks */}
-                    <div className="bar-chart-x-ticks">
-                      <span>$0.00</span>
-                      <span>${(maxChartVal * 0.15).toFixed(2)}</span>
-                      <span>${(maxChartVal * 0.3).toFixed(2)}</span>
-                      <span>${(maxChartVal * 0.45).toFixed(2)}</span>
-                      <span>${(maxChartVal * 0.6).toFixed(2)}</span>
-                      <span>${(maxChartVal * 0.75).toFixed(2)}</span>
-                      <span>${(maxChartVal * 0.9).toFixed(2)}</span>
-                      <span>${maxChartVal.toFixed(2)}</span>
+                    <div className="bar-chart-x-ticks amount-font">
+                      {[0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1].map((pct, idx) => {
+                        const tickVal = maxChartVal * pct;
+                        const isCurrency = activeMetricDef.id.includes("earnings") || activeMetricDef.id.includes("rpm") || activeMetricDef.id.includes("cpc");
+                        const formatted = isCurrency
+                          ? `${currencySymbol || "$"}${tickVal.toFixed(2)}`
+                          : tickVal >= 1000 ? `${(tickVal / 1000).toFixed(1)}k` : `${Math.round(tickVal)}`;
+                        return <span key={idx} className="amount-font">{formatted}</span>;
+                      })}
                     </div>
                   </div>
                 )}
