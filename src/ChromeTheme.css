@@ -3579,20 +3579,34 @@ input,
   padding: 8px 16px;
   gap: 12px;
   background-color: #ffffff;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, opacity 0.15s ease;
   cursor: grab;
+  user-select: none;
+  border-bottom: 1px solid #f8f9fa;
 }
 
 .pick-metrics-selected-item:hover {
   background-color: #f8f9fa;
 }
 
+.pick-metrics-selected-item.dragging {
+  opacity: 0.45;
+  background-color: #e8f0fe;
+  cursor: grabbing;
+}
+
 .pick-metrics-drag-handle {
-  color: #70757a;
-  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgb(128, 134, 139);
   cursor: grab;
   user-select: none;
   line-height: 1;
+}
+
+.pick-metrics-selected-item.dragging .pick-metrics-drag-handle {
+  cursor: grabbing;
 }
 
 .pick-metrics-selected-label {

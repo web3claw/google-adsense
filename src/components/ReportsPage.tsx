@@ -540,10 +540,16 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedMetricIndex(index);
     e.dataTransfer.effectAllowed = "move";
+    try {
+      e.dataTransfer.setData("text/plain", `${index}`);
+    } catch (err) {}
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
+    try {
+      e.dataTransfer.dropEffect = "move";
+    } catch (err) {}
     if (draggedMetricIndex === null || draggedMetricIndex === index) return;
     const newItems = [...tempSelectedMetricIds];
     const draggedItem = newItems[draggedMetricIndex];
@@ -1540,14 +1546,21 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                     return (
                       <div
                         key={id}
-                        className="pick-metrics-selected-item"
+                        className={`pick-metrics-selected-item ${draggedMetricIndex === index ? "dragging" : ""}`}
                         draggable
                         onDragStart={(e) => handleDragStart(e, index)}
                         onDragOver={(e) => handleDragOver(e, index)}
                         onDragEnd={handleDragEnd}
                       >
                         <span className="pick-metrics-drag-handle" title="Drag to reorder">
-                          ⠿
+                          <i
+                            className="material-icon-i material-icons-extended"
+                            role="img"
+                            aria-hidden="true"
+                            style={{ fontSize: "18px", color: "rgb(128, 134, 139)", lineHeight: 1 }}
+                          >
+                            drag_indicator
+                          </i>
                         </span>
                         <span className="pick-metrics-selected-label">{metricDef.label}</span>
                         <button
