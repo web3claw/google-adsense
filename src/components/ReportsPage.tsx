@@ -192,47 +192,17 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     }
   };
 
-  const calendarDays = useMemo(() => {
+  const calendarWeeks = useMemo(() => {
     const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
-    const firstDayOfWeek = new Date(calendarViewYear, calendarViewMonth, 1).getDay();
+    const firstDayOfWeek = new Date(calendarViewYear, calendarViewMonth, 1).getDay(); // 0 is Sunday, 6 is Saturday
     const prevMonthDaysCount = new Date(calendarViewYear, calendarViewMonth, 0).getDate();
 
-    const days: Array<{
-      dayNum: number;
-      dateKey: string;
-      isCurrentMonth: boolean;
-      isStart: boolean;
-      isEnd: boolean;
-      isInRange: boolean;
-      isToday: boolean;
-      isDisabled: boolean;
-    }> = [];
+    const effectiveEnd = tempCustomRange.end || tempCustomRange.start;
 
-    for (let i = firstDayOfWeek - 1; i >= 0; i--) {
-      const d = prevMonthDaysCount - i;
-      const prevM = calendarViewMonth === 0 ? 12 : calendarViewMonth;
-      const prevY = calendarViewMonth === 0 ? calendarViewYear - 1 : calendarViewYear;
-      const mStr = prevM < 10 ? `0${prevM}` : `${prevM}`;
-      const dStr = d < 10 ? `0${d}` : `${d}`;
-      const dateKey = `${prevY}-${mStr}-${dStr}`;
-      days.push({
-        dayNum: d,
-        dateKey,
-        isCurrentMonth: false,
-        isStart: false,
-        isEnd: false,
-        isInRange: false,
-        isToday: false,
-        isDisabled: true,
-      });
-    }
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const mNum = calendarViewMonth + 1;
-      const mStr = mNum < 10 ? `0${mNum}` : `${mNum}`;
-      const dStr = d < 10 ? `0${d}` : `${d}`;
-      const dateKey = `${calendarViewYear}-${mStr}-${dStr}`;
-      const effectiveEnd = tempCustomRange.end || tempCustomRange.start;
+    const buildDayObj = (year: number, month0: number, dayNum: number, isCurrentMonth: boolean) => {
+      const mStr = month0 + 1 < 10 ? `0${month0 + 1}` : `${month0 + 1}`;
+      const dStr = dayNum < 10 ? `0${dayNum}` : `${dayNum}`;
+      const dateKey = `${year}-${mStr}-${dStr}`;
       const isStart = tempCustomRange.start === dateKey;
       const isEnd = effectiveEnd === dateKey;
       const isInRange = Boolean(
@@ -243,20 +213,76 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
       );
       const isToday = dateKey === "2026-08-27";
       const isDisabled = dateKey > "2026-08-27";
-
-      days.push({
-        dayNum: d,
+      return {
+        dayNum,
         dateKey,
-        isCurrentMonth: true,
+        isCurrentMonth,
         isStart,
         isEnd,
         isInRange,
         isToday,
         isDisabled,
+      };
+    };
+
+    type DayObj = ReturnType<typeof buildDayObj>;
+    const weeks: Array<{
+      isMonthStartRow: boolean;
+      days: Array<DayObj | null>;
+      hasSelectedRange: boolean;
+    }> = [];
+
+    // 1. Previous month trailing week (e.g. July 26 - 31)
+    if (firstDayOfWeek > 0) {
+      const prevM = calendarViewMonth === 0 ? 11 : calendarViewMonth - 1;
+      const prevY = calendarViewMonth === 0 ? calendarViewYear - 1 : calendarViewYear;
+      const prevDays: Array<DayObj | null> = [];
+      const startDay = prevMonthDaysCount - firstDayOfWeek + 1;
+      for (let d = startDay; d <= prevMonthDaysCount; d++) {
+        prevDays.push(buildDayObj(prevY, prevM, d, false));
+      }
+      while (prevDays.length < 7) {
+        prevDays.push(null);
+      }
+      weeks.push({
+        isMonthStartRow: false,
+        days: prevDays,
+        hasSelectedRange: prevDays.some((d) => d?.isInRange),
       });
     }
 
-    return days;
+    // 2. Month first week with title embedded (occupies blank cols, followed by day 1..7-firstDayOfWeek)
+    if (firstDayOfWeek > 0) {
+      const firstWeekDays: Array<DayObj> = [];
+      for (let d = 1; d <= 7 - firstDayOfWeek; d++) {
+        firstWeekDays.push(buildDayObj(calendarViewYear, calendarViewMonth, d, true));
+      }
+      weeks.push({
+        isMonthStartRow: true,
+        days: firstWeekDays,
+        hasSelectedRange: firstWeekDays.some((d) => d.isInRange),
+      });
+    }
+
+    // 3. Remaining weeks of the month
+    const startDayForRemaining = firstDayOfWeek > 0 ? 7 - firstDayOfWeek + 1 : 1;
+    let currentWeekDays: Array<DayObj | null> = [];
+    for (let d = startDayForRemaining; d <= daysInMonth; d++) {
+      currentWeekDays.push(buildDayObj(calendarViewYear, calendarViewMonth, d, true));
+      if (currentWeekDays.length === 7 || d === daysInMonth) {
+        while (currentWeekDays.length < 7) {
+          currentWeekDays.push(null);
+        }
+        weeks.push({
+          isMonthStartRow: false,
+          days: currentWeekDays,
+          hasSelectedRange: currentWeekDays.some((d) => d?.isInRange),
+        });
+        currentWeekDays = [];
+      }
+    }
+
+    return weeks;
   }, [calendarViewYear, calendarViewMonth, tempCustomRange]);
 
   const handleApplyDateRange = () => {
@@ -1010,30 +1036,42 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                               <div className="header-day">F</div>
                               <div className="header-day">S</div>
                             </div>
-                            <div className="month-grid">
-                              <div className="month-title-label">
-                                {MONTH_NAMES[calendarViewMonth].toUpperCase()} {calendarViewYear}
-                              </div>
-                              <div className="days-matrix">
-                                {calendarDays.map((d, i) => {
-                                  if (!d.isCurrentMonth) {
-                                    return (
-                                      <div key={`prev-${i}`} className="day-slot other-month">
-                                        <span className="day-slot-circle text-muted">{d.dayNum}</span>
+                            <div className="calendar-scroll-area">
+                              {calendarWeeks.map((week, wIdx) => (
+                                <div key={wIdx} className={`calendar-week-row ${week.hasSelectedRange ? "in-week-range" : ""}`}>
+                                  {week.isMonthStartRow ? (
+                                    <>
+                                      <div className="month-title-cell">
+                                        {MONTH_NAMES[calendarViewMonth].toUpperCase()} {calendarViewYear}
                                       </div>
-                                    );
-                                  }
-                                  return (
-                                    <div
-                                      key={d.dateKey}
-                                      className={`day-slot ${d.isDisabled ? "disabled" : ""} ${d.isInRange ? "in-range" : ""} ${d.isStart ? "start" : ""} ${d.isEnd ? "end" : ""} ${d.isToday ? "today" : ""}`}
-                                      onClick={() => !d.isDisabled && handleDayClick(d.dateKey)}
-                                    >
-                                      <span className="day-slot-circle">{d.dayNum}</span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
+                                      {week.days.map((d) => d && (
+                                        <div
+                                          key={d.dateKey}
+                                          className={`day-slot ${d.isDisabled ? "disabled" : ""} ${d.isInRange ? "in-range" : ""} ${d.isStart ? "start" : ""} ${d.isEnd ? "end" : ""} ${d.isToday ? "today" : ""}`}
+                                          onClick={() => !d.isDisabled && handleDayClick(d.dateKey)}
+                                        >
+                                          <span className="day-slot-circle">{d.dayNum}</span>
+                                        </div>
+                                      ))}
+                                    </>
+                                  ) : (
+                                    week.days.map((d, dIdx) => {
+                                      if (!d) {
+                                        return <div key={`empty-${dIdx}`} className="day-slot empty" />;
+                                      }
+                                      return (
+                                        <div
+                                          key={d.dateKey}
+                                          className={`day-slot ${!d.isCurrentMonth ? "other-month" : ""} ${d.isDisabled ? "disabled" : ""} ${d.isInRange ? "in-range" : ""} ${d.isStart ? "start" : ""} ${d.isEnd ? "end" : ""} ${d.isToday ? "today" : ""}`}
+                                          onClick={() => !d.isDisabled && handleDayClick(d.dateKey)}
+                                        >
+                                          <span className="day-slot-circle">{d.dayNum}</span>
+                                        </div>
+                                      );
+                                    })
+                                  )}
+                                </div>
+                              ))}
                             </div>
                           </div>
                         </div>
@@ -1224,7 +1262,12 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                       ? "Country"
                       : "Ad unit"}
                   </span>
-                  <span className="breakdown-pill-arrow">▾</span>
+                  <i
+                    className="material-icon-i material-icons-extended"
+                    style={{ fontSize: "20px", color: "#5f6368", margin: "-2px -4px -2px 0", lineHeight: 1 }}
+                  >
+                    arrow_drop_down
+                  </i>
                 </button>
                 {isBreakdownDropdownOpen && (
                   <div className="breakdown-dropdown-menu">
@@ -1435,7 +1478,8 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                               textAnchor="start"
                               fill="#70757a"
                               fontSize="11"
-                              fontFamily="Roboto, Arial, sans-serif"
+                              style={{ fontFamily: "'Roboto', Arial, sans-serif" }}
+                              className="svg-y-axis-label amount-font"
                             >
                               {tick.label}
                             </text>
