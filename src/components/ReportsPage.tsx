@@ -105,11 +105,173 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
       }
     } catch (e) {}
     return {
-      start: "2026-08-01",
+      start: "2026-08-18",
       end: "2026-08-24",
     };
   });
   const [isCustomDropdownOpen, setIsCustomDropdownOpen] = useState(false);
+
+  // Compact Datepicker Popup State
+  const [tempPickerPreset, setTempPickerPreset] = useState<string>("custom");
+  const [tempCustomRange, setTempCustomRange] = useState<{ start: string; end: string }>(customRange);
+  const [calendarViewYear, setCalendarViewYear] = useState<number>(2026);
+  const [calendarViewMonth, setCalendarViewMonth] = useState<number>(7); // 7 = August (0-indexed)
+
+  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  const formatShortUSDate = (dStr: string) => {
+    if (!dStr) return "";
+    const parts = dStr.split("-");
+    if (parts.length < 3) return dStr;
+    const m = parseInt(parts[1], 10);
+    const d = parseInt(parts[2], 10);
+    const y = parts[0];
+    return `${m}/${d}/${y}`;
+  };
+
+  const formatMediumUSDate = (dStr: string) => {
+    if (!dStr) return "";
+    const parts = dStr.split("-");
+    if (parts.length < 3) return dStr;
+    const mIdx = parseInt(parts[1], 10) - 1;
+    const d = parseInt(parts[2], 10);
+    const y = parts[0];
+    return `${MONTH_NAMES[mIdx] || ""} ${d}, ${y}`;
+  };
+
+  const handleSelectPreset = (preset: string) => {
+    setTempPickerPreset(preset);
+    const todayStr = "2026-08-27";
+    if (preset === "today") {
+      setTempCustomRange({ start: todayStr, end: todayStr });
+    } else if (preset === "yesterday") {
+      setTempCustomRange({ start: "2026-08-26", end: "2026-08-26" });
+    } else if (preset === "last_7_days") {
+      setTempCustomRange({ start: "2026-08-21", end: todayStr });
+    } else if (preset === "last_30_days") {
+      setTempCustomRange({ start: "2026-07-29", end: todayStr });
+    } else if (preset === "this_month") {
+      setTempCustomRange({ start: "2026-08-01", end: todayStr });
+    } else if (preset === "last_month") {
+      setTempCustomRange({ start: "2026-07-01", end: "2026-07-31" });
+      setCalendarViewMonth(6);
+    } else if (preset === "last_3_years") {
+      setTempCustomRange({ start: "2023-08-27", end: todayStr });
+    }
+  };
+
+  const handleDayClick = (dayStr: string) => {
+    setTempPickerPreset("custom");
+    if (!tempCustomRange.start || (tempCustomRange.start && tempCustomRange.end)) {
+      setTempCustomRange({ start: dayStr, end: "" });
+    } else if (tempCustomRange.start && !tempCustomRange.end) {
+      if (dayStr < tempCustomRange.start) {
+        setTempCustomRange({ start: dayStr, end: tempCustomRange.start });
+      } else {
+        setTempCustomRange({ start: tempCustomRange.start, end: dayStr });
+      }
+    }
+  };
+
+  const handlePrevMonth = () => {
+    if (calendarViewMonth === 0) {
+      setCalendarViewMonth(11);
+      setCalendarViewYear((y) => y - 1);
+    } else {
+      setCalendarViewMonth((m) => m - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (calendarViewYear === 2026 && calendarViewMonth >= 7) return;
+    if (calendarViewMonth === 11) {
+      setCalendarViewMonth(0);
+      setCalendarViewYear((y) => y + 1);
+    } else {
+      setCalendarViewMonth((m) => m + 1);
+    }
+  };
+
+  const calendarDays = useMemo(() => {
+    const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
+    const firstDayOfWeek = new Date(calendarViewYear, calendarViewMonth, 1).getDay();
+    const prevMonthDaysCount = new Date(calendarViewYear, calendarViewMonth, 0).getDate();
+
+    const days: Array<{
+      dayNum: number;
+      dateKey: string;
+      isCurrentMonth: boolean;
+      isStart: boolean;
+      isEnd: boolean;
+      isInRange: boolean;
+      isToday: boolean;
+      isDisabled: boolean;
+    }> = [];
+
+    for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+      const d = prevMonthDaysCount - i;
+      const prevM = calendarViewMonth === 0 ? 12 : calendarViewMonth;
+      const prevY = calendarViewMonth === 0 ? calendarViewYear - 1 : calendarViewYear;
+      const mStr = prevM < 10 ? `0${prevM}` : `${prevM}`;
+      const dStr = d < 10 ? `0${d}` : `${d}`;
+      const dateKey = `${prevY}-${mStr}-${dStr}`;
+      days.push({
+        dayNum: d,
+        dateKey,
+        isCurrentMonth: false,
+        isStart: false,
+        isEnd: false,
+        isInRange: false,
+        isToday: false,
+        isDisabled: true,
+      });
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const mNum = calendarViewMonth + 1;
+      const mStr = mNum < 10 ? `0${mNum}` : `${mNum}`;
+      const dStr = d < 10 ? `0${d}` : `${d}`;
+      const dateKey = `${calendarViewYear}-${mStr}-${dStr}`;
+      const effectiveEnd = tempCustomRange.end || tempCustomRange.start;
+      const isStart = tempCustomRange.start === dateKey;
+      const isEnd = effectiveEnd === dateKey;
+      const isInRange = Boolean(
+        tempCustomRange.start &&
+        effectiveEnd &&
+        dateKey >= tempCustomRange.start &&
+        dateKey <= effectiveEnd
+      );
+      const isToday = dateKey === "2026-08-27";
+      const isDisabled = dateKey > "2026-08-27";
+
+      days.push({
+        dayNum: d,
+        dateKey,
+        isCurrentMonth: true,
+        isStart,
+        isEnd,
+        isInRange,
+        isToday,
+        isDisabled,
+      });
+    }
+
+    return days;
+  }, [calendarViewYear, calendarViewMonth, tempCustomRange]);
+
+  const handleApplyDateRange = () => {
+    if (tempCustomRange.start) {
+      const finalEnd = tempCustomRange.end || tempCustomRange.start;
+      setCustomRange({ start: tempCustomRange.start, end: finalEnd });
+      setTimeRange(tempPickerPreset as TimeRangeKey);
+      try {
+        localStorage.setItem("adsense_custom_range", JSON.stringify({ start: tempCustomRange.start, end: finalEnd }));
+      } catch (e) {}
+    }
+    setIsCustomDropdownOpen(false);
+    setIsUnsavedReport(true);
+    setIsUnsavedActive(true);
+  };
 
   // Dynamic Metrics Selection State
   const getInitialSelectedMetrics = (dim: ReportDimension): MetricKey[] => {
@@ -726,7 +888,10 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
               type="button"
               className={`reports-time-pill custom-pill ${timeRange === "custom" ? "active" : ""}`}
               onClick={() => {
-                setTimeRange("custom");
+                setTempPickerPreset(timeRange);
+                setTempCustomRange(customRange);
+                setCalendarViewYear(2026);
+                setCalendarViewMonth(7);
                 setIsCustomDropdownOpen(!isCustomDropdownOpen);
               }}
             >
@@ -735,39 +900,169 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
             </button>
 
             {isCustomDropdownOpen && (
-              <div className="custom-date-dropdown" onClick={(e) => e.stopPropagation()}>
-                <div className="custom-date-header">Custom Date Range (自定义时间)</div>
-                <div className="custom-date-inputs">
-                  <div>
-                    <label>Start Date:</label>
-                    <input
-                      type="date"
-                      value={customRange.start}
-                      onChange={(e) => setCustomRange({ ...customRange, start: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label>End Date:</label>
-                    <input
-                      type="date"
-                      value={customRange.end}
-                      onChange={(e) => setCustomRange({ ...customRange, end: e.target.value })}
-                    />
+              <div className="compact-datepicker-popup-overlay" onClick={() => setIsCustomDropdownOpen(false)}>
+                <div className="popup-wrapper compact-datepicker-wrapper" onClick={(e) => e.stopPropagation()}>
+                  <div className="compact-datepicker">
+                    <div className="date-range-editor compact">
+                      {/* Left Column: Presets List */}
+                      <div className="preset-list" role="listbox">
+                        <div className="group">
+                          <div
+                            className={`item ${tempPickerPreset === "custom" ? "selected" : ""}`}
+                            onClick={() => handleSelectPreset("custom")}
+                          >
+                            {tempPickerPreset === "custom" && <div className="selected-accent" />}
+                            <div>Custom</div>
+                          </div>
+                        </div>
+                        <div className="group preset-container">
+                          {[
+                            { id: "today", label: "Today" },
+                            { id: "yesterday", label: "Yesterday" },
+                            { id: "last_7_days", label: "Last 7 days" },
+                            { id: "last_30_days", label: "Last 30 days" },
+                            { id: "this_month", label: "This month" },
+                            { id: "last_month", label: "Last month" },
+                            { id: "last_3_years", label: "Last 3 years" },
+                          ].map((p) => {
+                            const isSelected = tempPickerPreset === p.id;
+                            return (
+                              <div
+                                key={p.id}
+                                className={`item ${isSelected ? "selected" : ""}`}
+                                onClick={() => handleSelectPreset(p.id)}
+                              >
+                                {isSelected && <div className="selected-accent" />}
+                                <div>{p.label}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Right Column: Inputs, Month selector, Calendar matrix */}
+                      <div className="right-column">
+                        {/* Range Inputs */}
+                        <div className="range-input">
+                          <div className="date-range-input">
+                            <div className="material-input start active">
+                              <label className="input-container floated-label">
+                                <span className="label-text">Start date*</span>
+                                <input
+                                  className="input"
+                                  type="text"
+                                  readOnly
+                                  value={formatShortUSDate(tempCustomRange.start)}
+                                />
+                              </label>
+                            </div>
+                            <span className="separator">—</span>
+                            <div className="material-input end">
+                              <label className="input-container floated-label">
+                                <span className="label-text">End date*</span>
+                                <input
+                                  className="input"
+                                  type="text"
+                                  readOnly
+                                  value={formatMediumUSDate(tempCustomRange.end || tempCustomRange.start)}
+                                />
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Month Selector Toolbar */}
+                        <div className="month-selector-toolbar">
+                          <div className="month-selector-dropdown">
+                            <span className="visible-month">
+                              {MONTH_NAMES[calendarViewMonth].toUpperCase()} {calendarViewYear}
+                            </span>
+                            <i className="material-icon-i material-icons-extended" style={{ fontSize: "18px", color: "#5f6368" }}>
+                              arrow_drop_down
+                            </i>
+                          </div>
+                          <div className="next-prev-buttons">
+                            <button
+                              type="button"
+                              className="prev-btn"
+                              onClick={handlePrevMonth}
+                              title="Previous month"
+                            >
+                              <i className="material-icon-i material-icons-extended">chevron_left</i>
+                            </button>
+                            <button
+                              type="button"
+                              className={`next-btn ${calendarViewYear === 2026 && calendarViewMonth >= 7 ? "is-disabled" : ""}`}
+                              onClick={handleNextMonth}
+                              title="Next month"
+                              disabled={calendarViewYear === 2026 && calendarViewMonth >= 7}
+                            >
+                              <i className="material-icon-i material-icons-extended">chevron_right</i>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Calendar Picker Matrix */}
+                        <div className="picker-container compact">
+                          <div className="material-calendar-picker">
+                            <div className="calendar-header-row">
+                              <div className="header-day">S</div>
+                              <div className="header-day">M</div>
+                              <div className="header-day">T</div>
+                              <div className="header-day">W</div>
+                              <div className="header-day">T</div>
+                              <div className="header-day">F</div>
+                              <div className="header-day">S</div>
+                            </div>
+                            <div className="month-grid">
+                              <div className="month-title-label">
+                                {MONTH_NAMES[calendarViewMonth].toUpperCase()} {calendarViewYear}
+                              </div>
+                              <div className="days-matrix">
+                                {calendarDays.map((d, i) => {
+                                  if (!d.isCurrentMonth) {
+                                    return (
+                                      <div key={`prev-${i}`} className="day-slot other-month">
+                                        <span className="day-slot-circle text-muted">{d.dayNum}</span>
+                                      </div>
+                                    );
+                                  }
+                                  return (
+                                    <div
+                                      key={d.dateKey}
+                                      className={`day-slot ${d.isDisabled ? "disabled" : ""} ${d.isInRange ? "in-range" : ""} ${d.isStart ? "start" : ""} ${d.isEnd ? "end" : ""} ${d.isToday ? "today" : ""}`}
+                                      onClick={() => !d.isDisabled && handleDayClick(d.dateKey)}
+                                    >
+                                      <span className="day-slot-circle">{d.dayNum}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="datepicker-footer">
+                      <button
+                        type="button"
+                        className="cancel-btn"
+                        onClick={() => setIsCustomDropdownOpen(false)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="apply-btn"
+                        onClick={handleApplyDateRange}
+                      >
+                        Apply
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="btn-apply-custom-date"
-                  onClick={() => {
-                    setTimeRange("custom");
-                    try {
-                      localStorage.setItem("adsense_custom_range", JSON.stringify(customRange));
-                    } catch (e) {}
-                    setIsCustomDropdownOpen(false);
-                  }}
-                >
-                  Apply
-                </button>
               </div>
             )}
           </div>
@@ -879,15 +1174,18 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
           {/* Header Bar */}
           <div className="reports-content-header">
             <div className="reports-header-left">
-              <span className="reports-drag-icon">
-                <i
-                  className="material-icon-i material-icons-extended"
-                  role="img"
-                  aria-hidden="true"
-                  style={{ fontSize: "20px", color: "#5f6368", verticalAlign: "middle" }}
-                >
-                  drag_indicator
-                </i>
+              <span className="reports-drag-icon" title="Report icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="#3c4043" style={{ display: "inline-block", verticalAlign: "middle" }}>
+                  <circle cx="3" cy="3" r="1.5" />
+                  <circle cx="9" cy="3" r="1.5" />
+                  <circle cx="15" cy="3" r="1.5" />
+                  <circle cx="3" cy="9" r="1.5" />
+                  <circle cx="9" cy="9" r="1.5" />
+                  <circle cx="15" cy="9" r="1.5" />
+                  <circle cx="3" cy="15" r="1.5" />
+                  <circle cx="9" cy="15" r="1.5" />
+                  <circle cx="15" cy="15" r="1.5" />
+                </svg>
               </span>
               <h2 className={`reports-header-title ${isUnsavedActive ? "unsaved-title" : ""}`}>
                 {isUnsavedActive ? "Unsaved report" : dimensionTitle}
