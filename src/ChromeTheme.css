@@ -2966,10 +2966,11 @@ input,
 .sidebar-item-title {
   font-size: 13px;
   color: #202124;
-  font-weight: 400;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-family: Google Sans, Roboto, Arial, sans-serif;
 }
 
 .reports-sidebar-item.active .sidebar-item-title {
@@ -3542,7 +3543,7 @@ input,
 .reports-data-table th {
   font-size: 11px;
   font-weight: 500;
-  color: #5f6368;
+  color: #202124;
   text-align: left;
   height: 36px;
   padding: 0 12px;
@@ -3552,6 +3553,7 @@ input,
   box-sizing: border-box;
   white-space: nowrap;
   overflow: hidden;
+  font-family: Roboto, Arial, sans-serif;
 }
 
 .reports-data-table th.th-col-dim {
@@ -3560,6 +3562,13 @@ input,
 }
 
 .reports-data-table th.th-col-metric {
+  white-space: nowrap;
+}
+
+.th-dim-header-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   white-space: nowrap;
 }
 
@@ -3579,7 +3588,7 @@ input,
 
 .th-sort-arrow .material-icon-i {
   font-size: 15px;
-  color: #5f6368;
+  color: #202124;
   line-height: 1;
 }
 

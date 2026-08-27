@@ -306,6 +306,14 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
   const [rawRecords, setRawRecords] = useState<RawReportRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [hiddenRowKeys, setHiddenRowKeys] = useState<Set<string>>(new Set());
+  const [hoveredPoint, setHoveredPoint] = useState<{
+    x: number;
+    y: number;
+    val: number;
+    color: string;
+    label: string;
+    dateLabel: string;
+  } | null>(null);
 
   // Pagination State
   const [page, setPage] = useState<number>(0);
@@ -640,18 +648,6 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
       };
     });
   }, [sortedDailyRows, activeMetricDef, lineMaxScale]);
-
-  const peakPoint = useMemo(() => {
-    if (activeChartMetricIds.length === 0 || sortedDailyRows.length === 0) return null;
-    const primaryId = activeChartMetricIds[0];
-    const series = getMetricSeriesData(primaryId);
-    if (!series.points || series.points.length === 0) return null;
-    let best = series.points[0];
-    for (const p of series.points) {
-      if (p.val > best.val) best = p;
-    }
-    return { ...best, color: METRIC_SERIES_COLORS[primaryId] || CHART_PALETTE[0] };
-  }, [activeChartMetricIds, sortedDailyRows]);
 
   const xAxisDateTicks = useMemo(() => {
     if (svgLinePoints.length === 0) return [];
@@ -1392,7 +1388,43 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                 {activeDimension === "by_day" ? (
                   <div className="aplos-time-series-chart">
                     <div className="aplos-chart" style={{ width: "100%", height: "216px", position: "relative" }}>
-                      <svg className="reports-svg-line-chart" viewBox="0 0 900 216" preserveAspectRatio="none" style={{ width: "100%", height: "216px" }}>
+                      <svg
+                        className="reports-svg-line-chart"
+                        viewBox="0 0 900 216"
+                        preserveAspectRatio="none"
+                        style={{ width: "100%", height: "216px" }}
+                        onMouseMove={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const mouseX = ((e.clientX - rect.left) / rect.width) * 900;
+                          if (svgLinePoints.length === 0 || activeChartMetricIds.length === 0) return;
+                          let closest = svgLinePoints[0];
+                          let minDist = Math.abs(closest.x - mouseX);
+                          for (const p of svgLinePoints) {
+                            const dist = Math.abs(p.x - mouseX);
+                            if (dist < minDist) {
+                              minDist = dist;
+                              closest = p;
+                            }
+                          }
+                          if (closest && minDist < 60) {
+                            const primaryId = activeChartMetricIds[0];
+                            const series = getMetricSeriesData(primaryId);
+                            const pt = series.points?.find((p) => p.dateKey === closest.dateKey) || closest;
+                            const color = METRIC_SERIES_COLORS[primaryId] || CHART_PALETTE[0];
+                            setHoveredPoint({
+                              x: pt.x,
+                              y: pt.y,
+                              val: pt.val,
+                              color,
+                              label: formatCell(activeMetricDef, pt.val),
+                              dateLabel: closest.dateLabel,
+                            });
+                          } else {
+                            setHoveredPoint(null);
+                          }
+                        }}
+                        onMouseLeave={() => setHoveredPoint(null)}
+                      >
                         {/* Dynamic Grid Lines & Y Axis Labels (Strictly placed below each line, shifted to left margin) */}
                         {yAxisTicks.map((tick) => (
                           <g key={tick.y}>
@@ -1439,11 +1471,11 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                             );
                           })}
 
-                        {/* Peak / Highlight Data Point Dot */}
-                        {peakPoint && peakPoint.val > 0 && (
-                          <g>
-                            <circle cx={peakPoint.x} cy={peakPoint.y} r="4.5" fill={peakPoint.color} />
-                            <circle cx={peakPoint.x} cy={peakPoint.y} r="7.5" fill="none" stroke={peakPoint.color} strokeWidth="1.5" opacity="0.4" />
+                        {/* Data Point Dot ONLY on Hover */}
+                        {hoveredPoint && (
+                          <g pointerEvents="none">
+                            <circle cx={hoveredPoint.x} cy={hoveredPoint.y} r="7" fill={hoveredPoint.color} fillOpacity="0.2" />
+                            <circle cx={hoveredPoint.x} cy={hoveredPoint.y} r="4" fill="#ffffff" stroke={hoveredPoint.color} strokeWidth="2.5" />
                           </g>
                         )}
 
@@ -1506,11 +1538,26 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
             <table className="reports-data-table">
               <thead>
                 <tr>
-                  <th className="th-col-dim">{dimensionColName}</th>
+                  <th className="th-col-dim">
+                    <div className="th-dim-header-content">
+                      <span>{dimensionColName}</span>
+                      {activeDimension === "by_day" && (
+                        <span className="th-sort-arrow">
+                          <i
+                            className="material-icon-i material-icons-extended"
+                            role="img"
+                            aria-hidden="true"
+                          >
+                            arrow_upward
+                          </i>
+                        </span>
+                      )}
+                    </div>
+                  </th>
                   {activeColumns.map((col) => (
                     <th key={col.id} className="th-col-metric align-right">
                       <div className="th-metric-header-content">
-                        {col.id === "earnings" && (
+                        {col.id === "earnings" && activeDimension !== "by_day" && (
                           <span className="th-sort-arrow">
                             <i
                               className="material-icon-i material-icons-extended"
