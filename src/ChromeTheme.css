@@ -2581,6 +2581,8 @@ input,
   transition: background 0.15s ease;
   user-select: none;
   border-bottom: 1px solid #f1f3f4;
+  border-left: 4px solid transparent;
+  box-sizing: border-box;
 }
 
 .reports-sidebar-item:hover {
@@ -2589,7 +2591,52 @@ input,
 
 .reports-sidebar-item.active {
   background-color: #e8f0fe;
-  border-left: 4px solid #1a73e8;
+  border-left-color: #1a73e8;
+}
+
+.reports-sidebar-item.unsaved-item {
+  background-color: #ffffff;
+}
+
+.reports-sidebar-item.unsaved-item.active {
+  background-color: #e8f0fe;
+  border-left-color: #1a73e8;
+}
+
+.sidebar-item-title.unsaved-title {
+  font-style: italic;
+  color: #1a73e8;
+  font-weight: 500;
+}
+
+.sidebar-unsaved-close-btn {
+  background: transparent;
+  border: none;
+  color: #5f6368;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  border-radius: 50%;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-unsaved-close-btn:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: #202124;
+}
+
+.sidebar-item-active-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #1a73e8;
+  z-index: 2;
 }
 
 .sidebar-item-main {
@@ -2695,6 +2742,10 @@ input,
   font-family: Google Sans, Roboto, Arial, sans-serif;
 }
 
+.reports-header-title.unsaved-title {
+  font-style: italic;
+}
+
 .reports-header-right {
   display: flex;
   align-items: center;
@@ -2710,6 +2761,17 @@ input,
   font-size: 13px;
   font-weight: 500;
   cursor: not-allowed;
+  transition: all 0.15s ease;
+}
+
+.reports-save-btn.active {
+  background-color: #1a73e8;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.reports-save-btn.active:hover {
+  background-color: #1557b0;
 }
 
 .reports-more-btn {
@@ -3101,6 +3163,41 @@ input,
   border-right: 1px solid #e0e0e0;
   background-color: #ffffff;
   box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.reports-data-table th.th-col-dim {
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.reports-data-table th.th-col-metric {
+  white-space: nowrap;
+}
+
+.th-metric-header-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.th-sort-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.th-sort-arrow .material-icon-i {
+  font-size: 15px;
+  color: #5f6368;
+  line-height: 1;
+}
+
+.th-metric-label {
+  white-space: nowrap;
 }
 
 .reports-data-table th:last-child {

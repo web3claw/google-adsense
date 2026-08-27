@@ -132,6 +132,10 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     getInitialSelectedMetrics(initialDimension)
   );
 
+  const [isUnsavedReport, setIsUnsavedReport] = useState<boolean>(false);
+  const [isUnsavedActive, setIsUnsavedActive] = useState<boolean>(false);
+  const [isBreakdownDropdownOpen, setIsBreakdownDropdownOpen] = useState<boolean>(false);
+
   const [isMetricModalOpen, setIsMetricModalOpen] = useState(false);
   const [tempSelectedMetricIds, setTempSelectedMetricIds] = useState<MetricKey[]>(selectedMetricIds);
   const [metricSearchText, setMetricSearchText] = useState("");
@@ -174,6 +178,8 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     } else {
       setActiveChartMetricIds([...activeChartMetricIds, id]);
     }
+    setIsUnsavedReport(true);
+    setIsUnsavedActive(true);
   };
 
   const getActivePubId = (): string => {
@@ -363,7 +369,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
 
   const dimensionColName =
     activeDimension === "by_day"
-      ? "DATE ↑"
+      ? "DATE"
       : activeDimension === "sites"
       ? "SITE"
       : activeDimension === "countries"
@@ -557,6 +563,8 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
       return;
     }
     setSelectedMetricIds(tempSelectedMetricIds);
+    setIsUnsavedReport(true);
+    setIsUnsavedActive(true);
     try {
       localStorage.setItem(`adsense_metric_cols_${activeDimension}`, JSON.stringify(tempSelectedMetricIds));
     } catch (e) {}
@@ -797,14 +805,45 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
           </div>
 
           <div className="reports-sidebar-list">
+            {/* Unsaved Report Item at Top */}
+            {isUnsavedReport && (
+              <div
+                className={`reports-sidebar-item unsaved-item ${isUnsavedActive ? "active" : ""}`}
+                onClick={() => setIsUnsavedActive(true)}
+              >
+                <div className="sidebar-item-main">
+                  <div className="sidebar-item-title-row">
+                    <span className="sidebar-item-title unsaved-title">Unsaved report</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="sidebar-unsaved-close-btn"
+                  title="Discard unsaved report"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsUnsavedReport(false);
+                    setIsUnsavedActive(false);
+                    const defaultM = getInitialSelectedMetrics(activeDimension);
+                    setSelectedMetricIds(defaultM);
+                    setActiveChartMetricIds(defaultM);
+                  }}
+                >
+                  ✕
+                </button>
+                {isUnsavedActive && <div className="sidebar-item-active-line" />}
+              </div>
+            )}
+
             {sidebarItems.map((item) => {
-              const isActive = activeDimension === item.id;
+              const isActive = !isUnsavedActive && activeDimension === item.id;
               return (
                 <div
                   key={item.id}
                   className={`reports-sidebar-item ${isActive ? "active" : ""}`}
                   onClick={() => {
                     if (item.isReal) {
+                      setIsUnsavedActive(false);
                       setActiveDimension(item.id as ReportDimension);
                     }
                   }}
@@ -822,6 +861,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                     <div className="sidebar-item-desc">{item.subtitle}</div>
                   </div>
                   {!isActive && <span className="sidebar-item-more">⋮</span>}
+                  {isActive && <div className="sidebar-item-active-line" />}
                 </div>
               );
             })}
@@ -834,10 +874,24 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
           <div className="reports-content-header">
             <div className="reports-header-left">
               <span className="reports-drag-icon">⋮⋮</span>
-              <h2 className="reports-header-title">{dimensionTitle}</h2>
+              <h2 className={`reports-header-title ${isUnsavedActive ? "unsaved-title" : ""}`}>
+                {isUnsavedActive ? "Unsaved report" : dimensionTitle}
+              </h2>
             </div>
             <div className="reports-header-right">
-              <button className="reports-save-btn" disabled>Save</button>
+              <button
+                className={`reports-save-btn ${isUnsavedActive ? "active" : ""}`}
+                disabled={!isUnsavedActive}
+                onClick={() => {
+                  if (isUnsavedActive) {
+                    setIsUnsavedReport(false);
+                    setIsUnsavedActive(false);
+                    alert("Report saved successfully!");
+                  }
+                }}
+              >
+                Save
+              </button>
               <button className="reports-more-btn">⋮</button>
             </div>
           </div>
@@ -846,15 +900,64 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
           <div className="reports-breakdowns-row">
             <div className="breakdown-tag-wrap">
               <span className="breakdown-label">Breakdowns:</span>
-              <div className="breakdown-pill">
-                {activeDimension === "by_day"
-                  ? "Date"
-                  : activeDimension === "sites"
-                  ? "Site"
-                  : activeDimension === "countries"
-                  ? "Country"
-                  : "Ad unit"}{" "}
-                ▼
+              <div className="breakdown-pill-wrap" style={{ position: "relative" }}>
+                <div
+                  className="breakdown-pill"
+                  onClick={() => setIsBreakdownDropdownOpen(!isBreakdownDropdownOpen)}
+                  style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                >
+                  {activeDimension === "by_day"
+                    ? "Date"
+                    : activeDimension === "sites"
+                    ? "Site"
+                    : activeDimension === "countries"
+                    ? "Country"
+                    : "Ad unit"}{" "}
+                  ▼
+                </div>
+                {isBreakdownDropdownOpen && (
+                  <div
+                    className="breakdown-dropdown-menu"
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 4px)",
+                      left: 0,
+                      backgroundColor: "#ffffff",
+                      border: "1px solid #dadce0",
+                      borderRadius: "4px",
+                      boxShadow: "0 2px 6px rgba(60,64,67,0.15)",
+                      zIndex: 100,
+                      minWidth: "120px",
+                      padding: "4px 0",
+                    }}
+                  >
+                    {[
+                      { id: "by_day", label: "Date" },
+                      { id: "sites", label: "Site" },
+                      { id: "countries", label: "Country" },
+                      { id: "ad_units", label: "Ad unit" },
+                    ].map((b) => (
+                      <div
+                        key={b.id}
+                        style={{
+                          padding: "8px 16px",
+                          fontSize: "13px",
+                          color: "#202124",
+                          cursor: "pointer",
+                          backgroundColor: activeDimension === b.id ? "#f1f3f4" : "transparent",
+                        }}
+                        onClick={() => {
+                          setActiveDimension(b.id as ReportDimension);
+                          setIsBreakdownDropdownOpen(false);
+                          setIsUnsavedReport(true);
+                          setIsUnsavedActive(true);
+                        }}
+                      >
+                        {b.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <span
                 className="breakdown-add-link"
@@ -1113,11 +1216,23 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                   <th className="th-col-dim">{dimensionColName}</th>
                   {activeColumns.map((col) => (
                     <th key={col.id} className="th-col-metric align-right">
-                      {col.id === "earnings" && activeDimension === "sites"
-                        ? "↓ Estimated earnings *"
-                        : col.id === "earnings"
-                        ? "↓ Estimated earnings"
-                        : col.label}
+                      <div className="th-metric-header-content">
+                        {col.id === "earnings" && (
+                          <span className="th-sort-arrow">
+                            <i
+                              className="material-icon-i material-icons-extended"
+                              role="img"
+                              aria-hidden="true"
+                            >
+                              arrow_downward
+                            </i>
+                          </span>
+                        )}
+                        <span className="th-metric-label">
+                          {col.label}
+                          {col.id === "earnings" && activeDimension === "sites" ? " *" : ""}
+                        </span>
+                      </div>
                     </th>
                   ))}
                 </tr>
