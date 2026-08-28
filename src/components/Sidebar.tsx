@@ -245,7 +245,13 @@ export const Sidebar: React.FC = () => {
 
           <div
             className={`sidebar-item expandable ${activePageId === "brand-safety" ? "active" : ""}`}
-            onClick={() => setBrandSafetyExpanded(!brandSafetyExpanded)}
+            onClick={() => {
+              if (isCollapsed) {
+                handleNav("brand-safety", "Brand safety", "brand-safety/overview");
+              } else {
+                setBrandSafetyExpanded(!brandSafetyExpanded);
+              }
+            }}
           >
             <div className="sidebar-item-content">
               {!isCollapsed && (
@@ -270,7 +276,13 @@ export const Sidebar: React.FC = () => {
 
           <div
             className={`sidebar-item expandable ${activePageId === "optimization" ? "active" : ""}`}
-            onClick={() => setOptimizationExpanded(!optimizationExpanded)}
+            onClick={() => {
+              if (isCollapsed) {
+                handleNav("optimization", "Optimization", "optimization/opportunities");
+              } else {
+                setOptimizationExpanded(!optimizationExpanded);
+              }
+            }}
           >
             <div className="sidebar-item-content">
               {!isCollapsed && (
@@ -300,8 +312,17 @@ export const Sidebar: React.FC = () => {
         <div className="sidebar-group">
           {/* Payments Group */}
           <div
-            className="sidebar-item expandable"
-            onClick={() => setPaymentsExpanded(!paymentsExpanded)}
+            className={`sidebar-item expandable ${activePageId === "payments-info" || activePageId === "transactions-service" || activePageId === "verification-check" ? "active" : ""}`}
+            onClick={() => {
+              if (isCollapsed) {
+                handleNav("payments-info", "Payments info – Payments", "payments");
+              } else {
+                setPaymentsExpanded(!paymentsExpanded);
+                if (!paymentsExpanded) {
+                  handleNav("payments-info", "Payments info – Payments", "payments");
+                }
+              }
+            }}
           >
             <div className="sidebar-item-content">
               {!isCollapsed && (
@@ -342,7 +363,13 @@ export const Sidebar: React.FC = () => {
           {/* Account Group */}
           <div
             className={`sidebar-item expandable ${activePageId === "settings" || activePageId === "account" ? "active" : ""}`}
-            onClick={() => setAccountExpanded(!accountExpanded)}
+            onClick={() => {
+              if (isCollapsed) {
+                handleNav("account", "Account", "account/settings");
+              } else {
+                setAccountExpanded(!accountExpanded);
+              }
+            }}
           >
             <div className="sidebar-item-content">
               {!isCollapsed && (

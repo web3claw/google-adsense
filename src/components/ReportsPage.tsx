@@ -228,6 +228,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     type DayObj = ReturnType<typeof buildDayObj>;
     const weeks: Array<{
       isMonthStartRow: boolean;
+      titleSpanCols?: number;
       days: Array<DayObj | null>;
       hasSelectedRange: boolean;
     }> = [];
@@ -251,7 +252,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
       });
     }
 
-    // 2. Month first week with title embedded (occupies blank cols, followed by day 1..7-firstDayOfWeek)
+    // 2. Month first week with title embedded (occupies blank cols 1..firstDayOfWeek, followed by days 1..7-firstDayOfWeek)
     if (firstDayOfWeek > 0) {
       const firstWeekDays: Array<DayObj> = [];
       for (let d = 1; d <= 7 - firstDayOfWeek; d++) {
@@ -259,8 +260,17 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
       }
       weeks.push({
         isMonthStartRow: true,
+        titleSpanCols: firstDayOfWeek,
         days: firstWeekDays,
         hasSelectedRange: firstWeekDays.some((d) => d.isInRange),
+      });
+    } else {
+      // Month starts on Sunday (col 0): Standalone title row
+      weeks.push({
+        isMonthStartRow: true,
+        titleSpanCols: 7,
+        days: [],
+        hasSelectedRange: false,
       });
     }
 
@@ -1041,7 +1051,10 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                                 <div key={wIdx} className={`calendar-week-row ${week.hasSelectedRange ? "in-week-range" : ""}`}>
                                   {week.isMonthStartRow ? (
                                     <>
-                                      <div className="month-title-cell">
+                                      <div
+                                        className="month-title-cell"
+                                        style={{ gridColumn: `1 / span ${week.titleSpanCols || 6}` }}
+                                      >
                                         {MONTH_NAMES[calendarViewMonth].toUpperCase()} {calendarViewYear}
                                       </div>
                                       {week.days.map((d) => d && (
@@ -1205,171 +1218,174 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
 
         {/* Right Content Area */}
         <div className="reports-content-area" onDoubleClick={fetchRecords}>
-          {/* Header Bar */}
-          <div className="reports-content-header">
-            <div className="reports-header-left">
-              <span className="reports-drag-icon" title="Report icon">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="#3c4043" style={{ display: "inline-block", verticalAlign: "middle" }}>
-                  <circle cx="3" cy="3" r="1.5" />
-                  <circle cx="9" cy="3" r="1.5" />
-                  <circle cx="15" cy="3" r="1.5" />
-                  <circle cx="3" cy="9" r="1.5" />
-                  <circle cx="9" cy="9" r="1.5" />
-                  <circle cx="15" cy="9" r="1.5" />
-                  <circle cx="3" cy="15" r="1.5" />
-                  <circle cx="9" cy="15" r="1.5" />
-                  <circle cx="15" cy="15" r="1.5" />
-                </svg>
-              </span>
-              <h2 className={`reports-header-title ${isUnsavedActive ? "unsaved-title" : ""}`}>
-                {isUnsavedActive ? "Unsaved report" : dimensionTitle}
-              </h2>
+          {/* Top Header Card */}
+          <div className="reports-header-card">
+            {/* Header Bar */}
+            <div className="reports-content-header">
+              <div className="reports-header-left">
+                <span className="reports-drag-icon" title="Report icon">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="#3c4043" style={{ display: "inline-block", verticalAlign: "middle" }}>
+                    <circle cx="3" cy="3" r="1.5" />
+                    <circle cx="9" cy="3" r="1.5" />
+                    <circle cx="15" cy="3" r="1.5" />
+                    <circle cx="3" cy="9" r="1.5" />
+                    <circle cx="9" cy="9" r="1.5" />
+                    <circle cx="15" cy="9" r="1.5" />
+                    <circle cx="3" cy="15" r="1.5" />
+                    <circle cx="9" cy="15" r="1.5" />
+                    <circle cx="15" cy="15" r="1.5" />
+                  </svg>
+                </span>
+                <h2 className={`reports-header-title ${isUnsavedActive ? "unsaved-title" : ""}`}>
+                  {isUnsavedActive ? "Unsaved report" : dimensionTitle}
+                </h2>
+              </div>
+              <div className="reports-header-right">
+                <button
+                  className={`reports-save-btn ${isUnsavedActive ? "active" : ""}`}
+                  disabled={!isUnsavedActive}
+                  onClick={() => {
+                    if (isUnsavedActive) {
+                      setIsUnsavedReport(false);
+                      setIsUnsavedActive(false);
+                      alert("Report saved successfully!");
+                    }
+                  }}
+                >
+                  Save
+                </button>
+                <button className="reports-more-btn">⋮</button>
+              </div>
             </div>
-            <div className="reports-header-right">
-              <button
-                className={`reports-save-btn ${isUnsavedActive ? "active" : ""}`}
-                disabled={!isUnsavedActive}
-                onClick={() => {
-                  if (isUnsavedActive) {
-                    setIsUnsavedReport(false);
-                    setIsUnsavedActive(false);
-                    alert("Report saved successfully!");
-                  }
-                }}
-              >
-                Save
-              </button>
-              <button className="reports-more-btn">⋮</button>
-            </div>
-          </div>
 
-          {/* Breakdowns Filter Controls */}
-          <div className="reports-breakdowns-row">
-            <div className="breakdown-tag-wrap">
-              <span className="breakdown-label">Breakdowns:</span>
-              <div className="breakdown-pill-wrap" style={{ position: "relative" }}>
+            {/* Breakdowns Filter Controls */}
+            <div className="reports-breakdowns-row">
+              <div className="breakdown-tag-wrap">
+                <span className="breakdown-label">Breakdowns:</span>
+                <div className="breakdown-pill-wrap" style={{ position: "relative" }}>
+                  <button
+                    type="button"
+                    className="breakdown-pill-btn"
+                    onClick={() => setIsBreakdownDropdownOpen(!isBreakdownDropdownOpen)}
+                  >
+                    <span>
+                      {activeDimension === "by_day"
+                        ? "Date"
+                        : activeDimension === "sites"
+                        ? "Site"
+                        : activeDimension === "countries"
+                        ? "Country"
+                        : "Ad unit"}
+                    </span>
+                    <i
+                      className="material-icon-i material-icons-extended"
+                      style={{ fontSize: "20px", color: "#5f6368", margin: "-2px -4px -2px 0", lineHeight: 1 }}
+                    >
+                      arrow_drop_down
+                    </i>
+                  </button>
+                  {isBreakdownDropdownOpen && (
+                    <div className="breakdown-dropdown-menu">
+                      {[
+                        { id: "by_day", label: "Date" },
+                        { id: "sites", label: "Site" },
+                        { id: "countries", label: "Country" },
+                        { id: "ad_units", label: "Ad unit" },
+                      ].map((b) => (
+                        <div
+                          key={b.id}
+                          className={`breakdown-dropdown-item ${activeDimension === b.id ? "selected" : ""}`}
+                          onClick={() => {
+                            setActiveDimension(b.id as ReportDimension);
+                            setIsBreakdownDropdownOpen(false);
+                            setIsUnsavedReport(true);
+                            setIsUnsavedActive(true);
+                          }}
+                        >
+                          {b.label}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <button
                   type="button"
-                  className="breakdown-pill-btn"
-                  onClick={() => setIsBreakdownDropdownOpen(!isBreakdownDropdownOpen)}
+                  className="breakdown-add-btn"
+                  onClick={openMetricModal}
+                  title="Manage metrics"
                 >
-                  <span>
-                    {activeDimension === "by_day"
-                      ? "Date"
-                      : activeDimension === "sites"
-                      ? "Site"
-                      : activeDimension === "countries"
-                      ? "Country"
-                      : "Ad unit"}
-                  </span>
-                  <i
-                    className="material-icon-i material-icons-extended"
-                    style={{ fontSize: "20px", color: "#5f6368", margin: "-2px -4px -2px 0", lineHeight: 1 }}
-                  >
-                    arrow_drop_down
-                  </i>
+                  <span className="breakdown-add-plus">+</span> Add
                 </button>
-                {isBreakdownDropdownOpen && (
-                  <div className="breakdown-dropdown-menu">
-                    {[
-                      { id: "by_day", label: "Date" },
-                      { id: "sites", label: "Site" },
-                      { id: "countries", label: "Country" },
-                      { id: "ad_units", label: "Ad unit" },
-                    ].map((b) => (
-                      <div
-                        key={b.id}
-                        className={`breakdown-dropdown-item ${activeDimension === b.id ? "selected" : ""}`}
-                        onClick={() => {
-                          setActiveDimension(b.id as ReportDimension);
-                          setIsBreakdownDropdownOpen(false);
-                          setIsUnsavedReport(true);
-                          setIsUnsavedActive(true);
-                        }}
-                      >
-                        {b.label}
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
-              <button
-                type="button"
-                className="breakdown-add-btn"
-                onClick={openMetricModal}
-                title="Manage metrics"
-              >
-                <span className="breakdown-add-plus">+</span> Add
-              </button>
-            </div>
 
-            <div className="breakdown-search-filter">
-              <i
-                className="material-icon-i material-icons-extended filter-icon"
-                role="img"
-                aria-hidden="true"
-                style={{ fontSize: "20px", color: "#5f6368", display: "inline-flex", verticalAlign: "middle" }}
-              >
-                filter_alt
-              </i>
-              <input
-                type="text"
-                placeholder="Search or filter your data"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Metric Chips Bar */}
-          <div className="reports-metrics-bar">
-            <div className="metrics-chips-list">
-              {activeChipsMetrics.map((m) => {
-                const isSelected = activeChartMetricIds.includes(m.id);
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    className={`metric-chip ${isSelected ? "selected" : ""}`}
-                    onClick={() => toggleChartMetric(m.id)}
-                  >
-                    {isSelected && <span className="metric-chip-check">✓</span>}
-                    {m.label}
-                  </button>
-                );
-              })}
-              <button
-                type="button"
-                className="mdc-icon-button edit-metrics metric-chip-pencil"
-                title="Edit metrics"
-                onClick={openMetricModal}
-              >
+              <div className="breakdown-search-filter">
                 <i
-                  aria-hidden="true"
-                  className="mdc-button__icon google-material-icons material-icon-i material-icons-extended"
-                  style={{ fontSize: "18px", color: "#5f6368", lineHeight: 1 }}
-                >
-                  edit
-                </i>
-              </button>
-            </div>
-
-            <div className="metrics-chart-toggle">
-              <button
-                type="button"
-                className="chart-menu-btn trigger-button"
-                aria-label="Chart options"
-                title="Chart options"
-              >
-                <i
-                  className="material-icon-i material-icons-extended"
+                  className="material-icon-i material-icons-extended filter-icon"
                   role="img"
                   aria-hidden="true"
-                  style={{ fontSize: "20px", color: "#5f6368", lineHeight: 1 }}
+                  style={{ fontSize: "20px", color: "#5f6368", display: "inline-flex", verticalAlign: "middle" }}
                 >
-                  multiline_chart
+                  filter_alt
                 </i>
-              </button>
+                <input
+                  type="text"
+                  placeholder="Search or filter your data"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Metric Chips Bar */}
+            <div className="reports-metrics-bar">
+              <div className="metrics-chips-list">
+                {activeChipsMetrics.map((m) => {
+                  const isSelected = activeChartMetricIds.includes(m.id);
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={`metric-chip ${isSelected ? "selected" : ""}`}
+                      onClick={() => toggleChartMetric(m.id)}
+                    >
+                      {isSelected && <span className="metric-chip-check">✓</span>}
+                      {m.label}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  className="mdc-icon-button edit-metrics metric-chip-pencil"
+                  title="Edit metrics"
+                  onClick={openMetricModal}
+                >
+                  <i
+                    aria-hidden="true"
+                    className="mdc-button__icon google-material-icons material-icon-i material-icons-extended"
+                    style={{ fontSize: "18px", color: "#5f6368", lineHeight: 1 }}
+                  >
+                    edit
+                  </i>
+                </button>
+              </div>
+
+              <div className="metrics-chart-toggle">
+                <button
+                  type="button"
+                  className="chart-menu-btn trigger-button"
+                  aria-label="Chart options"
+                  title="Chart options"
+                >
+                  <i
+                    className="material-icon-i material-icons-extended"
+                    role="img"
+                    aria-hidden="true"
+                    style={{ fontSize: "20px", color: "#5f6368", lineHeight: 1 }}
+                  >
+                    multiline_chart
+                  </i>
+                </button>
+              </div>
             </div>
           </div>
 
