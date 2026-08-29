@@ -169,6 +169,19 @@ export const EarningsConfigModal: React.FC<EarningsConfigModalProps> = ({
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.currencyCode) {
+      const code = formData.currencyCode.toUpperCase().trim();
+      let mappedSym = "$";
+      if (code === "EUR" || code === "€") mappedSym = "€";
+      else if (code === "GBP" || code === "£") mappedSym = "£";
+      else if (code === "CNY" || code === "¥") mappedSym = "¥";
+      else if (code === "HKD" || code === "HK$") mappedSym = "HK$";
+      else if (code === "USD" || code === "$") mappedSym = "$";
+      else mappedSym = formData.currencyCode;
+      localStorage.setItem("adsense_currency_symbol", mappedSym);
+    }
+
     onSaveConfig(formData);
     onClose();
   };

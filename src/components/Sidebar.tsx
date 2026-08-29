@@ -244,7 +244,7 @@ export const Sidebar: React.FC = () => {
           </div>
 
           <div
-            className={`sidebar-item expandable ${activePageId === "brand-safety" ? "active" : ""}`}
+            className={`sidebar-item expandable ${isCollapsed && activePageId === "brand-safety" ? "active" : ""}`}
             onClick={() => {
               if (isCollapsed) {
                 handleNav("brand-safety", "Brand safety", "brand-safety/overview");
@@ -275,7 +275,7 @@ export const Sidebar: React.FC = () => {
           </div>
 
           <div
-            className={`sidebar-item expandable ${activePageId === "optimization" ? "active" : ""}`}
+            className={`sidebar-item expandable ${isCollapsed && activePageId === "optimization" ? "active" : ""}`}
             onClick={() => {
               if (isCollapsed) {
                 handleNav("optimization", "Optimization", "optimization/opportunities");
@@ -312,7 +312,7 @@ export const Sidebar: React.FC = () => {
         <div className="sidebar-group">
           {/* Payments Group */}
           <div
-            className={`sidebar-item expandable ${activePageId === "payments-info" || activePageId === "transactions-service" || activePageId === "verification-check" ? "active" : ""}`}
+            className={`sidebar-item expandable ${isCollapsed && (activePageId === "payments-info" || activePageId === "transactions-service" || activePageId === "verification-check") ? "active" : ""}`}
             onClick={() => {
               if (isCollapsed) {
                 handleNav("payments-info", "Payments info – Payments", "payments");
@@ -362,7 +362,7 @@ export const Sidebar: React.FC = () => {
 
           {/* Account Group */}
           <div
-            className={`sidebar-item expandable ${activePageId === "settings" || activePageId === "account" ? "active" : ""}`}
+            className={`sidebar-item expandable ${isCollapsed && (activePageId === "settings" || activePageId === "account") ? "active" : ""}`}
             onClick={() => {
               if (isCollapsed) {
                 handleNav("account", "Account", "account/settings");

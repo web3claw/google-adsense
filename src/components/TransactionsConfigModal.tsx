@@ -5,6 +5,7 @@ import {
   MonthBlockData,
   DEFAULT_EARNINGS_CONFIG,
 } from "./EarningsConfigModal";
+import { useBrowser } from "../context/BrowserContext";
 
 interface TransactionsConfigModalProps {
   isOpen: boolean;
@@ -58,6 +59,7 @@ export const TransactionsConfigModal: React.FC<TransactionsConfigModalProps> = (
   config,
   onSaveConfig,
 }) => {
+  const { setCurrencySymbol } = useBrowser();
   const [formData, setFormData] = React.useState<EarningsConfigData>(() => {
     const merged = { ...DEFAULT_EARNINGS_CONFIG, ...config };
 
@@ -244,6 +246,19 @@ export const TransactionsConfigModal: React.FC<TransactionsConfigModalProps> = (
       julAmount: N > 1 ? (monthsData[1].items.find((i) => i.amount > 0)?.amount ?? 0.42) : 0.42,
       junAmount: N > 2 ? (monthsData[2].items.find((i) => i.amount > 0)?.amount ?? 392.47) : 392.47,
     };
+
+    if (formData.currencyCode) {
+      const code = formData.currencyCode.toUpperCase().trim();
+      let mappedSym = "$";
+      if (code === "EUR" || code === "€") mappedSym = "€";
+      else if (code === "GBP" || code === "£") mappedSym = "£";
+      else if (code === "CNY" || code === "¥") mappedSym = "¥";
+      else if (code === "HKD" || code === "HK$") mappedSym = "HK$";
+      else if (code === "USD" || code === "$") mappedSym = "$";
+      else mappedSym = formData.currencyCode;
+      setCurrencySymbol(mappedSym);
+      localStorage.setItem("adsense_currency_symbol", mappedSym);
+    }
 
     onSaveConfig(updatedConfig);
     onClose();

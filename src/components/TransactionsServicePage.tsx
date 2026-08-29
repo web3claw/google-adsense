@@ -17,7 +17,7 @@ export const TransactionsServicePage: React.FC<{
   onNavigateToPolicy?: () => void;
   onNavigateBackToPayments?: () => void;
 }> = ({ onNavigateBackToPayments }) => {
-  const { currentEntry, formatCurrency, currencySymbol } = useBrowser();
+  const { currentEntry, currencySymbol } = useBrowser();
   const [isProfilePopoverOpen, setIsProfilePopoverOpen] = useState<boolean>(false);
 
   // Financial Config Persistence
@@ -143,16 +143,38 @@ export const TransactionsServicePage: React.FC<{
     };
   }, [earningsConfig]);
 
+  const effectiveCurrencySymbol = useMemo(() => {
+    if (earningsConfig.currencyCode) {
+      const code = earningsConfig.currencyCode.toUpperCase().trim();
+      if (code === "EUR" || code === "€") return "€";
+      if (code === "GBP" || code === "£") return "£";
+      if (code === "CNY" || code === "¥") return "¥";
+      if (code === "HKD" || code === "HK$") return "HK$";
+      if (code === "USD" || code === "$") return "$";
+    }
+    if (currencySymbol && currencySymbol !== "$") return currencySymbol;
+    return "$";
+  }, [earningsConfig.currencyCode, currencySymbol]);
+
+  const formatLocalCurrency = (val: string | number): string => {
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    if (isNaN(num)) return `${effectiveCurrencySymbol}0.00`;
+    return `${effectiveCurrencySymbol}${num.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  };
+
   // Determine Currency Code in header (e.g. EUR, USD, GBP, HKD)
   const displayCurrencyCode = useMemo(() => {
     if (earningsConfig.currencyCode) return earningsConfig.currencyCode;
-    if (currencySymbol === "€") return "EUR";
-    if (currencySymbol === "$") return "USD";
-    if (currencySymbol === "£") return "GBP";
-    if (currencySymbol === "HK$") return "HKD";
-    if (currencySymbol === "¥") return "CNY";
+    if (effectiveCurrencySymbol === "€") return "EUR";
+    if (effectiveCurrencySymbol === "$") return "USD";
+    if (effectiveCurrencySymbol === "£") return "GBP";
+    if (effectiveCurrencySymbol === "HK$") return "HKD";
+    if (effectiveCurrencySymbol === "¥") return "CNY";
     return "USD";
-  }, [earningsConfig.currencyCode, currencySymbol]);
+  }, [earningsConfig.currencyCode, effectiveCurrencySymbol]);
 
   const toggleBlock = (rowKey: string) => {
     setExpandedBlocks((prev) => ({
@@ -183,7 +205,7 @@ export const TransactionsServicePage: React.FC<{
 
     return items.map((item, index) => {
       const isNegative = item.amount < 0;
-      const formatted = formatCurrency(Math.abs(item.amount));
+      const formatted = formatLocalCurrency(Math.abs(item.amount));
       const isPaymentLink = item.description.toLowerCase().includes("automatic payment");
       const displayDate = item.date || dateHeader || "";
 
@@ -359,7 +381,7 @@ export const TransactionsServicePage: React.FC<{
                       <div className="period-divider-line" />
 
                       <div className="period-balance-line align-right ending-line">
-                        <span className="balance-text">Ending balance: {formatCurrency(block.endBalance)}</span>
+                        <span className="balance-text">Ending balance: {formatLocalCurrency(block.endBalance)}</span>
                       </div>
 
                       <div className="transactions-table-wrap">
@@ -376,13 +398,13 @@ export const TransactionsServicePage: React.FC<{
                       </div>
 
                       <div className="period-balance-line align-right starting-line">
-                        <span className="balance-text">Starting balance: {formatCurrency(block.startBalance)}</span>
+                        <span className="balance-text">Starting balance: {formatLocalCurrency(block.startBalance)}</span>
                       </div>
                     </div>
                   ) : (
                     <div className="period-block collapsed" onClick={() => toggleBlock(rowKey)} style={{ cursor: "pointer" }}>
                       <span className="period-title-collapsed">{block.dateHeader}</span>
-                      <span className="balance-text-collapsed">Ending balance: {formatCurrency(block.endBalance)}</span>
+                      <span className="balance-text-collapsed">Ending balance: {formatLocalCurrency(block.endBalance)}</span>
                     </div>
                   )}
                 </div>

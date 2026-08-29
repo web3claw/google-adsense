@@ -81,7 +81,19 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
   });
 
   const [currencySymbol, setCurrencySymbolState] = useState<string>(() => {
-    return localStorage.getItem("adsense_currency_symbol") || "$";
+    const saved = localStorage.getItem("adsense_currency_symbol");
+    if (saved) return saved;
+    try {
+      const ec = localStorage.getItem("earnings_config");
+      if (ec) {
+        const parsed = JSON.parse(ec);
+        if (parsed.currencyCode === "EUR" || parsed.currencyCode === "€") return "€";
+        if (parsed.currencyCode === "GBP" || parsed.currencyCode === "£") return "£";
+        if (parsed.currencyCode === "CNY" || parsed.currencyCode === "¥") return "¥";
+        if (parsed.currencyCode === "HKD" || parsed.currencyCode === "HK$") return "HK$";
+      }
+    } catch (e) {}
+    return "$";
   });
 
   // UI Scale Percent (70% - 160%, Default: 110%)
@@ -277,8 +289,21 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const formatCurrency = (val: string | number): string => {
     const num = typeof val === "string" ? parseFloat(val) : val;
-    if (isNaN(num)) return `${currencySymbol}0.00`;
-    return `${currencySymbol}${num.toLocaleString("en-US", {
+    let sym = currencySymbol || "$";
+    if (!currencySymbol || currencySymbol === "$") {
+      try {
+        const ec = localStorage.getItem("adsense_earnings_config");
+        if (ec) {
+          const parsed = JSON.parse(ec);
+          if (parsed.currencyCode === "EUR" || parsed.currencyCode === "€") sym = "€";
+          else if (parsed.currencyCode === "GBP" || parsed.currencyCode === "£") sym = "£";
+          else if (parsed.currencyCode === "CNY" || parsed.currencyCode === "¥") sym = "¥";
+          else if (parsed.currencyCode === "HKD" || parsed.currencyCode === "HK$") sym = "HK$";
+        }
+      } catch (e) {}
+    }
+    if (isNaN(num)) return `${sym}0.00`;
+    return `${sym}${num.toLocaleString("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;

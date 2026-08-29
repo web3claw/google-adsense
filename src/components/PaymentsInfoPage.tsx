@@ -15,7 +15,7 @@ export const PaymentsInfoPage: React.FC<{
   onNavigateToPolicy?: () => void;
   onNavigateToTransactions?: (hash?: string) => void;
 }> = ({ onNavigateToTransactions }) => {
-  const { formatCurrency } = useBrowser();
+  const { currencySymbol } = useBrowser();
   const [isProfilePopoverOpen, setIsProfilePopoverOpen] = useState<boolean>(false);
 
   const [earningsConfig, setEarningsConfig] = useState<EarningsConfigData>(() => {
@@ -42,6 +42,28 @@ export const PaymentsInfoPage: React.FC<{
       console.error("Error saving earnings config", err);
     }
   }, [earningsConfig]);
+
+  const effectiveCurrencySymbol = useMemo(() => {
+    if (earningsConfig.currencyCode) {
+      const code = earningsConfig.currencyCode.toUpperCase().trim();
+      if (code === "EUR" || code === "€") return "€";
+      if (code === "GBP" || code === "£") return "£";
+      if (code === "CNY" || code === "¥") return "¥";
+      if (code === "HKD" || code === "HK$") return "HK$";
+      if (code === "USD" || code === "$") return "$";
+    }
+    if (currencySymbol && currencySymbol !== "$") return currencySymbol;
+    return "$";
+  }, [earningsConfig.currencyCode, currencySymbol]);
+
+  const formatLocalCurrency = (val: string | number): string => {
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    if (isNaN(num)) return `${effectiveCurrencySymbol}0.00`;
+    return `${effectiveCurrencySymbol}${num.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  };
 
   const computedMonthlyBalances = useMemo(() => {
     let monthsData = earningsConfig.monthsData;
@@ -141,10 +163,10 @@ export const PaymentsInfoPage: React.FC<{
               <div className="earnings-card-info">
                 <h3 className="earnings-title">Your earnings</h3>
                 <p className="earnings-subtitle">
-                  Paid monthly if the total is at least {formatCurrency(earningsConfig.threshold)} (your payout threshold)
+                  Paid monthly if the total is at least {formatLocalCurrency(earningsConfig.threshold)} (your payout threshold)
                 </p>
               </div>
-              <span className="earnings-amount">{formatCurrency(earningsConfig.currentEarnings)}</span>
+              <span className="earnings-amount">{formatLocalCurrency(earningsConfig.currentEarnings)}</span>
             </div>
 
             {/* Progress bar section */}
@@ -156,7 +178,7 @@ export const PaymentsInfoPage: React.FC<{
               <div className="earnings-card-footer-text">
                 <span>You've reached {progressPercent}% of your payment threshold</span>
                 <span style={{ fontFamily: "Roboto, Arial, sans-serif" }}>
-                  Payment threshold: {formatCurrency(earningsConfig.threshold)}
+                  Payment threshold: {formatLocalCurrency(earningsConfig.threshold)}
                 </span>
               </div>
             </div>
@@ -181,7 +203,7 @@ export const PaymentsInfoPage: React.FC<{
               </svg>
               <span style={{ fontFamily: "Roboto, Arial, sans-serif" }}>
                 Your last payment was issued on {earningsConfig.lastPaymentDate} for{" "}
-                {formatCurrency(earningsConfig.lastPaymentAmount)}.
+                {formatLocalCurrency(earningsConfig.lastPaymentAmount)}.
               </span>
             </div>
           </div>
@@ -209,7 +231,7 @@ export const PaymentsInfoPage: React.FC<{
                       {dateRanges.row1Text}
                     </a>
                     <span className="transaction-amount">
-                      {formatCurrency(computedMonthlyBalances[0] !== undefined ? computedMonthlyBalances[0] : (earningsConfig.augAmount ?? 0.42))}
+                      {formatLocalCurrency(computedMonthlyBalances[0] !== undefined ? computedMonthlyBalances[0] : (earningsConfig.augAmount ?? 0.42))}
                     </span>
                   </div>
                   <div className="transaction-item">
@@ -224,7 +246,7 @@ export const PaymentsInfoPage: React.FC<{
                       {dateRanges.row2Text}
                     </a>
                     <span className="transaction-amount">
-                      {formatCurrency(computedMonthlyBalances[1] !== undefined ? computedMonthlyBalances[1] : (earningsConfig.julAmount ?? 0.42))}
+                      {formatLocalCurrency(computedMonthlyBalances[1] !== undefined ? computedMonthlyBalances[1] : (earningsConfig.julAmount ?? 0.42))}
                     </span>
                   </div>
                   <div className="transaction-item">
@@ -239,7 +261,7 @@ export const PaymentsInfoPage: React.FC<{
                       {dateRanges.row3Text}
                     </a>
                     <span className="transaction-amount">
-                      {formatCurrency(computedMonthlyBalances[2] !== undefined ? computedMonthlyBalances[2] : (earningsConfig.junAmount ?? 392.47))}
+                      {formatLocalCurrency(computedMonthlyBalances[2] !== undefined ? computedMonthlyBalances[2] : (earningsConfig.junAmount ?? 392.47))}
                     </span>
                   </div>
                 </div>

@@ -502,9 +502,26 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
       .filter(Boolean) as MetricColumnDef[];
   }, [selectedMetricIds]);
 
+  // Effective currency symbol from context or earningsConfig
+  const effectiveCurrencySymbol = useMemo(() => {
+    if (currencySymbol && currencySymbol !== "$") return currencySymbol;
+    try {
+      const ec = localStorage.getItem("earnings_config");
+      if (ec) {
+        const parsed = JSON.parse(ec);
+        if (parsed.currencyCode === "EUR" || parsed.currencyCode === "€") return "€";
+        if (parsed.currencyCode === "GBP" || parsed.currencyCode === "£") return "£";
+        if (parsed.currencyCode === "CNY" || parsed.currencyCode === "¥") return "¥";
+        if (parsed.currencyCode === "HKD" || parsed.currencyCode === "HK$") return "HK$";
+        if (parsed.currencyCode === "USD" || parsed.currencyCode === "$") return "$";
+      }
+    } catch (e) {}
+    return currencySymbol || "$";
+  }, [currencySymbol]);
+
   // Currency & Number Formatting Helpers
   const formatMoney = (val: number) => {
-    const sym = currencySymbol || "$";
+    const sym = effectiveCurrencySymbol;
     return `${sym}${val.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
@@ -631,7 +648,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
       { y: 109, val: lineMaxScale * 0.5, label: formatCell(activeMetricDef, lineMaxScale * 0.5) },
       { y: 151, val: lineMaxScale * 0.25, label: formatCell(activeMetricDef, lineMaxScale * 0.25) },
     ];
-  }, [lineMaxScale, activeMetricDef]);
+  }, [lineMaxScale, activeMetricDef, effectiveCurrencySymbol]);
 
   const getMetricSeriesData = (metricKey: MetricKey) => {
     const colDef = ALL_METRIC_COLUMNS.find((col) => col.id === metricKey) || ALL_METRIC_COLUMNS[0];
@@ -1119,7 +1136,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
             onClick={openMetricModal}
             title="Manage metrics"
           >
-            + Add comparison
+            + add comparison
           </span>
         </div>
 
@@ -1314,7 +1331,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                   onClick={openMetricModal}
                   title="Manage metrics"
                 >
-                  <span className="breakdown-add-plus">+</span> Add
+                  + Add
                 </button>
               </div>
 
@@ -1581,7 +1598,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                         const tickVal = maxChartVal * pct;
                         const isCurrency = activeMetricDef.id.includes("earnings") || activeMetricDef.id.includes("rpm") || activeMetricDef.id.includes("cpc");
                         const formatted = isCurrency
-                          ? `${currencySymbol || "$"}${tickVal.toFixed(2)}`
+                          ? `${effectiveCurrencySymbol}${tickVal.toFixed(2)}`
                           : tickVal >= 1000 ? `${(tickVal / 1000).toFixed(1)}k` : `${Math.round(tickVal)}`;
                         return <span key={idx} className="amount-font">{formatted}</span>;
                       })}
