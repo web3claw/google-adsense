@@ -114,6 +114,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
   // Compact Datepicker Popup State
   const [tempPickerPreset, setTempPickerPreset] = useState<string>("custom");
   const [tempCustomRange, setTempCustomRange] = useState<{ start: string; end: string }>(customRange);
+  const [hoveredDateKey, setHoveredDateKey] = useState<string | null>(null);
   const [calendarViewYear, setCalendarViewYear] = useState<number>(2026);
   const [calendarViewMonth, setCalendarViewMonth] = useState<number>(7); // 7 = August (0-indexed)
 
@@ -139,24 +140,27 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     return `${MONTH_NAMES[mIdx] || ""} ${d}, ${y}`;
   };
 
+  const BASE_TODAY_STR = "2026-08-30";
+
   const handleSelectPreset = (preset: string) => {
     setTempPickerPreset(preset);
-    const todayStr = "2026-08-27";
+    setHoveredDateKey(null);
+    const todayStr = BASE_TODAY_STR;
     if (preset === "today") {
       setTempCustomRange({ start: todayStr, end: todayStr });
     } else if (preset === "yesterday") {
-      setTempCustomRange({ start: "2026-08-26", end: "2026-08-26" });
+      setTempCustomRange({ start: "2026-08-29", end: "2026-08-29" });
     } else if (preset === "last_7_days") {
-      setTempCustomRange({ start: "2026-08-21", end: todayStr });
+      setTempCustomRange({ start: "2026-08-24", end: todayStr });
     } else if (preset === "last_30_days") {
-      setTempCustomRange({ start: "2026-07-29", end: todayStr });
+      setTempCustomRange({ start: "2026-08-01", end: todayStr });
     } else if (preset === "this_month") {
       setTempCustomRange({ start: "2026-08-01", end: todayStr });
     } else if (preset === "last_month") {
       setTempCustomRange({ start: "2026-07-01", end: "2026-07-31" });
       setCalendarViewMonth(6);
     } else if (preset === "last_3_years") {
-      setTempCustomRange({ start: "2023-08-27", end: todayStr });
+      setTempCustomRange({ start: "2023-08-30", end: todayStr });
     }
   };
 
@@ -164,12 +168,14 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     setTempPickerPreset("custom");
     if (!tempCustomRange.start || (tempCustomRange.start && tempCustomRange.end)) {
       setTempCustomRange({ start: dayStr, end: "" });
+      setHoveredDateKey(null);
     } else if (tempCustomRange.start && !tempCustomRange.end) {
       if (dayStr < tempCustomRange.start) {
         setTempCustomRange({ start: dayStr, end: tempCustomRange.start });
       } else {
         setTempCustomRange({ start: tempCustomRange.start, end: dayStr });
       }
+      setHoveredDateKey(null);
     }
   };
 
@@ -197,22 +203,35 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     const firstDayOfWeek = new Date(calendarViewYear, calendarViewMonth, 1).getDay(); // 0 is Sunday, 6 is Saturday
     const prevMonthDaysCount = new Date(calendarViewYear, calendarViewMonth, 0).getDate();
 
-    const effectiveEnd = tempCustomRange.end || tempCustomRange.start;
+    let effectiveStart = tempCustomRange.start;
+    let effectiveEnd = tempCustomRange.end || tempCustomRange.start;
+    let isHoverPreview = false;
+
+    if (tempCustomRange.start && !tempCustomRange.end && hoveredDateKey) {
+      if (hoveredDateKey < tempCustomRange.start) {
+        effectiveStart = hoveredDateKey;
+        effectiveEnd = tempCustomRange.start;
+      } else {
+        effectiveStart = tempCustomRange.start;
+        effectiveEnd = hoveredDateKey;
+      }
+      isHoverPreview = true;
+    }
 
     const buildDayObj = (year: number, month0: number, dayNum: number, isCurrentMonth: boolean) => {
       const mStr = month0 + 1 < 10 ? `0${month0 + 1}` : `${month0 + 1}`;
       const dStr = dayNum < 10 ? `0${dayNum}` : `${dayNum}`;
       const dateKey = `${year}-${mStr}-${dStr}`;
-      const isStart = tempCustomRange.start === dateKey;
+      const isStart = effectiveStart === dateKey;
       const isEnd = effectiveEnd === dateKey;
       const isInRange = Boolean(
-        tempCustomRange.start &&
+        effectiveStart &&
         effectiveEnd &&
-        dateKey >= tempCustomRange.start &&
+        dateKey >= effectiveStart &&
         dateKey <= effectiveEnd
       );
-      const isToday = dateKey === "2026-08-27";
-      const isDisabled = dateKey > "2026-08-27";
+      const isToday = dateKey === BASE_TODAY_STR;
+      const isDisabled = dateKey > BASE_TODAY_STR;
       return {
         dayNum,
         dateKey,
@@ -222,6 +241,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
         isInRange,
         isToday,
         isDisabled,
+        isHoverPreview,
       };
     };
 
@@ -231,6 +251,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
       titleSpanCols?: number;
       days: Array<DayObj | null>;
       hasSelectedRange: boolean;
+      isHoverPreview: boolean;
     }> = [];
 
     // 1. Previous month trailing week (e.g. July 26 - 31)
@@ -249,6 +270,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
         isMonthStartRow: false,
         days: prevDays,
         hasSelectedRange: prevDays.some((d) => d?.isInRange),
+        isHoverPreview,
       });
     }
 
@@ -263,6 +285,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
         titleSpanCols: firstDayOfWeek,
         days: firstWeekDays,
         hasSelectedRange: firstWeekDays.some((d) => d.isInRange),
+        isHoverPreview,
       });
     } else {
       // Month starts on Sunday (col 0): Standalone title row
@@ -271,6 +294,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
         titleSpanCols: 7,
         days: [],
         hasSelectedRange: false,
+        isHoverPreview,
       });
     }
 
@@ -287,13 +311,14 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
           isMonthStartRow: false,
           days: currentWeekDays,
           hasSelectedRange: currentWeekDays.some((d) => d?.isInRange),
+          isHoverPreview,
         });
         currentWeekDays = [];
       }
     }
 
     return weeks;
-  }, [calendarViewYear, calendarViewMonth, tempCustomRange]);
+  }, [calendarViewYear, calendarViewMonth, tempCustomRange, hoveredDateKey]);
 
   const handleApplyDateRange = () => {
     if (tempCustomRange.start) {
@@ -602,16 +627,19 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
   // Chart Max Scale Calculation
   const chartItems = useMemo(() => {
     const activeDef = ALL_METRIC_COLUMNS.find((m) => m.id === activeMetric);
-    return filteredRows
-      .filter((r: AggregatedReportRow) => !hiddenRowKeys.has(r.key))
-      .map((r: AggregatedReportRow) => {
-        const val = activeDef ? activeDef.getValue(r) : r.earnings;
-        return {
-          key: r.key,
-          name: r.name,
-          value: val,
-        };
-      });
+    const visibleRows = filteredRows.filter((r: AggregatedReportRow) => !hiddenRowKeys.has(r.key));
+    const withTraffic = visibleRows.filter((r: AggregatedReportRow) => {
+      return r.pageViews > 0 || r.impressions > 0 || r.earnings > 0 || r.clicks > 0 || r.adRequests > 0;
+    });
+    const targetRows = withTraffic.length > 0 ? withTraffic : visibleRows;
+    return targetRows.map((r: AggregatedReportRow) => {
+      const val = activeDef ? activeDef.getValue(r) : r.earnings;
+      return {
+        key: r.key,
+        name: r.name,
+        value: val,
+      };
+    });
   }, [filteredRows, activeMetric, hiddenRowKeys]);
 
   const maxChartVal = useMemo(() => {
@@ -1001,7 +1029,13 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                                   className="input"
                                   type="text"
                                   readOnly
-                                  value={formatShortUSDate(tempCustomRange.start)}
+                                  value={
+                                    tempCustomRange.start
+                                      ? (tempCustomRange.start && !tempCustomRange.end && hoveredDateKey
+                                          ? formatMediumUSDate(tempCustomRange.start)
+                                          : formatShortUSDate(tempCustomRange.start))
+                                      : ""
+                                  }
                                 />
                               </label>
                             </div>
@@ -1013,7 +1047,15 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                                   className="input"
                                   type="text"
                                   readOnly
-                                  value={formatMediumUSDate(tempCustomRange.end || tempCustomRange.start)}
+                                  value={
+                                    tempCustomRange.end
+                                      ? formatMediumUSDate(tempCustomRange.end)
+                                      : hoveredDateKey
+                                      ? formatShortUSDate(hoveredDateKey)
+                                      : tempCustomRange.start
+                                      ? formatMediumUSDate(tempCustomRange.start)
+                                      : ""
+                                  }
                                 />
                               </label>
                             </div>
@@ -1063,9 +1105,18 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                               <div className="header-day">F</div>
                               <div className="header-day">S</div>
                             </div>
-                            <div className="calendar-scroll-area">
+                            <div className="calendar-scroll-area" onMouseLeave={() => setHoveredDateKey(null)}>
                               {calendarWeeks.map((week, wIdx) => (
-                                <div key={wIdx} className={`calendar-week-row ${week.hasSelectedRange ? "in-week-range" : ""}`}>
+                                <div
+                                  key={wIdx}
+                                  className={`calendar-week-row ${
+                                    week.hasSelectedRange
+                                      ? week.isHoverPreview
+                                        ? "in-week-hover-range"
+                                        : "in-week-range"
+                                      : ""
+                                  }`}
+                                >
                                   {week.isMonthStartRow ? (
                                     <>
                                       <div
@@ -1077,8 +1128,9 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                                       {week.days.map((d) => d && (
                                         <div
                                           key={d.dateKey}
-                                          className={`day-slot ${d.isDisabled ? "disabled" : ""} ${d.isInRange ? "in-range" : ""} ${d.isStart ? "start" : ""} ${d.isEnd ? "end" : ""} ${d.isToday ? "today" : ""}`}
+                                          className={`day-slot ${d.isDisabled ? "disabled" : ""} ${d.isInRange ? "in-range" : ""} ${d.isStart ? "start" : ""} ${d.isEnd ? "end" : ""} ${d.isToday ? "today" : ""} ${d.isHoverPreview ? "hover-preview" : ""}`}
                                           onClick={() => !d.isDisabled && handleDayClick(d.dateKey)}
+                                          onMouseEnter={() => !d.isDisabled && tempCustomRange.start && !tempCustomRange.end && setHoveredDateKey(d.dateKey)}
                                         >
                                           <span className="day-slot-circle">{d.dayNum}</span>
                                         </div>
@@ -1092,8 +1144,9 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                                       return (
                                         <div
                                           key={d.dateKey}
-                                          className={`day-slot ${!d.isCurrentMonth ? "other-month" : ""} ${d.isDisabled ? "disabled" : ""} ${d.isInRange ? "in-range" : ""} ${d.isStart ? "start" : ""} ${d.isEnd ? "end" : ""} ${d.isToday ? "today" : ""}`}
+                                          className={`day-slot ${!d.isCurrentMonth ? "other-month" : ""} ${d.isDisabled ? "disabled" : ""} ${d.isInRange ? "in-range" : ""} ${d.isStart ? "start" : ""} ${d.isEnd ? "end" : ""} ${d.isToday ? "today" : ""} ${d.isHoverPreview ? "hover-preview" : ""}`}
                                           onClick={() => !d.isDisabled && handleDayClick(d.dateKey)}
+                                          onMouseEnter={() => !d.isDisabled && tempCustomRange.start && !tempCustomRange.end && setHoveredDateKey(d.dateKey)}
                                         >
                                           <span className="day-slot-circle">{d.dayNum}</span>
                                         </div>
@@ -1577,8 +1630,8 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                   /* Bar Chart for Sites / Countries / Ad Units */
                   <div className="reports-bar-chart-wrap">
                     <div className="bar-chart-rows-list">
-                      {chartItems.slice(0, 10).map((item) => {
-                        const barPercent = Math.min(100, (item.value / maxChartVal) * 100);
+                      {chartItems.map((item) => {
+                        const barPercent = maxChartVal > 0 ? Math.min(100, (item.value / maxChartVal) * 100) : 0;
                         return (
                           <div key={item.key} className="bar-chart-row">
                             <div className="bar-chart-label" title={item.name}>

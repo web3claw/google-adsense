@@ -1774,7 +1774,7 @@ input,
 .balance-text-collapsed {
   font-size: 13px;
   font-weight: 400;
-  color: #5f6368;
+  color: #202124;
   font-family: Roboto, Arial, sans-serif !important;
 }
 
@@ -1855,7 +1855,7 @@ input,
 .balance-text {
   font-size: 13px;
   font-weight: 400;
-  color: #5f6368;
+  color: #202124;
   font-family: Roboto, Arial, sans-serif !important;
 }
 
@@ -1907,9 +1907,9 @@ input,
 }
 
 .transactions-table td {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 400;
-  color: #3c4043;
+  color: #202124;
   height: 48px;
   line-height: 48px;
   padding: 0 24px;
@@ -2686,8 +2686,13 @@ input,
 }
 
 .calendar-week-row.in-week-range {
-  border-top: 1px dashed #c2d7fa;
-  border-bottom: 1px dashed #c2d7fa;
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+}
+
+.calendar-week-row.in-week-hover-range {
+  border-top: 1px dashed #202124;
+  border-bottom: 1px dashed #202124;
 }
 
 .month-title-cell {
@@ -2747,14 +2752,14 @@ input,
 }
 
 .day-slot.start {
-  border-top-left-radius: 50%;
-  border-bottom-left-radius: 50%;
+  border-top-left-radius: 15px;
+  border-bottom-left-radius: 15px;
   background-color: #e8f0fe;
 }
 
 .day-slot.end {
-  border-top-right-radius: 50%;
-  border-bottom-right-radius: 50%;
+  border-top-right-radius: 15px;
+  border-bottom-right-radius: 15px;
   background-color: #e8f0fe;
 }
 
@@ -2763,8 +2768,22 @@ input,
   color: #ffffff !important;
 }
 
-.day-slot.end .day-slot-circle {
-  border: 1px solid #1a73e8;
+.day-slot.end:not(.hover-preview) .day-slot-circle {
+  background-color: transparent;
+  border: none;
+  color: #202124;
+}
+
+.day-slot.hover-preview.end .day-slot-circle {
+  background-color: #1a73e8;
+  color: #ffffff !important;
+  border: none;
+}
+
+.day-slot.hover-preview.start:not(.end) .day-slot-circle {
+  background-color: transparent;
+  border: 1px solid #70757a;
+  color: #202124 !important;
 }
 
 .day-slot.today:not(.start) .day-slot-circle {
