@@ -1189,7 +1189,8 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
             onClick={openMetricModal}
             title="Manage metrics"
           >
-            + add comparison
+            <i className="material-icon-i material-icons-extended add-icon">add</i>
+            add comparison
           </span>
         </div>
 
@@ -1384,7 +1385,8 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                   onClick={openMetricModal}
                   title="Manage metrics"
                 >
-                  + Add
+                  <i className="material-icon-i material-icons-extended add-icon">add</i>
+                  Add
                 </button>
               </div>
 

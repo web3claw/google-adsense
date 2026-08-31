@@ -2847,12 +2847,21 @@ input,
   font-size: 13px;
   color: #1a73e8;
   font-weight: 500;
-  margin-left: 8px;
+  margin-left: 16px;
   cursor: pointer;
   user-select: none;
   display: inline-flex;
   align-items: center;
+  gap: 4px;
   font-family: "Google Sans", Roboto, Arial, sans-serif;
+  line-height: 1;
+}
+
+.reports-add-comparison .add-icon {
+  font-size: 18px;
+  color: #1a73e8;
+  line-height: 1;
+  font-weight: 400;
 }
 
 .reports-add-comparison:hover {
@@ -3242,12 +3251,21 @@ input,
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  padding: 5px 8px;
-  margin-left: 8px;
+  gap: 4px;
+  padding: 4px 6px;
+  margin-left: 16px;
   border-radius: 4px;
   transition: background-color 0.15s ease;
   user-select: none;
   font-family: "Google Sans", Roboto, Arial, sans-serif;
+  line-height: 1;
+}
+
+.breakdown-add-btn .add-icon {
+  font-size: 18px;
+  color: #1a73e8;
+  line-height: 1;
+  font-weight: 400;
 }
 
 .breakdown-add-btn:hover {
