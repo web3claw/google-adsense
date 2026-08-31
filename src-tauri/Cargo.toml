@@ -1,12 +1,12 @@
 [package]
 name = "google-adsense"
-version = "0.2.4"
+version = "0.2.5"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
 
 [[bin]]
-name = "adsense-024"
+name = "adsense-025"
 path = "src/main.rs"
 
 [lib]

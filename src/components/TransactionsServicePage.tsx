@@ -192,8 +192,9 @@ export const TransactionsServicePage: React.FC<{
             style={{
               textAlign: "center",
               padding: "54px 0",
-              color: "#5f6368",
+              color: "#202124",
               fontSize: "13px",
+              fontFamily: "Roboto, Arial, sans-serif",
               borderBottom: "none",
             }}
           >
@@ -207,7 +208,7 @@ export const TransactionsServicePage: React.FC<{
       const isNegative = item.amount < 0;
       const formatted = formatLocalCurrency(Math.abs(item.amount));
       const isPaymentLink = item.description.toLowerCase().includes("automatic payment");
-      const displayDate = item.date || dateHeader || "";
+      const displayDate = (item.date || dateHeader || "").replace(/\u2009/g, " ");
 
       return (
         <tr key={item.id || index}>

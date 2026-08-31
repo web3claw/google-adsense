@@ -76,7 +76,7 @@ export const DEFAULT_EARNINGS_CONFIG: EarningsConfigData = {
       items: [
         {
           id: "m2-1",
-          date: "Jul 1\u2009\u2013\u200931, 2026",
+          date: "Jul 1 – 31, 2026",
           description: "Earnings - AdSense for Content",
           amount: 0.42,
         },
@@ -88,7 +88,7 @@ export const DEFAULT_EARNINGS_CONFIG: EarningsConfigData = {
         },
         {
           id: "m2-3",
-          date: "Jul 3\u2009\u2013\u20094, 2026",
+          date: "Jul 3 – 4, 2026",
           description: "Invalid Traffic - AdSense for Content",
           amount: -0.02,
         },
@@ -99,13 +99,13 @@ export const DEFAULT_EARNINGS_CONFIG: EarningsConfigData = {
       items: [
         {
           id: "m3-1",
-          date: "Jun 1\u2009\u2013\u200930, 2026",
+          date: "Jun 1 – 30, 2026",
           description: "Invalid Traffic - AdSense for Content",
           amount: -0.03,
         },
         {
           id: "m3-2",
-          date: "Jun 1\u2009\u2013\u200930, 2026",
+          date: "Jun 1 – 30, 2026",
           description: "Earnings - AdSense for Content",
           amount: 392.13,
         },
@@ -117,7 +117,7 @@ export const DEFAULT_EARNINGS_CONFIG: EarningsConfigData = {
   month2Items: [
     {
       id: "m2-1",
-      date: "Jul 1\u2009\u2013\u200931, 2026",
+      date: "Jul 1 – 31, 2026",
       description: "Earnings - AdSense for Content",
       amount: 0.42,
     },
@@ -129,7 +129,7 @@ export const DEFAULT_EARNINGS_CONFIG: EarningsConfigData = {
     },
     {
       id: "m2-3",
-      date: "Jul 3\u2009\u2013\u20094, 2026",
+      date: "Jul 3 – 4, 2026",
       description: "Invalid Traffic - AdSense for Content",
       amount: -0.02,
     },
@@ -137,13 +137,13 @@ export const DEFAULT_EARNINGS_CONFIG: EarningsConfigData = {
   month3Items: [
     {
       id: "m3-1",
-      date: "Jun 1\u2009\u2013\u200930, 2026",
+      date: "Jun 1 – 30, 2026",
       description: "Invalid Traffic - AdSense for Content",
       amount: -0.03,
     },
     {
       id: "m3-2",
-      date: "Jun 1\u2009\u2013\u200930, 2026",
+      date: "Jun 1 – 30, 2026",
       description: "Earnings - AdSense for Content",
       amount: 392.13,
     },

@@ -28,14 +28,14 @@ export function computeMonthDateInfo(baseDateStr: string | undefined, monthOffse
 
   if (monthOffsetIndex === 0) {
     const mName = base.toLocaleDateString("en-US", { month: "short" });
-    return `${mName} 1\u2009\u2013\u2009${day}, ${year}`;
+    return `${mName} 1 – ${day}, ${year}`;
   }
 
   const d = new Date(year, month - monthOffsetIndex, 1);
   const mName = d.toLocaleDateString("en-US", { month: "short" });
   const y = d.getFullYear();
   const lastDay = new Date(year, month - monthOffsetIndex + 1, 0).getDate();
-  return `${mName} 1\u2009\u2013\u2009${lastDay}, ${y}`;
+  return `${mName} 1 – ${lastDay}, ${y}`;
 }
 
 export function computeMonthPayDateInfo(baseDateStr: string | undefined, monthOffsetIndex: number) {

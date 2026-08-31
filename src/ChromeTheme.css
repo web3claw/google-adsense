@@ -1354,7 +1354,7 @@ input,
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 0 90px;
+  padding: 0 145px;
   width: 100%;
   max-width: 1360px;
   margin: 0 auto;
@@ -1826,7 +1826,7 @@ input,
 }
 
 .period-divider-line {
-  border-top: 1px solid #e0e0e0;
+  border-top: 2px solid #e0e0e0;
   margin: 12px 0 16px 0;
   width: 100%;
 }
@@ -1906,17 +1906,21 @@ input,
   text-align: right;
 }
 
-.transactions-table td {
-  font-size: 13px;
-  font-weight: 400;
-  color: #202124;
+.transactions-table td,
+.transactions-table td.col-date,
+.transactions-table td.col-desc,
+.transactions-table td.col-amount {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: #202124 !important;
   height: 48px;
   line-height: 48px;
   padding: 0 24px;
   border-bottom: 1px solid #f1f3f4;
   vertical-align: middle;
   box-sizing: border-box;
-  font-family: Roboto, Arial, sans-serif !important;
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
 }
 
 .transactions-table tr:last-child td {
@@ -2681,18 +2685,6 @@ input,
   align-items: center;
   height: 30px;
   position: relative;
-  border-top: 1px dashed transparent;
-  border-bottom: 1px dashed transparent;
-}
-
-.calendar-week-row.in-week-range {
-  border-top: 1px solid transparent;
-  border-bottom: 1px solid transparent;
-}
-
-.calendar-week-row.in-week-hover-range {
-  border-top: 1px dashed #202124;
-  border-bottom: 1px dashed #202124;
 }
 
 .month-title-cell {
@@ -2704,6 +2696,8 @@ input,
   align-items: center;
   padding-left: 2px;
   font-family: Roboto, Arial, sans-serif !important;
+  border: none !important;
+  background: transparent !important;
 }
 
 .day-slot {
@@ -2716,6 +2710,9 @@ input,
   cursor: pointer;
   position: relative;
   font-family: Roboto, Arial, sans-serif !important;
+  border-top: 1px dashed transparent;
+  border-bottom: 1px dashed transparent;
+  box-sizing: border-box;
 }
 
 .day-slot.empty {
@@ -2751,16 +2748,29 @@ input,
   background-color: #e8f0fe;
 }
 
+.day-slot.in-range.hover-preview {
+  border-top: 1px dashed #70757a;
+  border-bottom: 1px dashed #70757a;
+}
+
 .day-slot.start {
   border-top-left-radius: 15px;
   border-bottom-left-radius: 15px;
   background-color: #e8f0fe;
 }
 
+.day-slot.start.hover-preview {
+  border-left: 1px dashed #70757a;
+}
+
 .day-slot.end {
   border-top-right-radius: 15px;
   border-bottom-right-radius: 15px;
   background-color: #e8f0fe;
+}
+
+.day-slot.end.hover-preview {
+  border-right: 1px dashed #70757a;
 }
 
 .day-slot.start .day-slot-circle {
