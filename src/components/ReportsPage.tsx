@@ -350,10 +350,8 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     getInitialSelectedMetrics(initialDimension)
   );
 
-  // Active/checked metric chips for chart & legend (multi-select)
-  const [activeChartMetricIds, setActiveChartMetricIds] = useState<MetricKey[]>(() =>
-    getInitialSelectedMetrics(initialDimension)
-  );
+  // Active/checked metric chips for chart & legend (multi-select) - default to only earnings
+  const [activeChartMetricIds, setActiveChartMetricIds] = useState<MetricKey[]>(["earnings"]);
 
   const [isUnsavedReport, setIsUnsavedReport] = useState<boolean>(false);
   const [isUnsavedActive, setIsUnsavedActive] = useState<boolean>(false);
@@ -378,28 +376,26 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
 
   // Pagination State
   const [page, setPage] = useState<number>(0);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(50);
 
   // Reset page to 0 when filters or dimension change
   useEffect(() => {
     setPage(0);
   }, [activeDimension, timeRange, searchQuery, customRange]);
 
-  // Update selected metrics and active chart metrics when dimension changes
+  // Update selected metrics and reset chart metric to earnings when dimension changes
   useEffect(() => {
     const nextMetrics = getInitialSelectedMetrics(activeDimension);
     setSelectedMetricIds(nextMetrics);
-    setActiveChartMetricIds(nextMetrics);
-    if (!nextMetrics.includes(activeMetric)) {
-      setActiveMetric("earnings");
-    }
+    setActiveChartMetricIds(["earnings"]);
+    setActiveMetric("earnings");
   }, [activeDimension]);
 
   // Sync activeChartMetricIds when selectedMetricIds changes
   useEffect(() => {
     setActiveChartMetricIds((prev) => {
       const filtered = prev.filter((id) => selectedMetricIds.includes(id));
-      return filtered.length > 0 ? filtered : [...selectedMetricIds];
+      return filtered.length > 0 ? filtered : ["earnings"];
     });
   }, [selectedMetricIds]);
 
@@ -645,7 +641,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
   const maxChartVal = useMemo(() => {
     if (!chartItems || chartItems.length === 0) return 100;
     const m = Math.max(...chartItems.map((c) => c.value));
-    return m > 0 ? m * 1.05 : 100;
+    return m > 0 ? m : 100;
   }, [chartItems]);
 
   // Dynamic Line Chart Data for "Entire account by day"
@@ -873,7 +869,6 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
             }}
             title="Google AdSense"
           />
-          <div style={{ height: "22px", width: "1px", backgroundColor: "#dadce0", margin: "0 6px" }} />
           <h1
             className="adsense-topbar-title"
             style={{
@@ -881,7 +876,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
               color: "#202124",
               fontWeight: 400,
               fontFamily: "Google Sans, Roboto, Arial, sans-serif",
-              margin: 0,
+              margin: "0 0 0 20px",
             }}
           >
             Reports
@@ -1220,7 +1215,9 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <span className="reports-search-plus" title="Add report">+</span>
+            <button type="button" className="reports-search-plus" title="Add report">
+              <i className="material-icon-i material-icons-extended">add</i>
+            </button>
           </div>
 
           <div className="reports-sidebar-list">
@@ -1496,23 +1493,31 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
               </div>
             ) : (
               <div className="report-timeline">
-                {/* Report Legend - Strictly renders all checked metrics with matching dots */}
+                {/* Report Legend - Clean plain title for bar charts, series badges for timeline */}
                 <div className="report-legend" role="heading" aria-level={3}>
-                  {activeChipsMetrics
-                    .filter((m) => activeChartMetricIds.includes(m.id))
-                    .map((m, idx) => {
-                      const color = METRIC_SERIES_COLORS[m.id] || CHART_PALETTE[idx % CHART_PALETTE.length];
-                      return (
-                        <div key={m.id} className="legend-entry">
-                          <div className="category">{m.label}</div>
-                          <div className="badges">
-                            <div className="badge-and-series">
-                              <div className="badge" style={{ background: color }} />
-                            </div>
+                  {activeDimension === "by_day" ? (
+                    activeChipsMetrics
+                      .filter((m) => activeChartMetricIds.includes(m.id))
+                      .map((m, idx) => {
+                        const color = METRIC_SERIES_COLORS[m.id] || CHART_PALETTE[idx % CHART_PALETTE.length];
+                        return (
+                          <div key={m.id} className="legend-entry">
+                            <div className="category">{m.label}</div>
+                            {activeChartMetricIds.length > 1 && (
+                              <div className="badges">
+                                <div className="badge-and-series">
+                                  <div className="badge" style={{ background: color }} />
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                  ) : (
+                    <div className="legend-entry">
+                      <div className="category">{activeMetricDef.label}</div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Line Chart for Entire account by day */}
@@ -1631,20 +1636,33 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                 ) : (
                   /* Bar Chart for Sites / Countries / Ad Units */
                   <div className="reports-bar-chart-wrap">
-                    <div className="bar-chart-rows-list">
-                      {chartItems.map((item) => {
-                        const barPercent = maxChartVal > 0 ? Math.min(100, (item.value / maxChartVal) * 100) : 0;
-                        return (
-                          <div key={item.key} className="bar-chart-row">
-                            <div className="bar-chart-label" title={item.name}>
-                              {item.name}
+                    <div className="bar-chart-content-relative">
+                      {/* Background Vertical Grid Lines */}
+                      <div className="bar-chart-grid-lines">
+                        {[0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1].map((pct, idx) => (
+                          <div
+                            key={idx}
+                            className="bar-chart-v-line"
+                            style={{ left: `${pct * 100}%` }}
+                          />
+                        ))}
+                      </div>
+
+                      <div className="bar-chart-rows-list">
+                        {chartItems.map((item) => {
+                          const barPercent = maxChartVal > 0 ? Math.min(100, (item.value / maxChartVal) * 100) : 0;
+                          return (
+                            <div key={item.key} className="bar-chart-row">
+                              <div className="bar-chart-label" title={item.name}>
+                                {item.name}
+                              </div>
+                              <div className="bar-chart-track">
+                                <div className="bar-chart-fill" style={{ width: `${barPercent}%` }} />
+                              </div>
                             </div>
-                            <div className="bar-chart-track">
-                              <div className="bar-chart-fill" style={{ width: `${barPercent}%` }} />
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
 
                     {/* Bottom X-Axis Ticks */}
@@ -1851,7 +1869,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                     onClick={() => setPage(0)}
                     title="First page"
                   >
-                    |&lt;
+                    <i className="material-icon-i material-icons-extended">first_page</i>
                   </button>
                   <button
                     type="button"
@@ -1860,7 +1878,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
                     title="Previous page"
                   >
-                    &lt;
+                    <i className="material-icon-i material-icons-extended">chevron_left</i>
                   </button>
                   <button
                     type="button"
@@ -1869,7 +1887,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                     onClick={() => setPage((p) => Math.min(maxPage, p + 1))}
                     title="Next page"
                   >
-                    &gt;
+                    <i className="material-icon-i material-icons-extended">chevron_right</i>
                   </button>
                   <button
                     type="button"
@@ -1878,7 +1896,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                     onClick={() => setPage(maxPage)}
                     title="Last page"
                   >
-                    &gt;|
+                    <i className="material-icon-i material-icons-extended">last_page</i>
                   </button>
                 </div>
               </div>
