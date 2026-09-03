@@ -3641,18 +3641,20 @@ input,
 }
 
 .bar-chart-x-ticks {
-  display: flex;
-  justify-content: space-between;
+  position: relative;
+  height: 24px;
   border-top: 1px solid #dadce0;
-  padding-top: 8px;
-  font-size: 11px;
-  color: #70757a;
   margin-left: 180px;
   margin-right: 16px;
   font-family: Roboto, Arial, sans-serif !important;
 }
 
-.bar-chart-x-ticks span {
+.bar-chart-x-ticks .bar-chart-tick-label {
+  position: absolute;
+  top: 8px;
+  font-size: 11px;
+  color: #70757a;
+  white-space: nowrap;
   font-family: Roboto, Arial, sans-serif !important;
   font-weight: 400;
 }
@@ -3690,6 +3692,10 @@ input,
 .reports-data-table th.th-col-dim {
   text-transform: uppercase;
   white-space: nowrap;
+  padding-left: 12px;
+}
+
+.reports-data-table.sites-dimension th.th-col-dim {
   padding-left: 38px;
 }
 
@@ -3754,13 +3760,10 @@ input,
 }
 
 .reports-data-table .th-col-dim,
-.reports-data-table .td-col-dim {
-  width: 220px;
-}
-
+.reports-data-table .td-col-dim,
 .reports-data-table .th-col-metric,
 .reports-data-table .td-col-metric {
-  width: 130px;
+  width: auto;
 }
 
 .reports-data-table .amount-font {
@@ -3915,7 +3918,7 @@ input,
 .feedback-fab,
 .reports-floating-feedback {
   position: fixed;
-  bottom: 24px;
+  bottom: 56px;
   right: 24px;
   width: 48px;
   height: 48px;

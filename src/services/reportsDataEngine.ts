@@ -563,6 +563,7 @@ export function queryAndAggregateReport(
       activeViewsWeighted: number;
       adRequests: number;
       matchedRequests: number;
+      coverage?: number;
     }
   >();
 
@@ -578,6 +579,7 @@ export function queryAndAggregateReport(
         activeViewsWeighted: 0,
         adRequests: 0,
         matchedRequests: 0,
+        coverage: r.coverage,
       };
       cur.earnings += r.earnings;
       cur.pageViews += r.pageViews;
@@ -586,6 +588,9 @@ export function queryAndAggregateReport(
       cur.activeViewsWeighted += (r.activeViewPercent ?? 97.4) * r.impressions;
       cur.adRequests += r.adRequests ?? r.impressions;
       cur.matchedRequests += r.matchedRequests ?? r.impressions;
+      if (r.coverage !== undefined) {
+        cur.coverage = r.coverage;
+      }
       grouped.set(key, cur);
     }
 
@@ -667,6 +672,7 @@ export function queryAndAggregateReport(
         activeViewsWeighted: 0,
         adRequests: 0,
         matchedRequests: 0,
+        coverage: r.coverage,
       };
       cur.earnings += r.earnings;
       cur.pageViews += r.pageViews;
@@ -675,6 +681,9 @@ export function queryAndAggregateReport(
       cur.activeViewsWeighted += (r.activeViewPercent ?? 97.4) * r.impressions;
       cur.adRequests += r.adRequests ?? r.impressions;
       cur.matchedRequests += r.matchedRequests ?? r.impressions;
+      if (r.coverage !== undefined) {
+        cur.coverage = r.coverage;
+      }
       grouped.set(key, cur);
     }
   }
@@ -695,7 +704,9 @@ export function queryAndAggregateReport(
     const pageCtr = data.pageViews > 0 ? Number(((data.clicks / data.pageViews) * 100).toFixed(2)) : 0;
     const impressionCtr = data.impressions > 0 ? Number(((data.clicks / data.impressions) * 100).toFixed(2)) : 0;
     const cpc = data.clicks > 0 ? Number((data.earnings / data.clicks).toFixed(2)) : 0;
-    const coverage = data.adRequests > 0 ? Number(((data.matchedRequests / data.adRequests) * 100).toFixed(2)) : 100;
+    const coverage = data.coverage !== undefined
+      ? data.coverage
+      : (data.adRequests > 0 ? Number(((data.matchedRequests / data.adRequests) * 100).toFixed(2)) : 100);
 
     totalEarnings += data.earnings;
     totalPageViews += data.pageViews;
@@ -933,9 +944,9 @@ export function parseExcelRecords(buffer: ArrayBuffer): RawReportRecord[] {
         clicksIdx = c;
       } else if (h.includes("activeview") || h.includes("viewable") || h.includes("可见率") || h.includes("可见度")) {
         activeViewIdx = c;
-      } else if (h.includes("matchedrequest") || h.includes("匹配请求") || h.includes("匹配数")) {
+      } else if (h.includes("matchedrequest") || h.includes("匹配请求") || h.includes("匹配数") || h.includes("匹配次")) {
         matchedRequestsIdx = c;
-      } else if (h.includes("adrequest") || h.includes("request") || h.includes("广告请求") || h.includes("请求数")) {
+      } else if (h.includes("adrequest") || h.includes("request") || h.includes("广告请求") || h.includes("请求数") || h.includes("请求次")) {
         adRequestsIdx = c;
       } else if (h.includes("pagectr") || h.includes("网页点击率") || h.includes("网页ctr")) {
         pageCtrIdx = c;
@@ -980,13 +991,21 @@ export function parseExcelRecords(buffer: ArrayBuffer): RawReportRecord[] {
       const clicks = cellToNum(row[clicksIdx], 0);
       const activeViewPercent = activeViewIdx !== -1 && row[activeViewIdx] !== undefined ? cellToNum(row[activeViewIdx], 97.4) : 97.4;
       const adRequests = adRequestsIdx !== -1 && row[adRequestsIdx] !== undefined ? cellToNum(row[adRequestsIdx], impressions) : impressions;
-      const matchedRequests = matchedRequestsIdx !== -1 && row[matchedRequestsIdx] !== undefined ? cellToNum(row[matchedRequestsIdx], impressions) : impressions;
+      const rawCoverage = coverageIdx !== -1 && row[coverageIdx] !== undefined ? cellToNum(row[coverageIdx], 100) : undefined;
+      const coverage = rawCoverage !== undefined ? (rawCoverage > 0 && rawCoverage <= 1 ? Number((rawCoverage * 100).toFixed(2)) : rawCoverage) : undefined;
+      let matchedRequests = matchedRequestsIdx !== -1 && row[matchedRequestsIdx] !== undefined ? cellToNum(row[matchedRequestsIdx], impressions) : undefined;
+      if (matchedRequests === undefined) {
+        if (coverage !== undefined && adRequests > 0) {
+          matchedRequests = Math.round((coverage / 100) * adRequests);
+        } else {
+          matchedRequests = impressions;
+        }
+      }
       const pageRpm = pageRpmIdx !== -1 && row[pageRpmIdx] !== undefined ? cellToNum(row[pageRpmIdx], 0) : undefined;
       const impressionRpm = impressionRpmIdx !== -1 && row[impressionRpmIdx] !== undefined ? cellToNum(row[impressionRpmIdx], 0) : undefined;
       const pageCtr = pageCtrIdx !== -1 && row[pageCtrIdx] !== undefined ? cellToNum(row[pageCtrIdx], 0) : undefined;
       const impressionCtr = impressionCtrIdx !== -1 && row[impressionCtrIdx] !== undefined ? cellToNum(row[impressionCtrIdx], 0) : undefined;
       const cpc = cpcIdx !== -1 && row[cpcIdx] !== undefined ? cellToNum(row[cpcIdx], 0) : undefined;
-      const coverage = coverageIdx !== -1 && row[coverageIdx] !== undefined ? cellToNum(row[coverageIdx], 100) : undefined;
 
       records.push({
         date: dateVal,

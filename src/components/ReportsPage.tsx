@@ -644,6 +644,10 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
     return m > 0 ? m : 100;
   }, [chartItems]);
 
+  const barChartTickSteps = useMemo(() => {
+    return [0, 1 / 7, 2 / 7, 3 / 7, 4 / 7, 5 / 7, 6 / 7, 1];
+  }, []);
+
   // Dynamic Line Chart Data for "Entire account by day"
   const sortedDailyRows = useMemo(() => {
     return [...rows]
@@ -849,26 +853,17 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
           flexShrink: 0,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <button
-            type="button"
-            className="topbar-icon-btn"
-            title="Main menu"
-            style={{ width: "36px", height: "36px" }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#5F6368">
-              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
-            </svg>
-          </button>
+        <div className="adsense-topbar-left" style={{ display: "flex", alignItems: "center" }}>
           <div
             style={{
               background: `url('${ADSENSE_LOGO_SVG_BASE64}') no-repeat left center/contain`,
-              width: "160px",
-              height: "26px",
+              width: "190px",
+              height: "32px",
               cursor: "pointer",
             }}
             title="Google AdSense"
           />
+          <div style={{ height: "24px", width: "1px", backgroundColor: "#dadce0", margin: "0 18px" }} />
           <h1
             className="adsense-topbar-title"
             style={{
@@ -876,7 +871,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
               color: "#202124",
               fontWeight: 400,
               fontFamily: "Google Sans, Roboto, Arial, sans-serif",
-              margin: "0 0 0 20px",
+              margin: 0,
             }}
           >
             Reports
@@ -884,29 +879,18 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
         </div>
         <div className="adsense-topbar-right" style={{ position: "relative" }}>
           <button className="topbar-icon-btn" title="Help">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="9" stroke="#5F6368" strokeWidth="1.8" />
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" stroke="#5F6368" strokeWidth="1.8" strokeLinecap="round" />
-              <circle cx="12" cy="17" r="1" fill="#5F6368" />
-            </svg>
+            <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px", color: "#5f6368" }}>help_outline</i>
           </button>
           <button className="topbar-icon-btn" title="Notifications">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5F6368" strokeWidth="1.8">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" />
-            </svg>
+            <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px", color: "#5f6368" }}>notifications_none</i>
           </button>
           <div
             className="topbar-avatar"
             title="Google Account"
-            style={{ cursor: "pointer" }}
+            style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
             onClick={() => setIsProfilePopoverOpen(!isProfilePopoverOpen)}
           >
-            <svg width="28" height="28" viewBox="0 0 32 32">
-              <circle cx="16" cy="16" r="16" fill="#1A73E8" />
-              <path d="M16 18c-3.5 0-10 1.75-10 5.25V26h20v-2.75C26 19.75 19.5 18 16 18z" fill="#FFF" />
-              <circle cx="16" cy="11" r="4.5" fill="#FFF" />
-            </svg>
+            <i className="material-icon-i material-icons-extended" style={{ fontSize: "32px", color: "#1a73e8" }}>account_circle</i>
           </div>
           <UserProfilePopover
             isOpen={isProfilePopoverOpen}
@@ -1216,7 +1200,9 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <button type="button" className="reports-search-plus" title="Add report">
-              <i className="material-icon-i material-icons-extended">add</i>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#80868b">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+              </svg>
             </button>
           </div>
 
@@ -1639,13 +1625,16 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
                     <div className="bar-chart-content-relative">
                       {/* Background Vertical Grid Lines */}
                       <div className="bar-chart-grid-lines">
-                        {[0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1].map((pct, idx) => (
-                          <div
-                            key={idx}
-                            className="bar-chart-v-line"
-                            style={{ left: `${pct * 100}%` }}
-                          />
-                        ))}
+                        {barChartTickSteps.map((pct, idx) => {
+                          if (pct === 0) return null;
+                          return (
+                            <div
+                              key={idx}
+                              className="bar-chart-v-line"
+                              style={{ left: `${pct * 100}%` }}
+                            />
+                          );
+                        })}
                       </div>
 
                       <div className="bar-chart-rows-list">
@@ -1667,13 +1656,25 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
 
                     {/* Bottom X-Axis Ticks */}
                     <div className="bar-chart-x-ticks amount-font">
-                      {[0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1].map((pct, idx) => {
+                      {barChartTickSteps.map((pct, idx) => {
                         const tickVal = maxChartVal * pct;
                         const isCurrency = activeMetricDef.id.includes("earnings") || activeMetricDef.id.includes("rpm") || activeMetricDef.id.includes("cpc");
                         const formatted = isCurrency
                           ? `${effectiveCurrencySymbol}${tickVal.toFixed(2)}`
                           : tickVal >= 1000 ? `${(tickVal / 1000).toFixed(1)}k` : `${Math.round(tickVal)}`;
-                        return <span key={idx} className="amount-font">{formatted}</span>;
+                        const transformStyle = pct === 0 ? "none" : pct === 1 ? "translateX(-100%)" : "translateX(-50%)";
+                        return (
+                          <span
+                            key={idx}
+                            className="bar-chart-tick-label amount-font"
+                            style={{
+                              left: `${pct * 100}%`,
+                              transform: transformStyle,
+                            }}
+                          >
+                            {formatted}
+                          </span>
+                        );
                       })}
                     </div>
                   </div>
@@ -1685,7 +1686,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ initialDimension = "si
 
           {/* Data Table Card */}
           <div className="reports-table-card">
-            <table className="reports-data-table">
+            <table className={`reports-data-table ${activeDimension === "sites" ? "sites-dimension" : ""}`}>
               <thead>
                 <tr>
                   <th className="th-col-dim">

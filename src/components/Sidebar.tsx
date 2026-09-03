@@ -45,93 +45,23 @@ const ChevronDown = () => (
   </svg>
 );
 
-// Menu Icons (Ultra Compact 16px)
-const HomeIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-    <polyline points="9 22 9 12 15 12 15 22" />
-  </svg>
-);
-
-const AdsIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="4" width="20" height="16" rx="2" />
-    <path d="M7 8h4v4H7z" />
-    <path d="M15 8h2M15 12h2M7 16h10" />
-  </svg>
-);
-
-const SitesIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="18" height="18" rx="2" />
-    <path d="M3 9h18M9 21V9" />
-  </svg>
-);
-
-const PrivacyIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    <path d="M12 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
-    <path d="M12 14c-2 0-4 1-4 2v1h8v-1c0-1-2-2-4-2z" />
-  </svg>
-);
-
-const BrandSafetyIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-  </svg>
-);
-
-const ReportsIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="18" height="18" rx="2" />
-    <path d="M7 17v-4M12 17V7M17 17v-7" />
-  </svg>
-);
-
-const OptimizationIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-    <polyline points="17 6 23 6 23 12" />
-  </svg>
-);
-
-const PolicyIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    <circle cx="12" cy="12" r="2" fill="currentColor" />
-  </svg>
-);
-
-const PaymentsIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="5" width="20" height="14" rx="2" />
-    <line x1="2" y1="10" x2="22" y2="10" />
-    <circle cx="6" cy="15" r="1" fill="currentColor" />
-  </svg>
-);
-
+// Menu Icons (Google Material Symbols 20px)
+const HomeIcon = () => <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px" }}>home</i>;
+const AdsIcon = () => <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px" }}>view_agenda</i>;
+const SitesIcon = () => <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px" }}>language</i>;
+const PrivacyIcon = () => <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px" }}>security</i>;
+const BrandSafetyIcon = () => <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px" }}>block</i>;
+const ReportsIcon = () => <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px" }}>bar_chart</i>;
+const OptimizationIcon = () => <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px" }}>trending_up</i>;
+const PolicyIcon = () => <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px" }}>gavel</i>;
+const PaymentsIcon = () => <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px" }}>payments</i>;
 const DotIcon = ({ active }: { active?: boolean }) => (
   <svg width="10" height="10" viewBox="0 0 24 24" fill={active ? "#1A73E8" : "#5F6368"}>
     <circle cx="12" cy="12" r="9" />
   </svg>
 );
-
-const AccountIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-  </svg>
-);
-
-const FeedbackIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    <line x1="12" y1="8" x2="12" y2="12" />
-    <line x1="12" y1="16" x2="12.01" y2="16" />
-  </svg>
-);
+const AccountIcon = () => <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px" }}>settings</i>;
+const FeedbackIcon = () => <i className="material-icon-i material-icons-extended" style={{ fontSize: "20px" }}>feedback</i>;
 
 export const Sidebar: React.FC = () => {
   const { currentEntry, navigateTo } = useBrowser();
